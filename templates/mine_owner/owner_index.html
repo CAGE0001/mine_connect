@@ -1,0 +1,96 @@
+{% extends 'mine_owner/owner_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Mine Owner </h5>
+					<hr>
+					<h3>{{ player.name }} </h3>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	<div class="col-md-6">
+	</div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        {% for mine in mines %}
+            <div class="col-md">
+                <a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'mine_owner/mineview.html' pk=mine.mine.id %}">{{ mine.mine }}</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+<br>
+<br>
+<div class="row">
+	<div class="col-md-5">
+		<div id="map" style="height: 400px;"></div>
+	</div>
+
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>News</h5>
+			<hr>
+            {% for item in news %}
+			<div class="row">
+                <a class="text-success" href="{{item.url}}"><p>{{ item }}</p></a>
+			</div>
+            {% endfor %}
+		</div>
+	</div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}
+
+{% block map_centre %}
+<script type="text/javascript">
+    var map_view = {{min_locs.0.lat_long}};
+</script>
+{% endblock %}
+
+{% block java %}
+<script type="text/javascript">
+    {% for e in min_locs %}
+    var mineMarkers = L.marker({{e.lat_long}}).addTo(map).bindPopup('<a href="{% url 'mine_owner/mineview.html' pk=e.name.id %}">{{e}}<a>');
+    {% endfor %}
+</script>minelocs
+{% endblock %}

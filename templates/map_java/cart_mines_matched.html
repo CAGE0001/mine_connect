@@ -1,0 +1,8 @@
+
+
+
+<script type="text/javascript">
+        {% for e in min_locs %}
+        var mineMarkers = L.marker({{e.lat_long}}).addTo(map).bindPopup('<a href="{% url 'mine_detail_carts.html' pk=e.name.id %}">{{e}}<a>');
+        {% endfor %}
+</script>

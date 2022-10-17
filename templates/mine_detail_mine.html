@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'mine_add_zvinhu.html' %}
+<br>
+       {% include 'mine_detail_info.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-block" ><h5>Mining Claims</h5></a>
+        </div>
+        {% if cart_match_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_carts.html' pk=mine.id %}">Carts</a>
+        </div>
+        {% endif %}
+        {% if mandate_request_list.count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_mandate_req.html' pk=mine.id %}">Mandates Requests... </a>
+        </div>
+        {% endif %}
+        {% if mandate_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_mandates.html' pk=mine.id %}">Mandates... </a>
+        </div>
+        {% endif %}
+        {% if visit_req_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_field_req.html' pk=mine.id %}">Field Request</a>
+        </div>
+        {% endif %}
+        {% if visit_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_field_visits.html' pk=mine.id %}">Field Visits</a>
+        </div>
+        {% endif %}
+        {% if field_proforma_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_proforma.html' pk=mine.id %}">Field Proforma</a>
+        </div>
+        {% endif %}
+        {% if field_invoice_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_invoice.html' pk=mine.id %}">Field Invoice</a>
+        </div>
+        {% endif %}
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6">
+            {% if claim_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{claims_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+		<div class="row">
+			<div class="col-md-3">
+                <a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mine_add_claim.html' pk=mine.id %}">Add Mining Claim</a>
+			</div>
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+				<div class="row">
+					<div class="col-md">
+<!--									<p>Total Distance:</p>-->
+					</div>
+					<div class="col-md">
+<!--									<p>{{ total_distance }} Kms</p>-->
+					</div>
+				</div>
+			</div>
+			<div class="col-md">
+				<div class="row">
+					<div class="col-md">
+					<p>Query Count :     </p>
+					</div>
+					<div class="col-md">
+					<p>{{ claim_count }} </p>
+					</div>
+				</div>
+			</div>
+		</div>
+    <div class="row">
+        <div class="col-md-9">
+<!--            <h3>Mining Claims</h3>-->
+        </div>
+        <div class="col-md-3">
+            <h3>{{claim_count}}</h3>
+        </div>
+    </div>
+</div>
+{% if claim_count != 0 %}
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Name</h5>
+            </div>
+            <div class="col-md">
+            <h5>Type</h5>
+            </div>
+            <div class="col-md">
+            <h5>Reg Number</h5>
+            </div>
+            <div class="col-md">
+            <h5>Status</h5>
+            </div>
+        </div>
+		<br>
+        {% for claim in claims_filter.qs %}
+        <div class="list_content">
+            <div class="list-line">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{claim.claim.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p><a class="text-success" href="{% url 'mining_claim_detail.html' pk=claim.claim_id %}">{{claim.claim.name}}</a></p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ claim.claim.type }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ claim.claim.reg_number }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ claim.status }}</p>
+                    </div>
+                </div>
+            </div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+<br>
+<br>
+{% endblock %}
+
+    {% block map_centre %}
+{% include 'map_java/map_centre.html' %}
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

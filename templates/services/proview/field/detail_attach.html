@@ -1,0 +1,115 @@
+{% extends 'services/service_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'services/info/proview_field_activity.html' %}
+    <br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+{% if acquit %}
+{% if acquit.comment != Null %}
+<div class="card card-body">
+    <h5>Activity Remarks</h5>
+    <hr>
+    <p>{{ acquit.comment}} </p>
+</div>
+<br>
+{% endif %}
+{% if acquit.recommendation != Blank %}
+<div class="card card-body">
+    <h5>Mine Remarks</h5>
+    <hr>
+    <p>{{ acquit.recommendation}} </p>
+</div>
+<br>
+{% endif %}
+{% endif %}
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Reports and Attachments</h5></a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-8"></div>
+        <div class="col-md-2">
+        {% if acquit %}
+            {% else %}
+            <a class="btn btn-block btn-outline-success btn-sm" href="{% url 'services/proview/field/attach_new.html' pk=field_activity.id %}">New Attachment</a>
+        {% endif %}
+        </div>
+        <div class="col-md-2">
+        {% if acquit %}
+            {% else %}
+            <a class="btn btn-block btn-outline-success btn-sm" href="{% url 'services/proview/field/acquit.html' pk=field_activity.id %}">Acquit</a>
+        {% endif %}
+        </div>
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if attach_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{attach_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md-2">
+            <h5>Date Created</h5>
+            </div>
+            <div class="col-md">
+                <h5>Name</h5>
+            </div>
+            <div class="col-md-2">
+                <h5>Type</h5>
+            </div>
+        </div>
+		<br>
+		{% for attach in attachments %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{{ MEDIA_URL }}{{ attach.pdf.url }}" target="_blank">
+                <div class="row">
+                    <div class="col-md-2">
+                        <p>{{attach.date_created }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{attach.pdf.url}}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{ attach.type }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+<br>
+
+<br>
+{% endblock %}

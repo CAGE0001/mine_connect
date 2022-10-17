@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<br>
+<div class="row">
+    <div class="col-md">
+    <div class="card-header bg-success"><h3>New Syndicate Info ...</h3></div>
+    <div>
+        <form method="POST" class="corporate-form">{% csrf_token %}
+            <br>
+            <div class="group-form">
+            {{ form|crispy}}
+            </div>
+            <br>
+            <div class="card-footer">
+                <div class="row">
+                <div class="col-md-6"></div>
+                    <div class="col-md">
+                        <a class="btn btn-primary  btn-block btn-sm" href="{{ cancel }}">Cancel</a>
+                    </div>
+                    <div class="col-md">
+                        <button type="submit" class="btn btn-outline-success btn-block btn-sm" value="Create">Save Request</button>
+                    </div>
+                </div>
+            </div>
+            </form>
+    </div>
+    </div>
+</div>
+<br>
+<div class="row">
+    <br>
+    <div class="col-md-3">
+        <div class="card-header">
+            <form method="get">
+                <div class="row">
+                    <div class="form col-md">
+                    {{ filter.form|crispy}}
+                    </div>
+                </div>
+<!--                        <div class="col-md-1"></div>-->
+                <div class="row">
+                    <div class="col-md-6"></div>
+                <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+     </div>
+    <div class="col-md">
+            <div class="card-header">
+                <h3>Syndicates ...</h3>
+            </div>
+                <div class="card-body bg-white">
+                    <table class="table bg-white">
+                        <tr>
+                            <th>Date Added</th>
+                            <th>Name</th>
+                            <th>Incorp Date</th>
+                        </tr>
+
+                        {% if filter %}
+                        {% for synd in filter.qs %}
+                        <tr>
+                            <td>{{synd.date_created}}</td>
+                            <td>{{synd.name}}</td>
+                            <td>{{synd.dor}}</td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </table>
+                </div>
+<!--        </div>-->
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

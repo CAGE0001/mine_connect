@@ -1,0 +1,142 @@
+{% extends 'mine_owner/owner_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'mineview_mine_detail_info.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/mineview.html' %}">Mining Claims</a>
+        </div>
+        {% if mandate_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm"><h5>Mandates</h5></a>
+        </div>
+        {% endif %}
+        {% if visit_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/mineview/field.html' %}">Field Visits</a>
+        </div>
+        {% endif %}
+        {% if report_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/mineview/reports.html' %}">Reports</a>
+        </div>
+        {% endif %}
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-outline-success btn-sm btn-block" href="">Request Trip</a>
+        </div>
+        <div class="col-md">
+        <a class="btn btn-outline-success btn-sm btn-block" href="">Get Lift</a>
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if mandate_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="card-header bg-success">
+		<div class="row">
+			<div class="col-md-3">
+<!--								<a class="btn btn-primary btn-sm btn-block" href="{% url 'mytrip_request.html' %}">New Trip Request</a>-->
+			</div>
+			<div class="col-md-3">
+<!--                            <a class="btn btn-primary btn-sm btn-block" href="{% url 'get_a_lift.html'%}">Get Lift</a>-->
+			</div>
+			<div class="col-md-3">
+				<div class="row">
+					<div class="col-md">
+<!--									<p>Total Distance:</p>-->
+					</div>
+					<div class="col-md">
+<!--									<p>{{ total_distance }} Kms</p>-->
+					</div>
+				</div>
+			</div>
+			<div class="col-md">
+				<div class="row">
+					<div class="col-md">
+					<p>Query Count :     </p>
+					</div>
+					<div class="col-md">
+					<p>{{ mandate_count }} Mandates</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{% if mandate_count != 0 %}
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Name</h5>
+            </div>
+            <div class="col-md">
+            <h5>Valid Until</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mandate Request</h5>
+            </div>
+            <div class="col-md">
+            <h5>Cart Match record</h5>
+            </div>
+        </div>
+		<br>
+		<div class="list_content">
+		{% for mand in mandate_list %}
+            <div class="list-line">
+                <div class="row"><a href="{% url 'mining_claim_detail.html' pk=claim.id %}">
+                    <div class="col-md-2">
+                        <p>{{mand.2.date_created}}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{mand.2}}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{ mand.2.valid }}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{ mand.1.id }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p>{{ mand.0.id }}</p>
+                    </div>
+                </a></div>
+            </div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+<br>
+<br>
+{% endblock %}

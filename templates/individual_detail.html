@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+					<h3>{{ individual.first_name }} {{ individual.last_name }} </h3>
+				</div>
+			</div>
+			<br>
+			<div class="row">
+				<div class="col-md">
+					{% if driver.img %}
+					<img width="320px" class='img-responsive' src="{{ MEDIA_URL }}{{ individual.img.url }}"/>
+					{% endif %}
+				</div>
+			</div>
+			<br>
+
+			<br>
+
+	</div>
+
+<!--	<div class="col-md-2">-->
+<!--		<div class="card card-body">-->
+
+<!--			<h1 style="text-align: center;padding: 10px"></h1>-->
+<!--		</div>-->
+<!--	</div>-->
+	{% if individual.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card">
+			<div class="card-header bg-success"> <h5>Individual Info</h5></div>
+			<div class="card-body bg-white">
+				<div class="row">
+				<div class="col-md">
+					<p>National ID</p>
+					<p>Date of Birth</p>
+					<p>Sex</p>
+					<p>Nationality</p>
+				</div>
+				<div class="col-md">
+					<p>{{ individual.nid }}</p>
+					<p>{{ individual.dob }}</p>
+					<p>{{ individual.sex }}</p>
+					<p>{{ individual.nationality }}</p>
+				</div>
+			    </div>
+				<div class="row">
+				<div class="col-md">
+					<p>Syndicates</p>
+				</div>
+				<div class="col-md">
+					<p>{{ individual.nid }}</p>
+				</div>
+			    </div>
+				<div class="row">
+				<div class="col-md">
+					<p>Corporate Agency</p>
+				</div>
+				<div class="col-md">
+					<p>{{ individual.nid }}</p>
+				</div>
+			    </div>
+				<div class="row">
+				<div class="col-md">
+					<p>Mine Management</p>
+				</div>
+				<div class="col-md">
+					<p>{{ individual.nid }}</p>
+				</div>
+			    </div>
+				<div class="row">
+				<div class="col-md">
+					<p>Professional Services</p>
+				</div>
+				<div class="col-md">
+					<p>{{ individual.nid }}</p>
+				</div>
+			    </div>
+		</div>
+	</div>
+	</div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="my-client_visits">
+<!--	<div class="row">-->
+<!--		<div class="col-md">-->
+			<div class="card-header">
+				<div class="row">
+					<div class="col-md">
+						<a class="btn btn-block  " ><h5>My Client Visits</h5></a>
+					</div>
+					<div class="col-md">
+						<a class="btn btn-success  btn-block btn-sm" href="{% url 'my_profile_trip_requests.html' %}">My Trip Requests</a>
+					</div>
+					<div class="col-md">
+						<a class="btn btn-success  btn-block btn-sm" href="{% url 'my_profile_trips.html' %}">My Trips</a>
+					</div>
+					<div class="col-md">
+						<a class="btn btn-success btn-block btn-sm" href="{% url 'my_profile_dispatch.html' %}">My Dispatches</a>
+					</div>
+				</div>
+					<br>
+				<div class="row">
+					<div class="col-md">
+						<a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mytrip_request.html' %}">Request Trip</a>
+					</div>
+					<div class="col-md">
+					<a class="btn btn-outline-success btn-sm btn-block" href="{% url 'get_a_lift.html'%}">Get Lift</a>
+					</div>
+					<div class="col-md-3"></div>
+					<div class="col-md-6">
+						{% if visit_count > 5 %}
+<!--						<div class="card card-body">-->
+							<form method="get">
+
+								{{visit_filter.form|crispy}}
+
+							<button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+							</form>
+<!--						</div>-->
+						{% endif %}
+					</div>
+				</div>
+			</div>
+				<div class="card-header bg-success">
+						<div class="row">
+							<div class="col-md-9"></div>
+							<div class="col-md">
+								<div class="row">
+									<div class="col-md">
+									<p>Query Count :     </p>
+									</div>
+									<div class="col-md">
+									<p>{{ visit_count }} Visits</p>
+									</div>
+								</div>
+							</div>
+						</div>
+				</div>
+				<div class="card-body bg-white">
+
+					<table class="table">
+					<tr>
+						<th><h5>Date Created</h5></th>
+						<th><h5>Visit Ref</h5></th>
+						<th><h5>Customer</h5></th>
+						<th><h5>Purpose</h5></th>
+<!--						<th><h5>Status</h5></th>-->
+					</tr>
+
+					{% for item in visit_filter.qs %}
+
+					<tr>
+						<td>{{item.date_created}}</td>
+						<td><a class="text-success" href="{% url 'client_visit_detail.html' pk=item.pk %}">{{item.pk}}</a></td>
+						<td>{{item.customer}}</td>
+						<td>{{ item.purpose }}</td>
+<!--						<td>{{ item.status }}</td>-->
+					</tr>
+					{% endfor %}
+
+				</table>
+				</div>
+<!--			</div>-->
+<!--		</div>-->
+<!--	</div>-->
+</div>
+<br>
+<br>
+<br>
+
+<br>
+{% endblock %}

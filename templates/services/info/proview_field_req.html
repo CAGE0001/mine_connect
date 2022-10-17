@@ -1,0 +1,93 @@
+
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Field Request </h5>
+					<hr>
+					<h3>{{ field_request }} </h3>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	{% if field_request.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ mandate.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Purpose</h5>
+                </div>
+                <div class="col-md">
+                    <h5>{{ field_request.service }}</h5>
+                </div>
+            </div>
+			<hr>
+            <div class="col=md">
+                <div class="row">
+                    <div class="col-md-4">
+                        <p>Amount</p>
+                    </div>
+                {% if quote.cost %}
+                    <div class="col-md">
+                        <p>$ {{ quote.cost }}</p>
+                    </div>
+                {% else %}
+                    <div class="col-md">
+                        <p>Pending</p>
+                    </div>
+                {% endif %}
+                </div>
+                <div class="col-md">
+                {% if not field_request.serviceprovrequired_set.all.last.fieldproviderquote_set.all %}
+                    <p><a class="btn btn-outline-success btn-sm btn-block" href="{% url 'services/proview/submit_quote.html' pk=field_request.id %}">Submit Quote</a></p>
+                {% endif %}
+                </div>
+            </div>
+		</div>
+	</div>
+</div>
+    <br>
+    <div class="row">
+        <div class="col-md">
+		<div class="card card-body">
+			<h5>Description </h5>
+			<hr>
+            <p>{{ field_request.description }}</p>
+		</div>
+        </div>
+        <div class="col-md">
+		<div class="card card-body">
+			<h5>Field Request Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md-4">
+                    <p>Mine</p>
+                    <p>Service</p>
+                    <p>Valid Until</p>
+				</div>
+
+				<div class="col-md">
+                    <div class="line_content">
+                        <div class="line-list"><a class="text-success" href="{% url 'services/proview/mine/claims.html' pk=field_request.mandate.mandate_request.mine.id %}">
+                            <p>{{ field_request.mandate.mandate_request.mine }}</p>
+                        </a></div>
+                    </div>
+                    <p>{{ field_request.service }}</p>
+                    <p>{{ field_request.period }}</p>
+                </div>
+			</div>
+		</div>
+        </div>
+    </div>

@@ -1,0 +1,21 @@
+{% extends 'mine_owner/owner_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+       {% include 'services/info/service_detail.html' %}
+<br>
+<br>
+{% endblock %}

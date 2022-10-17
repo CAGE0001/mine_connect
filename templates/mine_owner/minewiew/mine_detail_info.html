@@ -1,0 +1,180 @@
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+		<div class="row">
+			<div class="col-md">
+				<h5>Mine </h5>
+				<hr>
+				<h3>{{ mine.name }} </h3>
+			</div>
+		</div>
+		<br>
+		<div id="map" style="height: 70%;"></div>
+	</div>
+
+	{% if mine.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Mine Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md">
+                    <p>Country</p>
+					<p>Area</p>
+					<p>Combine Option</p>
+					<p>Resource Type</p>
+					<p>Reserves Proven</p>
+					<p>Reserves Possible</p>
+					<p>Reserves Probable</p>
+					<p>Minerals</p>
+				</div>
+				<div class="col-md">
+                    <p>{{ mine.country }}</p>
+					<p>{{ mine_area }} Hectares</p>
+					{% if mine.mineinvestreq_set.all.last.conglomerate == True %}
+					<p>Available </p>
+					{% else %}
+					<p>N / A</p>
+					{% endif %}
+					<p>{{ mine.resource_type }}</p>
+					<p>{{ mine.reserves_proven }} MT</p>
+					<p>{{ mine.reserves_possible }} MT</p>
+					<p>{{ mine.reserves_probable }} MT</p>
+                {% for mineral in mine.minemineral_set.all %}
+                    <p>{{ mineral.mineral }}</p>
+                {% endfor %}
+                </div>
+			</div>
+		</div>
+	</div>
+</div>
+	<br>
+	<br>
+<div class="card card-body">
+	<div class="row">
+	<div class="col-md">
+		<div class="card card-header">
+			<h5>Employees</h5>
+		</div>
+		<div class="card-body">
+			{% if mine.minelabour_set.all.last.management %}
+			<div class="row">
+				<div class="col-md">
+					<p>Management</p>
+				</div>
+				<div class="col-md">
+					<p>{{ mine.minelabour_set.all.last.management }}</p>
+				</div>
+			</div>
+			{% endif %}
+			{% if mine.minelabour_set.all.last.skilled %}
+			<div class="row">
+				<div class="col-md">
+					<p>Skilled</p>
+				</div>
+				<div class="col-md">
+					<p>{{ mine.minelabour_set.all.last.skilled }}</p>
+				</div>
+			</div>
+			{% endif %}
+			{% if mine.minelabour_set.all.last.semi_skilled %}
+			<div class="row">
+				<div class="col-md">
+					<p>Semi-Skilled</p>
+				</div>
+				<div class="col-md">
+					<p>{{ mine.minelabour_set.all.last.semi_skilled }}</p>
+				</div>
+			</div>
+			{% endif %}
+			{% if mine.minelabour_set.all.last.unskilled %}
+			<div class="row">
+				<div class="col-md">
+					<p>Un-Skilled</p>
+				</div>
+				<div class="col-md">
+					<p>{{ mine.minelabour_set.all.last.unskilled }}</p>
+				</div>
+			</div>
+			{% endif %}
+		</div>
+		<br>
+		<div class="card card-header">
+			<h5>Production</h5>
+		</div>
+		{% for mineral in mineral_set %}
+					<div class="card-body">
+				{% if mineral == 'all' %}
+							<div class="row">
+								<div class="col-md">
+									<p>Ore</p>
+								</div>
+								<div class="col-md">
+									<p>{{ ore_production}} Tonnes</p>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md">
+									<p>Waste</p>
+								</div>
+								<div class="col-md">
+									<p>{{ waste_production }} Tonnes</p>
+								</div>
+							</div>
+				{% else %}
+						{% for prod in mineral_production %}
+							<div class="row">
+								<div class="col-md">
+									<p>{{ prod.0 }}</p>
+								</div>
+								<div class="col-md">
+									<p>{{ prod.1 }} {{ prod.2 }}</p>
+								</div>
+							</div>
+						{% endfor %}
+				{% endif %}
+					</div>
+		{% endfor %}
+		<br>
+		<div class="card card-header">
+			<h5>Mine Works</h5>
+		</div>
+		<div class="card-body">
+			{% for record in works %}
+				<p>{{ record.quantity }} {{ record.works }}</p>
+				<p>{{record.comment}}</p>
+			{% endfor %}
+		</div>
+	</div>
+	<div class="col-md">
+	<div class="card card-header">
+		<h5>Plant and Equipment</h5>
+	</div>
+	<div class="card-body">
+		{% for record in plant %}
+			<p>{{ record.quantity }} {{ record.plant }}</p>
+			<p>{{record.comment}}</p>
+		{% endfor %}
+	</div>
+	</div>
+	<div class="col-md">
+			<div class="card card-header">
+				<h5>Yellow Plant</h5>
+			</div>
+			<div class="card-body">
+				{% for record in mobile %}
+					<p>{{ record.quantity }} {{ record.plant }}</p>
+					<p>{{record.comment}}</p>
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+</div>

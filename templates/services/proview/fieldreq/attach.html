@@ -1,0 +1,63 @@
+{% extends 'services/service_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+
+       {% include 'services/info/proview_field_req.html' %}
+<br>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'services/proview/fieldreq/claims.html' pk=field_request.id %}">Field Activity</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'services/proview/fieldreq/quote.html' pk=field_request.id %}">Field Quotation</a>
+        </div>
+        {% if attachments %}
+        <div class="col-md">
+            <a class="btn btn-block"><h5>Reports and Attachment</h5></a>
+        </div>
+        {% endif %}
+    </div>
+        <br>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Date Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Type</h5>
+            </div>
+            <div class="col-md">
+            <h5>Name</h5>
+            </div>
+        </div>
+		<br>
+		{% for attach in attachments %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{{ MEDIA_URL }}{{ attach.pdf.url }}">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{attach.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{attach.type}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ attach.name }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+
+<br>
+<br>
+{% endblock %}

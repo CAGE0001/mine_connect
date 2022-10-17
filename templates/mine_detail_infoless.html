@@ -1,0 +1,61 @@
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Mine </h5>
+					<hr>
+					<h3>{{ mine.name }} </h3>
+				</div>
+			</div>
+			<br>
+			<br>
+	</div>
+
+	{% if mine.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Mine Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md">
+                    <p>Owner</p>
+                    <p>Inspection Date</p>
+                    <p>Resource Type</p>
+                    <p>Reserves Proven</p>
+                    <p>Reserves Possible</p>
+                    <p>Reserves Probable</p>
+                    <p>Status</p>
+                    <p>Minerals</p>
+				</div>
+
+				<div class="col-md">
+                {% if mine.mineownerrelation_set.all %}
+                    <p><a class="text-success" href="{% url 'mine_detail_mine.html' pk=mine.mineownerrelation_set.all.last.owner.id %}">{{ mine.mineownerrelation_set.all.last.owner }}</a></p>
+                {% else %}
+					<p>None</p>
+				{% endif %}
+                    <p>{{ mine.insp_date }}</p>
+                    <p>{{ mine.resource_type }}</p>
+                    <p>{{ mine.reserves_proven }} Metric Tonnes</p>
+                    <p>{{ mine.reserves_possible }} Metric Tonnes</p>
+                    <p>{{ mine.reserves_probable }} Metric Tonnes</p>
+                    <p>{{ mine.status }}</p>
+                {% for mineral in mine.minemineral_set.all %}
+                    <p>{{ mineral.mineral }}</p>
+                {% endfor %}
+                </div>
+			</div>
+		</div>
+	</div>
+</div>

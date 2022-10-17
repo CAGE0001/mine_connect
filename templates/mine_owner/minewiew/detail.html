@@ -1,0 +1,100 @@
+{% extends 'mine_owner/owner_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Transaction Number </h5>
+					<hr>
+					<h3>{{ trxn.id }} </h3>
+					<br>
+					{% if reverse_status == True %}
+                    <h5 class="text-danger">TRANSACTION REVERSED </h5>
+					{% endif %}
+				</div>
+			</div>
+			<br>
+	</div>
+
+	{% if trxn.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ trxn.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Transaction Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md">
+                    <p>Date</p>
+                    <p>From</p>
+                    <p>To</p>
+                    <p>Purpose</p>
+                    <p>Amount</p>
+					{% if trxn.purpose == 'Mandate Invoice' %}
+					{% if trxn.purpose == 'Field Invoice' %}
+					{% if trxn.purpose == 'Subs' %}
+                    <p>Invoice</p>
+					{% endif %}
+					{% endif %}
+					{% endif %}
+					{% if trxn.purpose == 'Reversal' %}
+                    <p>Reversed Trxn</p>
+					{% endif %}
+				</div>
+
+				<div class="col-md">
+                    <p>{{ trxn.date_created }}</p>
+                    <p>{{trxn.payer}}</p>
+                    <p>{{trxn.payee}}</p>
+                    <p>{{ trxn.purpose }}</p>
+                    <p>{{ trxn.amount }}</p>
+					{% if trxn.purpose == 'Mandate Invoice' %}
+					{% if trxn.purpose == 'Field Invoice' %}
+					{% if trxn.purpose == 'Subs' %}
+					<p><a class="text-success" href="{% url 'invoice_detail.html' pk=invoice.id %}">{{ invoice }}</a></p>
+					{% endif %}
+					{% endif %}
+					{% endif %}
+					{% if trxn.purpose == 'Reversal' %}
+					<p><a class="text-success" href="{% url 'trxn_detail.html' pk=trxn.reverse_trxn %}">{{ trxn.reverse_trxn }}</a></p>
+					{% endif %}
+                </div>
+			</div>
+		</div>
+	</div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

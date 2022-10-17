@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'mine_detail_infoless.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        {% if mineral_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-block" ><h5>Minerals</h5></a>
+        </div>
+        {% endif %}
+        {% if ore_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'more_production_reports_ore.html' pk=mine.id %}">Ore</a>
+        </div>
+        {% endif %}
+        {% if waste_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'more_production_reports_waste.html' pk=mine.id %}">Waste</a>
+        </div>
+        {% endif %}
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6">
+            {% if mineral_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-6"></div>
+    </div>
+</div>
+{% if mineral_count != 0 %}
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Beginning</h5>
+            </div>
+            <div class="col-md">
+            <h5>Ending</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mineral</h5>
+            </div>
+            <div class="col-md">
+            <h5>Quantity</h5>
+            </div>
+        </div>
+		<br>
+        {% for record in minerals %}
+        <div class="list_content">
+            <div class="list-line">
+                <div class="row">
+                    <div class="col-md-3">
+                        <p>{{record.start_date}}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p>{{record.end_date}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{record.mineral}}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p>{{ record.quantity }} {{ record.unit }}</p>
+                    </div>
+                </div>
+            </div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+<br>
+<br>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'player_info.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div>
+<div class="card-header">
+    <div class="row">
+        {% if mine_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_detail_mines.html' pk=player.id %}">Mines</a>
+        </div>
+        {% endif %}
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Investor</h5></a>
+        </div>
+        {% if service_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_detail_services.html' pk=player.id %}">Services</a>
+        </div>
+        {% endif %}
+        {% if payment_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_detail_payments.html' pk=player.id %}">Payments</a>
+        </div>
+        {% endif %}
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if mine_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{cart_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+		<div class="row">
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+				<div class="row">
+					<div class="col-md">
+<!--									<p>Total Distance:</p>-->
+					</div>
+					<div class="col-md">
+<!--									<p>{{ total_distance }} Kms</p>-->
+					</div>
+				</div>
+			</div>
+			<div class="col-md">
+				<div class="row">
+					<div class="col-md">
+					<p>Query Count :</p>
+					</div>
+					<div class="col-md">
+					<p>{{ mine_count }} </p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{% if mine_count != 0 %}
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Date Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Investment Type</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mineral</h5>
+            </div>
+            <div class="col-md">
+            <h5>Valid</h5>
+            </div>
+        </div>
+		<br>
+		{% for claim in carts %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{% url 'investor/cart_request_detail.html' pk=claim.id %}">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{claim.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{claim.invest_type}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ claim.mineral }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ claim.valid }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+</div>
+<br>
+<br>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'investor/investor_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'investor/info/investview_field_req.html' %}
+<br>
+<br>
+<div class="card-header">
+    <div class="row">
+        {% if activities.count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'investor/investview/fieldreq/field_activity.html' pk=field_request.id %}">Field Activity</a>
+        </div>
+        {% endif %}
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Field Quotes</h5></a>
+        </div>
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if quote_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{provider_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+       {% include 'investor/lists/mandate_request_field_quote_face.html' %}
+
+<br>
+<br>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'investor/info/cart_match.html' %}
+<br>
+{% if mandate_request_count != 0 %}
+<div class="card-header bg-success">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'investor/cart_match_field_req.html' pk=cart_match.id %}">Mandate Requests</a>
+        </div>
+        {% if mandate_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'investor/cart_match_mandate.html' pk=cart_match.id %}">Mandates</a>
+        </div>
+        {% endif %}
+        {% if field_request_count %}
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Field Requests</h5></a>
+        </div>
+        {% endif %}
+        {% if field_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'investor/cart_match_field_act.html' pk=cart_match.id %}">Field Activity</a>
+        </div>
+        {% endif %}
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+<!--            <a class="btn btn-outline-success btn-sm btn-block" href="">Request Trip</a>-->
+        </div>
+        <div class="col-md">
+<!--        <a class="btn btn-outline-success btn-sm btn-block" href="">Get Lift</a>-->
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if mine_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{mine_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+       {% include 'investor/lists/mandate_request_field_req.html' %}
+
+{% endif %}
+<br>
+<br>
+{% endblock %}

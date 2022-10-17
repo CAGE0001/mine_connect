@@ -1,0 +1,98 @@
+{% extends 'services/service_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<br>
+<div class="row">
+    <br>
+    <div class="col-md-3">
+        <div class="card-header">
+            <form method="get">
+                <div class="row">
+                    <div class="form col-md">
+                    {{ filter.form|crispy}}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6"></div>
+                <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+     </div>
+    <div class="col-md">
+    <div id="map" style="height: 530px; "></div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+<h3>Field Requests - Open for bidding</h3>
+</div>
+<div class="card-body bg-white">
+        <div class="row">
+            <div class="col-md">
+                <h5>Valid Until</h5>
+            </div>
+            <div class="col-md">
+                <h5>Service</h5>
+            </div>
+            <div class="col-md">
+                <h5>Number of bids</h5>
+            </div>
+        </div>
+
+    {% for record in service_list %}
+    <div class="list_content">
+        <div class="list-line"><a class="text-success" href="{% url 'services/proview/fieldreq/claims.html' pk=record.field_request.id %}">
+            <div class="row">
+                <div class="col-md">
+                    <p>{{record.field_request.period}}</p>
+                </div>
+                <div class="col-md">
+                    <p>{{record}}</p>
+                </div>
+                <div class="col-md">
+                    {% if record.fieldproviderquote_set.all.count %}
+                    <p>{{record.fieldproviderquote_set.all.count}}</p>
+                    {% else %}
+                    <p>None</p>
+                    {% endif %}
+                </div>
+            </div>
+        </a></div>
+    </div>
+    {% endfor %}
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}
+
+    {% block map_centre %}
+<script type="text/javascript">
+    {% if locations.0 != None %}
+    var map_view = {{locations.0.lat_long}};
+    var zoom = 12
+    {% endif %}
+</script>
+    {% endblock %}
+
+    {% block java %}
+<script type="text/javascript">
+        {% for e in locations %}
+        var mineMarkers = L.marker({{e.0.lat_long}}).bindPopup(
+            '<a href="{% url 'services/proview/mine/claims.html' pk=e.0.name.id %}">{{e.0.name}}<a>',
+            {% for i in e.1 %}
+            '<a href="{% url 'services/proview/fieldreq/claims.html' pk=i.field_request.id %}">Field Req: {{i}}<a>',
+            {% endfor %}
+            ).addTo(map);
+        {% endfor %}
+</script>
+
+    {% endblock %}

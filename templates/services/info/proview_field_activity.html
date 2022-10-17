@@ -1,0 +1,51 @@
+	<br>
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Field Activity </h5>
+					<hr>
+					<h3>{{ field_activity.id }} </h3>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ mandate.date_created }}</h5>-->
+		</div>
+	</div>
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Field Activity Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md-4">
+                    <p>Date Created</p>
+                    <p>Mine</p>
+                    <p>Service</p>
+                    <p>Activity</p>
+                    <p>Beginning</p>
+                    <p>Ending</p>
+                    <p>Status</p>
+				</div>
+
+				<div class="col-md">
+                    <p>{{ field_activity.date_created }}</p>
+                    <p><a class="text-success" href="{% url 'services/proview/mine/claims.html' pk=field_activity.proforma.field_request.mandate.mandate_request.mine.id %}">{{ field_activity.proforma.field_request.mandate.mandate_request.mine }}</a></p>
+                    <p>{{ field_activity.proforma.field_request.service }}</p>
+                    <p>{{ field_activity.subject }}</p>
+                    <p>{{ field_activity.from_date }}</p>
+                    <p>{{ field_activity.to_date }}</p>
+                    <p>{{ field_activity.status }}</p>
+                </div>
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,98 @@
+{% extends 'investor/investor_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Quotation Number : {{ quote.id }}</h5>
+					<hr>
+					<h3> </h3>
+				</div>
+			</div>
+			<br>
+			<div class="row">
+				{% if quote.service_ref.fieldreqwinqte_set.all.count < quote.service_ref.quantity %}
+					{% if win_status == False %}
+					{% if quote.cost != quote.counter_offer %}
+						<div class="col-md">
+							<a class="btn btn-outline-success btn-block btn-sm"href="{% url 'investor/investview/quote_accept_confirm.html' pk=quote.id %}">Accept</a>
+						</div>
+					{% endif %}
+					{% endif %}
+					{% if not quote.counter_offer %}
+						<div class="col-md">
+							<a class="btn btn-outline-success btn-block btn-sm"href="{% url 'investor/investview/quote_counter.html' pk=quote.id %}">Counter Offer</a>
+						</div>
+					{% endif %}
+				{% endif %}
+			</div>
+	</div>
+
+	{% if quote.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Quote Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md">
+                    <p>Date</p>
+                    <p>Service Provider</p>
+                    <p>Field Request</p>
+                    <p>Purpose</p>
+                    <p>Bid Amount</p>
+					{% if quote.counter_offer %}
+					<p class="text-danger">Counter Offer</p>
+					{% endif %}
+					<p>Status</p>
+					<p>Comment</p>
+				</div>
+
+				<div class="col-md">
+                    <p>{{ quote.date_created }}</p>
+                    <p><a class="text-success" href="{% url 'player_detail.html' pk=quote.provider.name.id %}">{{quote.provider}}</a></p>
+                    <p><a class="text-success" href="{% url 'investor/field_request_detail_quote.html' pk=quote.service_ref.field_request.id %}">{{quote.service_ref.field_request.id}}</a></p>
+                    <p>{{ quote.service_ref.field_request.service }} - {{ quote.service_ref.provider_role }}</p>
+                    <p>$ {{ quote.cost }}</p>
+					{% if quote.counter_offer %}
+                    <p class="text-danger">$ {{ quote.counter_offer }}</p>
+					{% endif %}
+                    <p>{{ quote.status }}</p>
+                    <p>{{ quote.comment }}</p>
+                </div>
+			</div>
+		</div>
+	</div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

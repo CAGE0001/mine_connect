@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Receipt Number </h5>
+					<hr>
+					<h3>{{ receipt.id }} </h3>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	{% if receipt.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Receipt Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md">
+                    <p>Date</p>
+                    <p>Invoice</p>
+                    <p>Trxn Ref</p>
+                    <p>Amount</p>
+				</div>
+
+				<div class="col-md">
+                    <p>{{ receipt.date_created }}</p>
+                    <p><a href="{% url 'invoice_detail.html' pk=receipt.invoice.id %}">{{receipt.invoice.id}}</a></p>
+                    <p><a href="{% url 'trxn_detail.html' pk=receipt.trxn_ref.id %}">{{receipt.trxn_ref.id}}</a></p>
+                    <p>{{ receipt.amount }}</p>
+                </div>
+			</div>
+            <div class="row">
+                <div class="col-md-6"></div>
+<!--                <div class="col-md">-->
+<!--                    <a class="btn btn-outline-info  btn-block btn-sm" href="{% url 'receipt_edit.html' pk=receipt.id %}">Update</a>-->
+<!--                </div>-->
+            </div>
+		</div>
+	</div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

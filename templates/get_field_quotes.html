@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Field Activity </h5>
+					<hr>
+					<h3>{{ field_activity.id }} </h3>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	{% if field_request.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ mandate.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+	</div>
+</div>
+<br>
+<div>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-outline-success btn-sm btn-block" href="{% url 'get_qoutes.html' pk=field_activity.id %}">Get Quotes</a>
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if provider_count > 10 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{choice_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="card-header bg-success">
+		<div class="row">
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+				<div class="row">
+					<div class="col-md">
+<!--									<p>Total Distance:</p>-->
+					</div>
+					<div class="col-md">
+<!--									<p>{{ total_distance }} Kms</p>-->
+					</div>
+				</div>
+			</div>
+			<div class="col-md">
+				<div class="row">
+					<div class="col-md">
+					<p>Query Count :</p>
+					</div>
+					<div class="col-md">
+					<p>{{ provider_count }} </p>
+					</div>
+				</div>
+			</div>
+		</div>
+</div>
+{% if provider_count != 0 %}
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md-2">
+            <h5>Name</h5>
+            </div>
+            <div class="col-md-2">
+            <h5>Rating</h5>
+            </div>
+            <div class="col-md-2">
+            <h5>Type</h5>
+            </div>
+        </div>
+		<br>
+		<div class="list_content">
+		{% for choice in choice_filter.qs %}
+            {% if choice not in chosen %}
+            <div class="list-line">
+                <div class="row"><a href="{% url 'field_activity_detail.html' pk=activity.id %}">
+                    <div class="col-md-2">
+                        <p>{{choice.name}}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{choice.rating}}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{ choice.name.type }}</p>
+                    </div>
+                </a></div>
+            </div>
+		    {% endif %}
+		{% endfor %}
+		</div>
+	</div>
+</div>
+{% endif %}
+</div>
+<br>
+<br>
+{% endblock %}

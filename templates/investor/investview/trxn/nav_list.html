@@ -1,0 +1,85 @@
+{% extends 'investor/investor_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<div class="row">
+    <div class="col-md-2">
+            <form method="get">
+
+                    {{ filter.form|crispy}}
+            <br>
+            <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+            </form>
+     </div>
+    <div class="col-md">
+            <div class="card-header">
+                <h3>Transactions ...</h3>
+            </div>
+                <div class="card-body bg-white">
+                        <div class="row">
+                            <div class="col-md">
+                            <h5>Date Created</h5>
+                            </div>
+                            <div class="col-md">
+                            <h5>Purpose</h5>
+                            </div>
+                            <div class="col-md">
+                            <h5>Invoice </h5>
+                            </div>
+                            <div class="col-md">
+                            <h5>Debit </h5>
+                            </div>
+                            <div class="col-md">
+                            <h5>Credit </h5>
+                            </div>
+                        </div>
+                    <br>
+
+                    {% for record in trxn_list %}
+                    <div class="list_content">
+                        <div class="list-line"><a class="text-success" href="{% url 'investor/investview/trxn/detail.html' pk=record.id %}">
+                            <div class="row">
+                                <div class="col-md">
+                                <p>{{record.date_created}}</p>
+                                </div>
+                                <div class="col-md">
+                                <p>{{record.purpose}}</p>
+                                </div>
+                                <div class="col-md">
+                                <p>{{record.invoice_ref}}</p>
+                                </div>
+                            {% if record.payer_id == player.id %}
+                                <div class="col-md">
+                                <p>{{record.amount}}</p>
+                                </div>
+                            {% else %}
+                                <div class="col-md">
+                                <p></p>
+                                </div>
+                            {% endif %}
+                            {% if record.payee_id == player.id %}
+                                <div class="col-md">
+                                <p>{{record.amount}}</p>
+                                </div>
+                            {% else %}
+                                <div class="col-md">
+                                <p></p>
+                                </div>
+                            {% endif %}
+                            </div>
+                        </a></div>
+                    </div>
+                    {% endfor %}
+                </div>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

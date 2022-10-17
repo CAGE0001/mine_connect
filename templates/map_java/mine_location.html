@@ -1,0 +1,17 @@
+
+
+
+<script type="text/javascript">
+    var mineBoundaryJson = {{poly.polygon.geojson|safe}};
+    var mineLocJson = {{mineloc.location.geojson|safe}};
+    var myLayer = L.geoJSON().addTo(map);
+    var claimLayer = L.geoJSON().addTo(map);
+    var mineMarkersLayer = L.geoJSON().addTo(map);
+    myLayer.addData(mineBoundaryJson);
+    myLayer.addData(mineLocJson);
+    myLayer.addData(claimLocJson);
+    {% for e in claims %}
+    var claimLocJson = {{e.location.geojson|safe}};
+    myLayer.addData(claimLocJson);
+    {% endfor %}
+</script>

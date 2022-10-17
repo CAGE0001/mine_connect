@@ -1,0 +1,54 @@
+{% load static %}
+
+<head>
+</head>
+
+<div class="banner group">
+    <div class="brand">
+        <img style="padding: 10px 10px" src="{% static 'images/logo_trans.png' %}">
+    </div>
+    <div class="row">
+    <div class="col-md">
+        <div class="logwrapper">
+        <div class="nav-bar">
+          <div class="dropdown">
+          <a class="dropbtn" href="{% url 'investor/investor_index.html' %}" ><h5>Home</h5></a>
+          </div>
+          <div class="dropdown">
+          <a class="dropbtn" href="{% url 'investor/profile.html' %}" ><h5>Profile</h5></a>
+          </div>
+          <div class="dropdown">
+          <a class="dropbtn" ><h5>Shopping Cart</h5></a>
+            <div class="dropdown-content">
+              <a class="dropbtn1" href="{% url 'investor/investview/cart/request.html' pk=request.user.playeruserrelation_set.all.last.player.id %}">New Cart Request</a>
+              <a class="dropbtn1" href="{% url 'investor/investview/cart/list.html' %}">Cart List</a>
+            </div>
+          </div>
+          <div class="dropdown">
+          <a class="dropbtn" href="{% url 'investor/investview/mandate/list.html' %}"><h5>Mandates</h5></a>
+          </div>
+          <div class="dropdown">
+          <a class="dropbtn" href="{% url 'investor/investview/fieldreq/list.html' %}"><h5>Field Activities</h5></a>
+          </div>
+          <div class="dropdown">
+          <a class="dropbtn" href="{% url 'investor/investview/trxn/nav_list.html' %}"><h5>Accounts</h5></a>
+          </div>
+        {% if user.is_authenticated %}
+          <div class="dropdown">
+              <a class="dropbtn" href="{% url 'confirm_logout.html' %}"><h5>Log Out</h5></a>
+          </div>
+        {% else %}
+          <div class="dropdown">
+              <a class="dropbtn" href="{% url 'logout' %}"><h5>Log In</h5></a>
+          </div>
+        {% endif %}
+        </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        {% if user.is_authenticated %}
+                <p class="log">{{ user.username}}</p>
+        {% endif %}
+    </div>
+    </div>
+</div>

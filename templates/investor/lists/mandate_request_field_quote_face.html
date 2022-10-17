@@ -1,0 +1,46 @@
+
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Service</h5>
+            </div>
+            <div class="col-md">
+            <h5>Service Provider</h5>
+            </div>
+            <div class="col-md">
+            <h5>Amount</h5>
+            </div>
+            <div class="col-md">
+            <h5>Status</h5>
+            </div>
+        </div>
+		<br>
+		{% for quote in quotes %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{% url 'investor/investview/quote_detail.html' pk=quote.id %}">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{quote.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ quote.service_ref.provider_role }} {{ quote.service_ref.field_request.service }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{quote.provider}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ quote.cost }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ quote.status }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>

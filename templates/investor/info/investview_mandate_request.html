@@ -1,0 +1,89 @@
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Mandate Request </h5>
+					<hr>
+					<h3>{{ mandate_request }} </h3>
+				</div>
+			</div>
+			<br>
+		<div class="card card-body">
+			<h5>Mandate Costs</h5>
+			<hr>
+			{% if mandate_request.mandateproforma_set.all %}
+            <div class="col=md">
+                <div class="row">
+                    <div class="col-md">
+                        <p>Amount</p>
+                    </div>
+                    <div class="col-md">
+                        <p>$ {{ mandate_request.mandateproforma_set.all.last.amount }}</p>
+                    </div>
+                </div>
+
+			{% if mandate_request.mandateproforma_set.all.last.status == 'Pending' %}
+                <p><a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mand_req_invoice_create.html' pk=mandate_request.id %}">Make Payment</a></p>
+            {% endif %}
+            </div>
+            {% endif %}
+		</div>
+	</div>
+
+	{% if mandate_request.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ cart.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Mandate Request Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md-4">
+                    <p>Cart Request</p>
+                    <p>Mineral</p>
+                    <p>Investment Type</p>
+                    <p>Date Created</p>
+                    <p>Mandate</p>
+                </div>
+
+				<div class="col-md">
+                    <div class="line_content">
+                        <div class="line-list">
+							<p><a class="text-success" href="{% url 'investor/investview/cart/mandate_request.html' pk=cart.id %}">{{ cart }}</a></p>
+                        </div>
+                    </div>
+                    <p>{{ cart.mineral }}</p>
+                    <p>{{ cart.invest_type }}</p>
+                    <p>{{ mandate_request.date_created }}</p>
+                    <div class="line_content">
+                        <div class="line-list">
+							<p><a class="text-success" href="{% url 'investor/investview/mandate/services.html' pk=mandate_request.mandate_set.all.last.id %}">{{ mandate_request.mandate_set.all.last }}</a></p>
+                        </div>
+                    </div>
+                </div>
+			</div>
+            <div class="row">
+                <div class="col-md-4">
+                    <p>Mines</p>
+                </div>
+                <div class="col-md">
+                    <div class="line_content">
+                        <div class="line-list">
+                    		<a class="text-success" href="{% url 'investor/investview/mine/claims.html' pk=mandate_request.mine.id %}"><p>{{ mandate_request.mine }}</p></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+		</div>
+	</div>
+
+</div>

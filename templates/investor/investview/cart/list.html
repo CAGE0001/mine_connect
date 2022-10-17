@@ -1,0 +1,72 @@
+{% extends 'investor/investor_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<div class="row">
+    <br>
+    <div class="col-md-3">
+            <form method="get">
+                <div class="row">
+                    <div class="form col-md">
+                    {{ filter.form|crispy}}
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+                </div>
+            </form>
+     </div>
+    <div class="col-md">
+        <div class="card-header">
+            <h3>Cart Items</h3>
+        </div>
+        <div class="card-body bg-white">
+            <div class="row">
+                <div class="col-md">
+                <h5>Date</h5>
+                </div>
+                <div class="col-md">
+                <h5>Investment Type</h5>
+                </div>
+                <div class="col-md">
+                <h5>Mineral</h5>
+                </div>
+                <div class="col-md">
+                <h5>Valid</h5>
+                </div>
+            </div>
+            <br>
+            {% for record in filter.qs %}
+            <div class="list_content">
+                <div class="list-line"><a class="text-success" href="{% url 'investor/investview/cart/mandate_request.html' pk=record.id %}">
+                    <div class="row">
+                        <div class="col-md">
+                        <p>{{record.date_created}}</p>
+                        </div>
+                        <div class="col-md">
+                        <p>{{record.invest_type}}</p>
+                        </div>
+                        <div class="col-md">
+                        <p>{{record.mineral}}</p>
+                        </div>
+                        <div class="col-md">
+                        <p>{{record.valid}}</p>
+                        </div>
+                    </div>
+                </a></div>
+            </div>
+            {% endfor %}
+        </div>
+        <br>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<br>
+<div class="row">
+    <br>
+    <div class="col-md-3">
+        <div class="card-header">
+            <form method="get">
+                <div class="row">
+                    <div class="form col-md">
+                    {{ filter.form|crispy}}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6"></div>
+                <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+     </div>
+    <div class="col-md">
+            <div class="card-header">
+                <h3>Receipts ...</h3>
+            </div>
+                <div class="card-body bg-white">
+                    <table class="table bg-white">
+                        <tr>
+                            <th>Date Created</th>
+                            <th>Payer</th>
+                            <th>Purpose</th>
+                            <th>Amount </th>
+                            <th>Invoice </th>
+                        </tr>
+
+                    <div class="list-line">
+                    {% for record in filter.qs %}
+                        <div class="list-content"><a
+                                href="{% url 'receipt_detail.html' pk=record.id %}">
+                        <tr>
+                            <td>{{record.date_created}}</td>
+                            <td>{{record.trxn_ref.payer}}</td>
+                            <td>{{record.trxn_ref.purpose}}</td>
+                            <td>{{record.amount}}</td>
+                            <td>{{record.invoice}}</td>
+                        </tr>
+                            </a>
+                        </div>
+                    {% endfor %}
+                    </div>
+                    </table>
+                </div>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

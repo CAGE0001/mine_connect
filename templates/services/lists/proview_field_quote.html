@@ -1,0 +1,66 @@
+<br>
+<div class="card-body bg-white">
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md">
+                <div class="row">
+                    <div class="col-md">
+                        <h5>Quotation Number</h5>
+                    </div>
+                    <div class="col-md">
+                        <h5>{{ quote.id }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="row">
+                    <div class="col-md">
+                        <h5>Amount</h5>
+                    </div>
+                    <div class="col-md">
+                        <h5>$ {{ quote.cost }}</h5>
+                    </div>
+                </div>
+                <br>
+                {% if quote.counter_offer %}
+                <div class="row">
+                    <div class="col-md">
+                        <h5>Counter Offer</h5>
+                    </div>
+                    <div class="col-md">
+                        <h5>$ {{ quote.counter_offer }}</h5>
+                    </div>
+                </div>
+                <br>
+                {% if quote.status != 'Success' %}
+                {% if quote.service_ref.status == 'Pending' %}
+                {% if quote.fieldreqwinqte_set.all %}
+                <a class="btn btn-outline-danger btn-block btn-sm" href="{% url 'services/proview/accept_counter_offer.html' pk=quote.id %}">Accept Counter Offer</a>
+                {% endif %}
+                {% endif %}
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="card card-body">
+        <div class="row">
+            <div class="col-md">
+                <p>{{ quote.comment }}</p>
+            </div>
+        </div>
+    </div>
+<br>
+<div class="card card-body">
+    <h5>Attachments</h5>
+    <hr>
+    {% if quote.pdf %}
+            <div class="row">
+                <div class="col-md">
+                    <a class="text-success" href="">{{quote.pdf}}</a>
+                </div>
+            </div>
+    {% endif %}
+</div>
+</div>

@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'mine_add_zvinhu.html' %}
+<br>
+
+       {% include 'mine_detail_info.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_mine.html' pk=mine.id %}">Claims</a>
+        </div>
+        {% if cart_match_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_carts.html' pk=mine.id  %}">Carts</a>
+        </div>
+        {% endif %}
+        {% if mandate_request_list.count != 0 %}
+        <div class="col-md">
+            <a class="btn  btn-block btn-sm"><h5>Mand-Reqs</h5></a>
+        </div>
+        {% endif %}
+        {% if mandate_list.count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_mandate.html' pk=mine.id %}">Mandates ...</a>
+        </div>
+        {% endif %}
+        {% if visit_req_list.count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_field_req.html' pk=mine.id %}">Field Request</a>
+        </div>
+        {% endif %}
+        {% if visit_list.count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_field_visits.html' pk=mine.id %}">Field Visits</a>
+        </div>
+        {% endif %}
+        {% if field_proforma_list.count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_proforma.html' pk=mine.id %}">Proformas</a>
+        </div>
+        {% endif %}
+        {% if field_invoice_list.count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_invoice.html' pk=mine.id %}">Field Invoice</a>
+        </div>
+        {% endif %}
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if mandate_request_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="card-header bg-success">
+		<div class="row">
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+				<div class="row">
+					<div class="col-md">
+<!--									<p>Total Distance:</p>-->
+					</div>
+					<div class="col-md">
+<!--									<p>{{ total_distance }} Kms</p>-->
+					</div>
+				</div>
+			</div>
+			<div class="col-md">
+				<div class="row">
+					<div class="col-md">
+					<p>Query Count :     </p>
+					</div>
+					<div class="col-md">
+					<p>{{ mandate_request_count }} Requests</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Name</h5>
+            </div>
+            <div class="col-md">
+            <h5>Valid Until</h5>
+            </div>
+            <div class="col-md">
+            <h5>Cart Match Record</h5>
+            </div>
+        </div>
+		<br>
+		{% for req in mandate_request_list %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{% url 'investor/mandate_request_detail.html' pk=req.1.id %}">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{req.1.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{req.1}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ req.1.period }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ req.0.id }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+</div>
+<br>
+<br>
+{% endblock %}
+
+    {% block map_centre %}
+{% include 'map_java/map_centre.html' %}
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

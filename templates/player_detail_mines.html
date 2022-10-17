@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Player </h5>
+					<hr>
+					<h3>{{ player.name }} </h3>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	{% if mine.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+	</div>
+</div>
+<br>
+<br>
+    <div class="card card-body">
+        <div class="card-header">
+        <h5>Player Information</h5>
+        </div>
+        <br>
+        <div class="row">
+        <div class="col-md">
+            {% if player.type == 'Individual' %}
+            <div class="row">
+                <div class="col-md">
+                    <p>Name</p>
+                    <p>Sex</p>
+                    <p>Date of Birth</p>
+                    <p>Nationality</p>
+                    <p>Identity Number</p>
+                </div>
+                <div class="col-md">
+                    <p><a class="text-success" href="{% url 'individual_detail.html' pk=indi.id %}">{{player}}</a></p>
+                    <p>{{ indi.sex }}</p>
+                    <p>{{ indi.dob }}</p>
+                    <p>{{ indi.nationality }}</p>
+                    <p>{{ indi.nid }}</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-9">
+                </div>
+                <div class="col-md">
+                    <p><a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'individual_edit.html' pk=player.ref %}">Edit</a></p>
+                </div>
+            </div>
+            <br>
+            {% elif player.type == 'Syndicate' %}
+            <div class="row">
+                <div class="col-md">
+                    <p>Name</p>
+                    <p>Date of Registration</p>
+                    <p>Identity Number</p>
+                    <p>Represantatives</p>
+                </div>
+                <div class="col-md">
+                    <p>{{ synd.name }}</p>
+                    <p>{{ synd.dor }}</p>
+                    <p>Members:</p>
+                    {% for member in syndicate.syndmemberrelation_set.all %}
+                    {{ member.member }}
+                    {% endfor %}
+                    <p>Agents:</p>
+                    {% for member in syndicate.syndagentrelation_set.all %}
+                    {{ member.agent }}
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-9">
+                </div>
+                <div class="col-md">
+                    <p><a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'syndicate_edit.html' pk=synd.id %}">Edit</a></p>
+                </div>
+            </div>
+            <br>
+            {% else %}
+            <div class="row">
+                <div class="col-md">
+                    <p>Name</p>
+                    <p>Company Type</p>
+                    <p>Date of Registration</p>
+                    <p>Nationality</p>
+                    <p>Registration Number</p>
+                    <p>Agents</p>
+                </div>
+                <div class="col-md">
+                    <p>{{ corp.name }}</p>
+                    <p>{{ corp.type }}</p>
+                    <p>{{ corp.doi }}</p>
+                    <p>{{ corp.nationality }}</p>
+                    <p>{{ corp.reg_number }}</p>
+                    {% for member in corp.corpagentrelation_set.all %}
+                    <p>{{ member.agent }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-9">
+                </div>
+                <div class="col-md">
+                    <p><a class="btn btn-outline-success  btn-block btn-sm"  href="{% url 'corporate_edit.html' pk=corp.id %}">Edit</a></p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-md">
+        <div class="row">
+            <div class="col-md">
+                <p>Type</p>
+                <p>Phone Number</p>
+                <p>Email</p>
+                <p>Bank</p>
+                <p>Bank Account</p>
+                <p>Trxn Balance</p>
+                <p>Street Address</p>
+                <p>Surburb</p>
+                <p>Town/City</p>
+                <p>Country</p>
+<!--                    <p>Investor Status</p>-->
+            </div>
+
+            <div class="col-md">
+                <p>{{ player.type }}</p>
+                <p>{{ player.phone_number }}</p>
+                <p>{{ player.email }}</p>
+                <p>{{ player.bank }}</p>
+                <p>{{ player.bank_account }}</p>
+                <p>{{ player.trxn_balance }}</p>
+                <p>{{ player.street_address }}</p>
+                <p>{{ player.suburb }}</p>
+                <p>{{ player.city }}</p>
+                <p>{{ player.country }}</p>
+<!--                    <p>{{ investor_status }}</p>-->
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6"></div>
+            <div class="col-md">
+            </div>
+            <div class="col-md">
+                <a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'player_edit.html' pk=player.id %}">Update</a>
+            </div>
+<!--                <div class="col-md">-->
+<!--                    <a class="btn btn-danger  btn-block btn-sm" href="">Delete</a>-->
+<!--                </div>-->
+        </div>
+        </div>
+        </div>
+    </div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div id="map" style="height: 350px; "></div>
+<br>
+<div class="card-header">
+    <div class="row">
+        {% if mine_count %}
+        <div class="col-md">
+            <a class="btn  btn-block" ><h5>Mines</h5></a>
+        </div>
+        {% endif %}
+        {% if investor_status == 'Investor' %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_detail_investor.html' pk=player.id %}">Investor </a>
+        </div>
+        {% endif %}
+        {% if service_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_detail_services.html' pk=player.id %}">Services</a>
+        </div>
+        {% endif %}
+        {% if payment_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_detail_payments.html' pk=player.id %}">Payments</a>
+        </div>
+        {% endif %}
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if mine_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{mine_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+        <div class="row">
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+				<div class="row">
+					<div class="col-md">
+<!--									<p>Total Distance:</p>-->
+					</div>
+					<div class="col-md">
+<!--									<p>{{ total_distance }} Kms</p>-->
+					</div>
+				</div>
+			</div>
+			<div class="col-md">
+				<div class="row">
+					<div class="col-md">
+					<p>Query Count :</p>
+					</div>
+					<div class="col-md">
+					<p>{{ mine_count }} </p>
+					</div>
+				</div>
+			</div>
+		</div>
+</div>
+{% if mine_count != 0 %}
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Date Created</h5>
+            </div>
+            <div class="col-md-4">
+            <h5>Name</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mineral</h5>
+            </div>
+            <div class="col-md">
+            <h5>Inspection</h5>
+            </div>
+            <div class="col-md">
+            <h5>Status</h5>
+            </div>
+        </div>
+		<br>
+		{% for claim in mine_filter.qs %}
+		<div class="list_content">
+            <div class="list-line"> <a class="text-success" href="{% url 'mine_detail_carts.html' pk=claim.mine.id %}">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{claim.mine.date_created}}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p>{{claim.mine.name}}</p>
+                    </div>
+                    <div class="col-md">
+                        {% for item in claim.mine.minemineral_set.all %}
+                        {{ item.mineral }} ,
+                        {% endfor %}
+                    </div>
+                    <div class="col-md">
+                        <p>{{ claim.mine.insp_date }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ claim.status }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+<br>
+<br>
+{% endblock %}
+
+{% block map_centre %}
+<script type="text/javascript">
+    var map_view = {{min_locs.0.lat_long}};
+</script>
+{% endblock %}
+
+{% block java %}
+<script type="text/javascript">
+    {% for e in min_locs %}
+    var mineMarkers = L.marker({{e.lat_long}}).addTo(map).bindPopup('<a href="{% url 'mine_detail_carts.html' pk=e.name.id %}">{{e}}<a>');
+    {% endfor %}
+</script>minelocs
+{% endblock %}

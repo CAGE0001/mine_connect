@@ -1,0 +1,41 @@
+{% extends 'services/service_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<div class="card-header">
+    <div class="col-md">
+        <div style="text-align: center">
+            <h3>{{ report }} </h3>
+        </div>
+    </div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        {% if report.pdf %}
+        <img width="100%" class='img-responsive' src="{{ MEDIA_URL }}{{ report.pdf.url }}"/>
+        {% endif %}
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

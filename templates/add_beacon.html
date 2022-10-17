@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+{% load leaflet_tags %}
+<br>
+<br>
+<br>
+<br>
+<div>
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md">
+            <h3>Beacons</h3>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-md">
+            <p>Mining Claim Name</p>
+            <p>Beacons</p>
+            </div>
+            <div class="col-md">
+            <p>{{ claim.name }}</p>
+            {% for beacon in claim.beacon_set.all %}
+                {{ beacon.symbol }} ,
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+    <br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+    <div class="row">
+        <div class="col-md-3">
+            <div>
+                <form method="POST" class="player-form">{% csrf_token %}
+                    <br>
+                    <div class="group-form">
+                    {{ form|crispy}}
+                    </div>
+                    <br>
+                    <div class="card-footer">
+                        <div class="row">
+                            <div class="col-md">
+                                <a class="btn btn-primary  btn-block btn-sm" href="{% url 'mining_claim_detail.html' pk=claim.id %}">Cancel</a>
+                            </div>
+                            <div class="col-md">
+                                <button type="submit" class="btn btn-outline-success btn-block btn-sm" value="Create">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                    </form>
+            </div>
+        </div>
+        <div class="col-md">
+            <div id="map" style="height: 600px; "></div>
+        </div>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}
+
+{% block map_centre %}
+{% if beacons %}
+    var map_view = mineloc;
+{% endif %}
+    var zoom = 18;
+{% endblock %}
+
+{% block java %}
+<script type="text/javascript">
+    {% for e in beacons %}
+        var mineMarkers = L.marker([{{e.latitude}}, {{e.longitude}}]).addTo(map).bindPopup('{{e.symbol}}').openPopup();
+    {% endfor %}
+</script>
+{% endblock %}

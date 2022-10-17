@@ -1,0 +1,100 @@
+{% extends 'investor/investor_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+					<h3>{{ provider }} </h3>
+					<hr>
+					<h3>{{ provider.service }} </h3>
+					<h5>{{ provider.rating }} </h5>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	<div class="col-md-6">
+    <div class="col-md">
+        <p>{{ provider.summary }}</p>
+    </div>
+	</div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div>
+<br>
+	<div class="card-header">
+		<div class="row">
+			<div class="col-md">
+				<h5>Work History</h5>
+			</div>
+		</div>
+	</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+	<div class="row">
+		<div class="col-md">
+		<h5>Title</h5>
+		</div>
+		<div class="col-md">
+		<h5>Duration</h5>
+		</div>
+		<div class="col-md">
+		<h5>Employer</h5>
+		</div>
+		<div class="col-md">
+		<h5>Role</h5>
+		</div>
+	</div>
+		<br>
+	</div>
+	<div class="col-md">
+	{% for record in  history %}
+		<div class="list_content">
+			<div class="list-line"><a class="text-success" href="{% url 'investor/work_history_detail.html' pk=record.id %}">
+				<div class="row">
+					<div class="col-md">
+						<p>{{ record.title }}</p>
+					</div>
+					<div class="col-md">
+						<p>{{ record.from_date }} - {{ record.to_date }}</p>
+					</div>
+					<div class="col-md">
+						<p>{{ record.principal }}</p>
+					</div>
+					<div class="col-md">
+					<p>{{provider.service}} - {{ record.role }}</p>
+				</div>
+				</div>
+			</a></div>
+		</div>
+	{% endfor %}
+	</div>
+</div>
+    <br>
+    <br>
+</div>
+<br>
+<br>
+{% endblock %}

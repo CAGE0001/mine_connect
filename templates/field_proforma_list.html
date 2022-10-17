@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<br>
+<div class="row">
+    <br>
+    <div class="col-md-3">
+        <div class="card-header">
+            <form method="get">
+                <div class="row">
+                    <div class="form col-md">
+                    {{ filter.form|crispy}}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6"></div>
+                <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+     </div>
+    <div class="col-md">
+            <div class="card-header">
+                <h3>Field Proformas ...</h3>
+            </div>
+                <div class="card-body bg-white">
+                    <div class="row">
+                        <div class="col-md">
+                        <h5>Date Created</h5>
+                        </div>
+                        <div class="col-md">
+                        <h5>Investor</h5>
+                        </div>
+                        <div class="col-md">
+                        <h5>Service</h5>
+                        </div>
+                        <div class="col-md">
+                        <h5>Mine </h5>
+                        </div>
+                        <div class="col-md">
+                        <h5>Status </h5>
+                        </div>
+                    </div>
+
+                    {% for record in filter.qs %}
+                    <div class="list_content">
+                        <div class="list-line"><a class="text-success" href="{% url 'field_activity_detail_attach.html' pk=record.id %}">
+                            <div class="row">
+                                <div class="col-md">
+                                    <p>{{record.date_created}}</p>
+                                </div>
+                                <div class="col-md">
+                                    <p>{{record.field_request.mandate.mandate_request.cart_mine_match.cart_request.investor.player}}</p>
+                                </div>
+                                <div class="col-md">
+                                    <p>{{record.field_request.service}}</p>
+                                </div>
+                                <div class="col-md">
+                                    <p>{{record.field_request.mandate.mandate_request.mine}}</p>
+                                </div>
+                                <div class="col-md">
+                                        <p>{{record.status}}</p>
+                                </div>
+                            </div>
+                        </a></div>
+                    </div>
+                    {% endfor %}
+                </div>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'services/service_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+					<h3>{{ player.name }} </h3>
+				<hr>
+				</div>
+			</div>
+			<h4>{{ player.serviceprov_set.all.last.service }} - {{ player.serviceprov_set.all.last.rating }}</h4>
+	</div>
+
+	{% if player.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+	</div>
+</div>
+<br>
+<div class="card card-body">
+	<div class="card-header">
+		<h5>Service Provider Information</h5>
+	</div>
+	<br>
+	<div class="row">
+		<div class="col-md">
+			<div class="card-body">
+				{% if player.type == 'Individual' %}
+				<div>
+					{% include 'individual_info.html' %}
+				</div>
+				{% elif player.type == 'Syndicate' %}
+				<div>
+					{% include 'syndicate_info.html' %}
+				</div>
+				{% else %}
+				<div>
+					{% include 'corporate_info.html' %}
+				</div>
+				{% endif %}
+			</div>
+		</div>
+		<div class="col-md">
+			<div class="card-body">
+				<div>
+					{% include 'player.html' %}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<br>
+<br>
+<div class="card-header">
+	<div class="row">
+		<div class="col-md-8">
+			<h5>Work History</h5>
+		</div>
+		<div class="col-md">
+<!--				<a class="btn btn-outline-success btn-block btn sm" href="">Add to Profile</a>-->
+		</div>
+	</div>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+	<div class="row">
+		<div class="col-md">
+		<h5>Duration</h5>
+		</div>
+		<div class="col-md">
+		<h5>Employer</h5>
+		</div>
+		<div class="col-md">
+		<h5>Title</h5>
+		</div>
+	</div>
+	</div>
+	<br>
+	<div class="col-md">
+	{% for record in history %}
+		<div class="list_content">
+			<div class="list-line"><a class="text-success" href="{% url 'services/proview/work_history_detail.html' pk=record.id %}">
+				<div class="row">
+					<div class="col-md">
+						<p>{{ record.from_date }} - {{ record.to_date }}</p>
+					</div>
+					<div class="col-md">
+						<p>{{ record.principal }}</p>
+					</div>
+					<div class="col-md">
+					<p>{{ record.title }}</p>
+				</div>
+				</div>
+			</a></div>
+		</div>
+	{% endfor %}
+	</div>
+</div>
+<br>
+{% endblock %}

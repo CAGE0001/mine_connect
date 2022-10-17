@@ -1,0 +1,101 @@
+{% extends 'mine_owner/owner_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'mineview_detail_infoless.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mineview_mine_works.html' pk=mine.id %}">Mine Works</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-block "><h5>Plant and Equipment</h5></a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mineview_yellow_plant.html' pk=mine.id %}">Mobile Plant</a>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6">
+            {% if waste_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-6"></div>
+    </div>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md-2">
+            <h5>Quantity</h5>
+            </div>
+            <div class="col-md-3">
+            <h5>Type</h5>
+            </div>
+            <div class="col-md">
+            <h5>Description</h5>
+            </div>
+        </div>
+		<br>
+        {% for record in plant %}
+        <div class="list_content">
+            <div class="list-line">
+                <div class="row">
+                    <div class="col-md-2">
+                        <p>{{record.quantity}}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p>{{record.plant}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{record.comment}}</p>
+                    </div>
+                </div>
+            </div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+<br>
+<br>
+{% endblock %}
+
+    {% block map_centre %}
+<script type="text/javascript">
+    var map_view = {{mineloc.lat_long}};
+    var zoom = 16
+</script>
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

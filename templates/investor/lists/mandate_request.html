@@ -1,0 +1,42 @@
+
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mandate Request</h5>
+            </div>
+            <div class="col-md">
+            <h5>Valid Until</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mandate</h5>
+            </div>
+        </div>
+		<br>
+		{% for man_req in mandate_requests %}
+		<div class="list_content">
+            <div class="list-line"><a class=" text-success" href="{% url 'investor/mandate_request_detail.html' pk=man_req.id %}">
+                <div class="row">
+                    <div class="col-md">
+                    <p>{{man_req.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{man_req.id}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ man_req.period }}</p>
+                    </div>
+                    <div class="col-md">
+                        {% for  record in man_req.mandate_set.all %}
+                        <p>{{ record }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>

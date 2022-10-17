@@ -1,0 +1,24 @@
+
+<div class="row">
+    <div class="col-md">
+        <p>Name</p>
+        <p>Date of Registration</p>
+        <p>Nationality</p>
+        <p>Identity Number</p>
+        <p>Represantatives</p>
+    </div>
+    <div class="col-md">
+        <p>{{ syndicate.name }}</p>
+        <p>{{ syndicate.dor }}</p>
+        <p>{{ syndicate.nationality }}</p>
+        <p>{{ syndicate.nid }}</p>
+        <p>Members:</p>
+        {% for member in syndicate.syndmemberrelation_set.all %}
+        {{ member.member }}
+        {% endif %}
+        <p>Agents:</p>
+        {% for member in syndicate.syndagentrelation_set.all %}
+        {{ member.agent }}
+        {% endif %}
+    </div>
+</div>

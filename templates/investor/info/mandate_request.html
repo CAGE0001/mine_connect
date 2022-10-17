@@ -1,0 +1,69 @@
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Mandate Request </h5>
+					<hr>
+					<h3>{{ mandate_request }} </h3>
+				</div>
+			</div>
+			<br>
+		<div id="map" style="height: 300px;"></div>
+	</div>
+
+	{% if mandate_request.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ cart.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Mandate Request Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md-4">
+                    <p>Date Created</p>
+                    <p>Investor</p>
+                    <p>Cart Request</p>
+                    <p>Mineral</p>
+                    <p>Mandate Type</p>
+                </div>
+
+				<div class="col-md">
+                    <p>{{ mandate_request.date_created }}</p>
+                    <p><a class="text-success" href="{% url 'player_detail.html' pk=cart.investor.player.id %}">{{ cart.investor }}</a></p>
+                    <p><a class="text-success" href="{% url 'investor/cart_request_detail.html' pk=cart.id %}">{{ cart }}</a></p>
+                    <p>{{ cart.mineral }}</p>
+                    <p>{{ mandate_request.purpose }}</p>
+                </div>
+			</div>
+            <div class="row">
+                <div class="col-md-4">
+                    <p>Mines</p>
+                </div>
+                <div class="col-md">
+                    {% for mine in mandate_request.minemandaterequest_set.all %}
+                    <div class="line_content">
+                        <div class="line-list">
+                            <a class="text-success" href="{% url 'mine_detail_mine.html' pk=mine.id %}"><p>{{ mine.mine }}</p></a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6"></div>
+                <div class="col-md">
+                </div>
+            </div>
+		</div>
+	</div>
+
+</div>

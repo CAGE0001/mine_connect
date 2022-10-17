@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'player_info.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div>
+<br>
+	<div class="card-header">
+		<div class="row">
+			<div class="col-md-8">
+				<h5>Work History</h5>
+			</div>
+			<div class="col-md">
+				<a class="btn btn-outline-success btn-block btn sm" href="{% url 'services/work_history.html' pk=player.id %}">Add</a>
+			</div>
+		</div>
+	</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+	<div class="row">
+		<div class="col-md">
+		<h5>Duration</h5>
+		</div>
+		<div class="col-md">
+		<h5>Employer</h5>
+		</div>
+		<div class="col-md">
+		<h5>Role</h5>
+		</div>
+	</div>
+		<br>
+	</div>
+	<div class="col-md">
+	{% for record in  provider.serprovprofile_set.all %}
+		<div class="list_content">
+			<div class="list-line"><a class="text-success" href="{% url 'services/work_history_detail.html' pk=record.id %}">
+				<div class="row">
+					<div class="col-md">
+						<p>{{ record.from_date }} - {{ record.to_date }}</p>
+					</div>
+					<div class="col-md">
+						<p>{{ record.principal }}</p>
+					</div>
+					<div class="col-md">
+					<p>{{provider.service}} - {{ record.role }}</p>
+				</div>
+				</div>
+			</a></div>
+		</div>
+	{% endfor %}
+	</div>
+
+</div>
+    <br>
+    <br>
+<div class="card-header">
+    <div class="row">
+        {% if mine_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_detail_mines.html' pk=player.id %}">Mines</a>
+        </div>
+        {% endif %}
+        {% if investor_status == 'Investor' %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_detail_investor.html' pk=player.id %}">Investor </a>
+        </div>
+        {% endif %}
+        {% if service_count %}
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Services</h5></a>
+        </div>
+        {% endif %}
+        {% if payment_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_detail_payments.html' pk=player.id %}">Payments</a>
+        </div>
+        {% endif %}
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if quotations.count > 10 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{service_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+		<div class="row">
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+				<div class="row">
+					<div class="col-md">
+<!--									<p>Total Distance:</p>-->
+					</div>
+					<div class="col-md">
+<!--									<p>{{ total_distance }} Kms</p>-->
+					</div>
+				</div>
+			</div>
+			<div class="col-md">
+				<div class="row">
+					<div class="col-md">
+					<p>Query Count :</p>
+					</div>
+					<div class="col-md">
+					<p>{{ quotations.count }} </p>
+					</div>
+				</div>
+			</div>
+		</div>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Date Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Category</h5>
+            </div>
+            <div class="col-md">
+            <h5>Cost</h5>
+            </div>
+            <div class="col-md">
+            <h5>Status</h5>
+            </div>
+        </div>
+		<br>
+		{% for service in services.last.fieldproviderquote_set.all %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{% url 'quote_detail.html' pk=service.id %}">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{service.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{service.service_ref}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ service.cost }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ service.status }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+</div>
+<br>
+<br>
+{% endblock %}

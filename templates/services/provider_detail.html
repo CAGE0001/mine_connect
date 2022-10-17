@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'services/info.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div>
+<div class="card-header">
+    <div class="row">
+        {% if profile_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'services/detail_profile.html' pk=service.id %}">Profile </a>
+        </div>
+        {% endif %}
+        {% if field_count %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'services/detail_activities.html' pk=service.id %}">Field Activities</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</div>
+<br>
+<br>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'mine_owner/owner_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'mineview_mine_detail_info.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/mineview.html' pk=mine.id %}">Mining Claims</a>
+        </div>
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Field Visits</h5></a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/mineview/reports.html' pk=mine.id %}">Reports</a>
+        </div>
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if visit_count > 5 %}
+                <form method="get">
+
+                    {{filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="card-header bg-success">
+		<div class="row">
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+				<div class="row">
+					<div class="col-md">
+					</div>
+					<div class="col-md">
+					</div>
+				</div>
+			</div>
+			<div class="col-md">
+				<div class="row">
+					<div class="col-md">
+					<p>Query Count :     </p>
+					</div>
+					<div class="col-md">
+					<p>{{ visit_count }} Visits</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{% if visit_count != 0 %}
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Service Prov.</h5>
+            </div>
+            <div class="col-md">
+            <h5>Status</h5>
+            </div>
+            <div class="col-md">
+            <h5>Visit Request</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mandate</h5>
+            </div>
+        </div>
+		<br>
+		<div class="list_content">
+		{% for visit in visit_list %}
+            <div class="list-line">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{visit.5.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p><a href="">{{visit.5.service_provider}}</a></p>
+                    </div>
+                    <div class="col-md">
+                        <p><a href="">{{ visit.5.status }}</a></p>
+                    </div>
+                    <div class="col-md">
+                        <p><a href="">{{ visit.3.id }}</a></p>
+                    </div>
+                    <div class="col-md">
+                        <p><a href="">{{ visit.2.id }}</a></p>
+                    </div>
+                </div>
+            </div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+<br>
+<br>
+{% endblock %}
+
+    {% block map_centre %}
+<script type="text/javascript">
+    var map_view = {{mineloc.lat_long}};
+    var zoom = 16
+</script>
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

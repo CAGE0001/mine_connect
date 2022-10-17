@@ -1,0 +1,47 @@
+{% load static %}
+
+
+<head>
+</head>
+
+<div class="banner group">
+    <div class="brand">
+        <img style="padding: 10px 10px" src="{% static 'images/logo_trans.png' %}">
+    </div>
+    <div class="row">
+    <div class="col-md">
+        <div class="logwrapper">
+        <div class="nav-bar">
+          <div class="dropdown">
+          <a class="dropbtn" href="{% url 'mine_owner/owner_index.html' %}"><h5>Home</h5></a>
+            <div class="dropdown-content">
+            </div>
+          </div>
+          <div class="dropdown">
+          <a class="dropbtn" href="{% url 'mine_owner/profile.html' %}" ><h5>Profile</h5></a>
+          </div>
+          <div class="dropdown">
+          <a class="dropbtn" href="{% url 'mine_owner/mineview_archive_letters.html' %}"><h5>Archives</h5></a>
+          </div>
+          <div class="dropdown">
+          <a class="dropbtn" href="{% url 'mine_owner/accounts.html' %}"><h5>Accounts</h5></a>
+          </div>
+        {% if user.is_authenticated %}
+          <div class="dropdown">
+              <a class="dropbtn" href="{% url 'confirm_logout.html' %}"><h5>Log Out</h5></a>
+          </div>
+        {% else %}
+          <div class="dropdown">
+              <a class="dropbtn" href="{% url 'logout' %}"><h5>Log In</h5></a>
+          </div>
+        {% endif %}
+        </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        {% if user.is_authenticated %}
+                <p class="log">{{ user.username}}</p>
+        {% endif %}
+    </div>
+    </div>
+</div>

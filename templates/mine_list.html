@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% load crispy_forms_tags %}
+
+{% load leaflet_tags %}
+
+{% block content %}
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<div class="row">
+    <br>
+    <div class="col-md-3">
+            <form method="get">
+                <div class="row">
+                    <div class="form col-md">
+                    {{ filter.form|crispy}}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6"></div>
+                <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+                </div>
+            </form>
+    </div>
+    <div class="col-md">
+        <div class="card-header">
+            <h3>Mines ...</h3>
+        </div>
+        <br>
+        <div id="map" class="col-md"></div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+        <h5>Date Created</h5>
+        </div>
+        <div class="col-md">
+        <h5>Name</h5>
+        </div>
+        <div class="col-md">
+        <h5>Owner</h5>
+        </div>
+        <div class="col-md">
+        <h5>Minerals</h5>
+        </div>
+    </div>
+</div>
+    <div class="card-body bg-white">
+        {% for mine in filter.qs %}
+            <div class="list_content">
+                <div class="list-line"><a
+                        href="{% url 'mine_detail_carts.html' pk=mine.id %}">
+                <div class="row">
+                    <div class="col-md">
+                    <p>{{mine.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                    <p>{{mine.name}}</p>
+                    </div>
+                    <div class="col-md">
+                    <p>{{mine.mineownerrelation_set.all.last}}</p>
+                    </div>
+                    {% for mineral in mine.minemineral_set.all %}
+                    <div class="col-md">
+                    <p>{{mineral.mineral}}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}
+
+    {% block java %}
+<script type="text/javascript">
+
+        {% for e in locations %}
+        var mineMarkers = L.marker({{e.lat_long}}).addTo(map).bindPopup('<a href="{% url 'mine_detail_carts.html' pk=e.name.id %}">{{e}}<a>');
+        {% endfor %}
+</script>
+
+    {% endblock %}

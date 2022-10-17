@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+{% load leaflet_tags %}
+<br>
+<br>
+<br>
+<br>
+<div class="row">
+    <br>
+    <div class="col-md-3">
+        <div class="card-header">
+            <form method="get">
+                <div class="row">
+                    <div class="form col-md">
+                    {{ filter.form|crispy}}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6"></div>
+                <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+     </div>
+    <div class="col-md">
+            <div class="card-header">
+                <h3>Mining Claims ...</h3>
+            </div>
+        <br>
+        <div id="map" class="col-md"></div>
+    </div>
+</div>
+<br>
+<div class="card-body bg-white">
+    <div class="row">
+        <div class="col-md">
+        <h5>Date Created</h5>
+        </div>
+        <div class="col-md">
+        <h5>Name</h5>
+        </div>
+        <div class="col-md">
+        <h5>Type</h5>
+        </div>
+        <div class="col-md">
+        <h5>Reg Number</h5>
+        </div>
+    </div>
+</div>
+    <div class="card-body bg-white">
+        {% for claim in filter.qs %}
+            <div class="list_content">
+                <div class="list-line"><a
+                        href="{% url 'mining_claim_detail.html' pk=claim.pk %}">
+                <div class="row">
+                    <div class="col-md">
+                    <p>{{claim.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                    <p>{{claim.name}}</p>
+                    </div>
+                    <div class="col-md">
+                    <p>{{claim.type}}</p>
+                    </div>
+                    <div class="col-md">
+                    <p>{{claim.reg_number}}</p>
+                    </div>
+                </div>
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}
+
+    {% block java %}
+<script type="text/javascript">
+
+        {% for e in locations %}
+        var mineMarkers = L.marker({{e.lat_long}}).addTo(map).bindPopup('<a href="{% url 'mining_claim_detail.html' pk=e.name.id %}">{{e}}<a>');
+        {% endfor %}
+</script>
+
+    {% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+{% load leaflet_tags %}
+
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+			<div class="row">
+				<div class="col-md">
+                    <h5>Mandate Request </h5>
+					<hr>
+					<h3>{{ mandate_request }} </h3>
+				</div>
+			</div>
+        <br>
+        <div>
+		<div id="map" style="height: 400px;"></div>
+        </div>
+	</div>
+
+	{% if mandate_request.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ cart.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Mandate Request Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md-4">
+                    <p>Investor</p>
+                    <p>Cart Request</p>
+                    <p>Mineral</p>
+                    <p>Investment Purpose</p>
+                    <p>Date Created</p>
+                    <p>Mandate Duration</p>
+                    <p>Mandate</p>
+                </div>
+
+				<div class="col-md">
+                    <p><a class="text-success" href="{% url 'player_detail.html' pk=cart_request.investor.player.id %}">{{ cart_request.investor }}</a></p>
+                    <p><a class="text-success" href="{% url 'investor/cart_request_detail.html' pk=cart_request.id %}">{{ cart_request }}</a></p>
+                    <p>{{ cart_request.mineral }}</p>
+                    <p>{{ mandate_request.purpose }}</p>
+                    <p>{{ mandate_request.date_created }}</p>
+                    <p>{{ mandate_request.duration }} Months</p>
+                    <p><a class="text-success" href="{% url 'investor/mandate_detail.html' pk=mandate_request.mandate_set.all.last.id %}">{{ mandate_request.mandate_set.all.last }}</a></p>
+                </div>
+			</div>
+            <div class="row">
+                <div class="col-md-4">
+                    <p>Mines</p>
+                </div>
+                <div class="col-md">
+                    <a class="text-success" href="{% url 'mine_detail_mine.html' pk=mandate_request.mine.id %}"><p>{{ mandate_request.mine }}</p></a>
+                </div>
+            </div>
+		</div>
+			<br>
+		<div class="card card-body">
+			<h5>Mandate Proforma</h5>
+			<hr>
+			{% if not mandate_request.mandateproforma_set.all %}
+			<p><a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mandate_proforma_new.html' pk=mandate_request.id %}">Create</a></p>
+			{% else %}
+            <div class="col=md">
+                <div class="row">
+                    <div class="col-md">
+                        <p>Proforma Ref</p>
+                        <p>Amount</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ mandate_request.mandateproforma_set.all.last.id }}</p>
+                        <p>$ {{ mandate_request.mandateproforma_set.all.last.amount }}</p>
+                    </div>
+                </div>
+
+			{% if mandate_request.mandateproforma_set.all.last.status == 'Confirmed' %}
+                {% if mandate_request.mandate_set.all.last %}
+                {% else %}
+                <p><a class="btn btn-outline-success btn-sm btn-block" href="{% url 'investor/mandate_create.html' pk=mandate_request.id %}">Create Mandate</a></p>
+                {% endif %}
+            {% endif %}
+            </div>
+            {% endif %}
+		</div>
+	</div>
+
+</div>
+<br>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'investor/mandate_request_field_req.html' pk=mandate_request.id %}">Field Requests</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'investor/mandate_request_field_act.html' pk=mandate_request.id %}">Field Activity</a>
+        </div>
+    </div>
+        <br>
+    <br>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}
+
+    {% block map_centre %}
+{% include 'map_java/map_centre.html' %}
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

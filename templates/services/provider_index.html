@@ -1,0 +1,81 @@
+{% extends 'services/service_base.html' %}
+
+{% block content %}
+
+{% load static %}
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+			<div class="row">
+				<div class="col-md">
+                    <h5>Service Provider </h5>
+					<hr>
+					<h3>{{ player }} </h3>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	<div class="col-md-6">
+	</div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        {% for mine in mines %}
+            <div class="col-md">
+                <a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'mine_owner/mineview.html' pk=mine.mine.id %}">{{ mine.mine }}</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+<br>
+<br>
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<br>
+	</div>
+
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>News</h5>
+			<hr>
+            {% for item in news %}
+			<div class="row">
+                <a class="text-success" href="{{item.url}}"><p>{{ item }}</p></a>
+			</div>
+            {% endfor %}
+		</div>
+	</div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

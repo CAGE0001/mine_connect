@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'field_activity_info.html' %}
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Remarks</h5></a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'field_activity_detail.html' pk=field_activity.id %}">Attachments</a>
+        </div>
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+    </div>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		{% for acquit in acquitals %}
+		<div class="list_content">
+            <div class="list-line">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-md">
+                            <h5>{{acquit.player}}</h5>
+                        </div>
+                        <div class="col-md">
+                            <h5>{{acquit.date_created }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="card-body">
+                    <div class="col-md">
+                        <p>{{ acquit.comment }}</p>
+                    </div>
+                </div>
+                <hr>
+            </div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+<br>
+<br>
+{% endblock %}

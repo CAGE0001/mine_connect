@@ -1,0 +1,74 @@
+{% extends 'investor/investor_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Quotation Number </h5>
+					<hr>
+					<h3>{{ quote.id }} </h3>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	{% if quote.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Quote Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md">
+                    <p>Date</p>
+                    <p>Service Provider</p>
+                    <p>Field Request</p>
+                    <p>Purpose</p>
+                    <p>Amount</p>
+                    <p>Comment</p>
+				</div>
+
+				<div class="col-md">
+                    <p>{{ quote.date_created }}</p>
+                    <p><a href="{% url 'investor/investview/provider_detail.html' pk=quote.provider.id %}">{{quote.provider}}</a></p>
+                    <p><a href="{% url 'investor/investview/field_request/field_quote.html' pk=quote.quote.proforma.feild_request.id %}">{{quote.proforma.feild_request.id}}</a></p>
+                    <p>{{ quote.purpose }}</p>
+                    <p>{{ quote.amount }}</p>
+                    <p>{{ quote.comment }}</p>
+                </div>
+			</div>
+		</div>
+	</div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

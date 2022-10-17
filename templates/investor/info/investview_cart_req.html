@@ -1,0 +1,92 @@
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Shopping Cart Request </h5>
+					<hr>
+					<h3>{{ cart_request }} </h3>
+				</div>
+			</div>
+			<br>
+        {% if mines_available %}
+		<div class="card card-body">
+			<div class="card-header">
+				<h5>Mandate Request - Mine List</h5>
+			</div>
+			<br>
+			{% for match in mines_available %}
+				{% if match.mine.minemandate_set.all.last %}
+					{% if match.mine.minemandaterelation_set.all.last == 'Free' %}
+                    <div class="line_content">
+                        <div class="line-list">
+							<a class="text-success" href="{% url 'investor/investview/mine/claims.html' pk=match.mine.id %}" >{{ match.mine }}</a>
+                        </div>
+                    </div>
+					{% elif match.mine.minemandate_set.all.last == 'Desktop' %}
+                    <div class="line_content">
+                        <div class="line-list">
+							<a class="text-success" href="{% url 'investor/investview/mine/claims.html' pk=match.mine.id %}" >{{ match.mine }}</a>
+                        </div>
+                    </div>
+					{% endif %}
+				{% else %}
+					<a class="text-success" href="{% url 'investor/investview/mine/claims.html' pk=match.mine.id %}">{{ match.mine }}</a>
+				{% endif %}
+			{% endfor %}
+		</div>
+        {% endif %}
+	</div>
+
+	<div class="col-md-1">
+	{% if cart.date_created %}
+		<div class="date">
+<!--			<h5>{{ cart.date_created }}</h5>-->
+		</div>
+	{% endif%}
+	</div>
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Cart Request Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md-4">
+                    <p>Date Created</p>
+                    <p>Valid Until</p>
+                    <p>Mineral</p>
+                    <p>Deposit Type</p>
+                    <p>Minimum Grade</p>
+                    <p>Investment Type</p>
+				</div>
+
+				<div class="col-md">
+                    <p>{{ cart_request.date_created }}</p>
+                    <p>{{ cart_request.valid }}</p>
+                    <p>{{ cart_request.mineral }}</p>
+                    <p>{{ cart_request.deposit_type }}</p>
+                    <p>{{ cart_request.min_grade }} {{ cart_request.grade_unit }}</p>
+                    <p>{{ cart_request.invest_type }}</p>
+                </div>
+			</div>
+            <div class="row">
+                <div class="col-md-4">
+                    <p>Mines Matched</p>
+                </div>
+                <div class="col-md">
+                    {% for mine in mines_matched %}
+                    <div class="line_content">
+                        <div class="line-list">
+                    		<a class="text-success" href="{% url 'investor/investview/mine/claims.html' pk=mine.mine.id %}"><p>{{ mine.mine }}</p></a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+		</div>
+	</div>
+</div>
+	<br>

@@ -1,0 +1,63 @@
+{% extends 'mine_owner/owner_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Welcome ... </h5>
+					<hr>
+					<hr>
+					<h3>{{ player.name }} </h3>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	{% if mine.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Confirm deactivation of reminder</h5>
+			<hr>
+			<div class="row">
+                <p>{{ alert }}</p>
+			</div>
+        <form method="POST" class="deactivate_alert-form">{% csrf_token %}
+            <br>
+            <div class="group-form">
+            {{ form|crispy}}
+            </div>
+            <br>
+            <div class="card-footer">
+                <div class="row">
+                <div class="col-md-6"></div>
+                    <div class="col-md">
+                        <a class="btn btn-primary  btn-block btn-sm" href="{{ cancel }}">Cancel</a>
+                    </div>
+                    <div class="col-md">
+                        <button type="submit" class="btn btn-outline-success btn-block btn-sm" value="Create">Confirm</button>
+                    </div>
+                </div>
+            </div>
+            </form>
+		</div>
+	</div>
+</div>
+<br>
+<br>
+<br>
+{% endblock %}

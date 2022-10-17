@@ -1,0 +1,53 @@
+{% extends 'investor/investor_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+					<h3>{{ player.name }} </h3>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	{% if player.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Investor Information</h5>
+			<hr>
+            {% if player.type == 'individual' %}
+			<div>
+                {% include 'individual_info.html' %}
+            </div>
+            {% elif player.type == 'syndicate' %}
+			<div>
+                {% include 'syndicate_info.html' %}
+            </div>
+            {% else %}
+			<div>
+                {% include 'corporate_info.html' %}
+            </div>
+            {% endif %}
+			<div>
+                {% include 'player.html' %}
+            </div>
+		</div>
+	</div>
+</div>
+<br>
+<br>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'mine_add_zvinhu.html' %}
+<br>
+
+       {% include 'mine_detail_info.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm"  href="{% url 'mine_detail_mine.html' pk=mine.id %}">Claims</a>
+        </div>
+        {% if cart_match_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_carts.html' pk=mine.id %}">Carts</a>
+        </div>
+        {% endif %}
+        {% if mandate_request.count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_mandate_req.html' pk=mine.id %}">Mand-Reqs</a>
+        </div>
+        {% endif %}
+        {% if mandate.count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_mandate.html' pk=mine.id %}">Mandates</a>
+        </div>
+        {% endif %}
+        {% if visit_req_count %}
+        <div class="col-md">
+            <a class="btn btn-block"><h5>Field Requests</h5></a>
+        </div>
+        {% endif %}
+        {% if visit_list.count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_field_visits.html' pk=mine.id %}">Field Visits</a>
+        </div>
+        {% endif %}
+        {% if field_proforma_list.count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_proforma.html' pk=mine.id %}">Proformas</a>
+        </div>
+        {% endif %}
+        {% if field_invoice_list.count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_invoice.html' pk=mine.id %}">Field Invoice</a>
+        </div>
+        {% endif %}
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if visit_req_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="card-header bg-success">
+		<div class="row">
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+			</div>
+			<div class="col-md-3">
+				<div class="row">
+					<div class="col-md">
+<!--									<p>Total Distance:</p>-->
+					</div>
+					<div class="col-md">
+<!--									<p>{{ total_distance }} Kms</p>-->
+					</div>
+				</div>
+			</div>
+			<div class="col-md">
+				<div class="row">
+					<div class="col-md">
+					<p>Query Count :     </p>
+					</div>
+					<div class="col-md">
+					<p>{{ visit_req_count }} Requests</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Service</h5>
+            </div>
+            <div class="col-md">
+            <h5>Duration</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mandate</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mandate Req</h5>
+            </div>
+            <div class="col-md">
+            <h5>Cart Match Rec.</h5>
+            </div>
+        </div>
+		<br>
+		{% for req in visit_requests_list %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{% url 'investor/field_request_detail.html' pk=req.3.id %}">
+                <div class="row">
+                    <div class="col-md-2">
+                        <p>{{req.3.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{req.3.service}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ req.3.period }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ req.2.id }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ req.1.id }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ req.0.id }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+</div>
+<br>
+<br>
+{% endblock %}
+
+    {% block map_centre %}
+{% include 'map_java/map_centre.html' %}
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

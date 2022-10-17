@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'mine_detail_infoless.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        {% if report_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-block" ><h5>Reports</h5></a>
+        </div>
+        {% endif %}
+        {% if attach_count != 0 %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'more_mine_attach.html' pk=mine.id %}">Attachments</a>
+        </div>
+        {% endif %}
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6">
+            {% if report_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{report_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mine_attach_report.html' pk=mine.id %}">Attach Report</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mine_attach_certificate.html' pk=mine.id %}">Attach Certificate</a>
+        </div>
+        <div class="col-md-6"></div>
+    </div>
+</div>
+{% if report_count != 0 %}
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md-3">
+            <h5>Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Name</h5>
+            </div>
+            <div class="col-md-3">
+            <h5>Type</h5>
+            </div>
+        </div>
+		<br>
+        {% for record in filter.qs %}
+        <div class="list_content">
+            <div class="list-line">
+                <div class="row">
+                    <div class="col-md-3">
+                        <p>{{record.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p><a class="text-success" href="{% url 'mine_report_detail.html' pk=record.id %}">{{record}}</a></p>
+                    </div>
+                    <div class="col-md-3">
+                        <p>{{ record.type }}</p>
+                    </div>
+                </div>
+            </div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+<br>
+<br>
+{% endblock %}

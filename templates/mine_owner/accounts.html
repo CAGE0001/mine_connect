@@ -1,0 +1,121 @@
+{% extends 'mine_owner/owner_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="row">
+<div class="col-md-2">
+    <form method="get">
+
+        {{trxn_filter.form|crispy}}
+
+    <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+    </form>
+</div>
+<div class="col-md">
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Transactions</h5></a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+        </div>
+        <div class="col-md-3">
+        </div>
+        <div class="col-md-3">
+            <div class="row">
+                <div class="col-md">
+<!--									<p>Total Distance:</p>-->
+                </div>
+                <div class="col-md">
+                </div>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="row">
+                <div class="col-md">
+                <p>Trxns :</p>
+                </div>
+                <div class="col-md">
+                <p>{{ payment_count }} </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Date Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Purpose</h5>
+            </div>
+            <div class="col-md">
+            <h5>Credit</h5>
+            </div>
+            <div class="col-md">
+            <h5>Debit</h5>
+            </div>
+        </div>
+		<br>
+		{% for payment in payments %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{% url 'mine_owner/mineview/detail.html' pk=payment.0.id %}">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{payment.0.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{payment.0.purpose}}</p>
+                    </div>
+                    {% if payment.1 == 'N' %}
+                    <div class="col-md">
+                        <p>{{ payment.0.amount }}</p>
+                    </div>
+                    {% else %}
+                    <div class="col-md">
+                        <p></p>
+                    </div>
+                    {% endif %}
+                    {% if payment.1 == 'Y' %}
+                    <div class="col-md">
+                        <p>{{ payment.0.amount }}</p>
+                    </div>
+                    {% else %}
+                    <div class="col-md">
+                        <p></p>
+                    </div>
+                    {% endif %}
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+</div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

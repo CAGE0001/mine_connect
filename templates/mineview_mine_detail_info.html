@@ -1,0 +1,184 @@
+	<br>
+	<br>
+<style>
+.expand{
+    position:absolute;
+    top:130px;
+    right:30px;
+    z-index: 1000;
+}
+</style>
+<div class="row">
+	<div class="col-md-5">
+			<div class="row">
+				<div class="col-md">
+                    <h5>Mine </h5>
+					<hr>
+					<h3>{{ mine.name }} </h3>
+				</div>
+			</div>
+			<br>
+            <a class="expand" href="{% url 'mine_owner/mine_map.html' pk=mine.id %}"><i class="fa-regular fa-window-maximize" style="font-size:30px;color:gray;"></i></a>
+		<div id="map" style="height: 70%;"></div>
+	</div>
+
+	{% if mine.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Mine Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md">
+                    <p>Country</p>
+					<p>Area</p>
+					<p>Combine Option</p>
+					<p>Resource Type</p>
+					<p>Reserves Proven</p>
+					<p>Reserves Possible</p>
+					<p>Reserves Probable</p>
+					<p>Minerals</p>
+				</div>
+
+				<div class="col-md">
+                    <p>{{ mine.country }}</p>
+					<p>{{ mine_area }} Hectares</p>
+					{% if mine.mineinvestreq_set.all.last.conglomerate == True %}
+					<p>Available </p>
+					{% else %}
+					<p>N / A</p>
+					{% endif %}
+					<p>{{ mine.resource_type }}</p>
+					<p>{{ mine.reserves_proven }} MT</p>
+					<p>{{ mine.reserves_possible }} MT</p>
+					<p>{{ mine.reserves_probable }} MT</p>
+                {% for mineral in mine.minemineral_set.all %}
+                    <p>{{ mineral.mineral }}</p>
+                {% endfor %}
+                </div>
+			</div>
+		</div>
+	</div>
+</div>
+	<br>
+	<br>
+<div class="card card-body">
+	<div class="row">
+	<div class="col-md">
+	{% if mine.minelabour_set.all %}
+			<div class="col-md">
+			<h5>Employees</h5>
+			<hr>
+			</div>
+		<div class="card-body">
+			{% if mine.minelabour_set.all.last.management %}
+			<div class="row">
+				<div class="col-md">
+					Management
+				</div>
+				<div class="col-md">
+					{{ mine.minelabour_set.all.last.management }}
+				</div>
+			</div>
+			{% endif %}
+			{% if mine.minelabour_set.all.last.skilled %}
+			<div class="row">
+				<div class="col-md">
+					Skilled
+				</div>
+				<div class="col-md">
+					{{ mine.minelabour_set.all.last.skilled }}
+				</div>
+			</div>
+			{% endif %}
+			{% if mine.minelabour_set.all.last.semi_skilled %}
+			<div class="row">
+				<div class="col-md">
+					Semi-Skilled
+				</div>
+				<div class="col-md">
+					{{ mine.minelabour_set.all.last.semi_skilled }}
+				</div>
+			</div>
+			{% endif %}
+			{% if mine.minelabour_set.all.last.unskilled %}
+			<div class="row">
+				<div class="col-md">
+					Un-Skilled
+				</div>
+				<div class="col-md">
+					{{ mine.minelabour_set.all.last.unskilled }}
+				</div>
+			</div>
+			{% endif %}
+		</div>
+	{% endif %}
+	</div>
+		<div class="col-md">
+			<div class="col-md">
+			<h5>Production</h5>
+				<hr>
+			</div>
+		{% for mineral in mineral_set %}
+					<div class="card-body">
+				{% if mineral == 'all' %}
+						<div><a class="text-success" href="{% url 'mineview_production_ore.html' pk=mine.id%}">
+							<div class="row">
+								<div class="col-md">
+									Ore
+								</div>
+								<div class="col-md">
+									{{ ore_production}} Tonnes
+								</div>
+							</div>
+						</a></div>
+						<div><a class="text-success" href="{% url 'mineview_production_waste.html' pk=mine.id%}">
+							<div class="row">
+								<div class="col-md">
+									Waste
+								</div>
+								<div class="col-md">
+									{{ waste_production }} Tonnes
+								</div>
+							</div>
+						</a></div>
+				{% else %}
+						{% for prod in mineral_production %}
+						<hr>
+						<div><a class="text-success" href="{% url 'mineview_production_mineral.html' pk=mine.id%}">
+							<div class="row">
+								<div class="col-md">
+									{{ prod.0 }}
+								</div>
+								<div class="col-md">
+									{{ prod.1 }} {{ prod.2 }}
+								</div>
+							</div>
+						</a></div>
+						{% endfor %}
+				{% endif %}
+					</div>
+		{% endfor %}
+		</div>
+		<div class="col-md">
+			<br>
+			<br>
+		<div class="col-md">
+			<a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'mineview_plant_list.html' pk=mine.id %}">Fixed Plant and Equipment</a>
+		</div>
+			<br>
+			<div class="col-md">
+				<a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'mineview_yellow_plant.html' pk=mine.id %}">Mobile Plant</a>
+			</div>
+			<br>
+		<div class="col-md">
+			<a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'mineview_mine_works.html' pk=mine.id %}">Mine Works</a>
+		</div>
+		</div>
+	</div>
+</div>

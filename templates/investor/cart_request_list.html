@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<br>
+<div class="row">
+    <br>
+    <div class="col-md-3">
+        <div class="card-header">
+            <form method="get">
+                <div class="row">
+                    <div class="form col-md">
+                    {{ filter.form|crispy}}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6"></div>
+                <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+     </div>
+    <div class="col-md">
+            <div class="card-header">
+                <h3>Shopping Cart Requests ...</h3>
+            </div>
+                <div class="card-body bg-white">
+                    <table class="table bg-white">
+                        <tr>
+                            <th>Date Created</th>
+                            <th>Investor</th>
+                            <th>Investment Type</th>
+                            <th>Mineral </th>
+                            <th>Valid </th>
+                        </tr>
+
+                    <div class="list-line">
+                    {% for record in filter.qs %}
+                        <div class="list-content"><a
+                                href="{% url 'investor/cart_request_detail.html' pk=record.id %}">
+                        <tr>
+                            <td><a class="text-success" href="{% url 'investor/cart_request_detail.html' pk=record.id %}">{{record.date_created}}</a></td>
+                            <td>{{record.investor}}</td>
+                            <td>{{record.invest_type}}</td>
+                            <td>{{record.mineral}}</td>
+                            <td>{{record.valid}}</td>
+                        </tr>
+                            </a>
+                        </div>
+                    {% endfor %}
+                    </div>
+                    </table>
+                </div>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

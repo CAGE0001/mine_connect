@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<br>
+<div class="row">
+    <br>
+    <div class="col-md-3">
+        <div class="card-header">
+            <form method="get">
+                <div class="row">
+                    <div class="form col-md">
+                    {{ filter.form|crispy}}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6"></div>
+                <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+     </div>
+    <div class="col-md">
+            <div class="card-header">
+                <h3>Mandate Requests ...</h3>
+            </div>
+                <div class="card-body bg-white">
+                        <div class="row">
+                            <div class="col-md">
+                            <h5>Date Created</h5>
+                            </div>
+                            <div class="col-md">
+                            <h5>Investor</h5>
+                            </div>
+                            <div class="col-md">
+                            <h5>Mandate Req Ref</h5>
+                            </div>
+                            <div class="col-md">
+                            <h5>Valid </h5>
+                            </div>
+                            <div class="col-md">
+                            <h5>Process Status </h5>
+                            </div>
+                        </div>
+
+                    {% for record in filter.qs %}
+                    <div class="list_content">
+                        <div class="list-line"><a class="text-success" href="{% url 'investor/mandate_request_detail.html' pk=record.id %}">
+                        <div class="row">
+                            <div class="col-md">
+                            <p>{{record.date_created}}</p>
+                            </div>
+                            <div class="col-md">
+                            <p>{{record.cart_mine_match.cart_request.investor.player}}</p>
+                            </div>
+                            <div class="col-md">
+                            <p>{{ record }}</p>
+                            </div>
+                            <div class="col-md">
+                            <p>{{record.period}}</p>
+                            </div>
+                            <div class="col-md">
+                            <p>{{record.minemandaterequest_set.all.last.status}}</p>
+                            </div>
+                        </div>
+                        </a></div>
+                    </div>
+                    {% endfor %}
+                </div>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

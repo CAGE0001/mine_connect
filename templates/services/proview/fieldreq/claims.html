@@ -1,0 +1,34 @@
+{% extends 'services/service_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+
+       {% include 'services/info/proview_field_req.html' %}
+<br>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn  btn-block" ><h5>Field Activity</h5></a>
+        </div>
+        {% if quote %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'services/proview/fieldreq/quote.html' pk=field_request.id %}">Field Quotation</a>
+        </div>
+        {% endif %}
+        {% if attachments %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'services/proview/fieldreq/attach.html' pk=field_request.id %}">Reports and Attachment</a>
+        </div>
+        {% endif %}
+    </div>
+        <br>
+</div>
+
+       {% include 'services/lists/proview_field_activity.html' %}
+
+<br>
+<br>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'investor/base_claim_map.html' %}
+
+{% block head %}
+<style>
+.expand{
+    position:absolute;
+    top:170px;
+    right:50px;
+    z-index: 1000;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% load leaflet_tags %}
+
+{% load crispy_forms_tags %}
+
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md">
+                <h3>Mine </h3>
+            </div>
+            <div class="col-md">
+                <h3>{{ mine }} </h3>
+            </div>
+        </div>
+    </div>
+    <a class="expand" href={{cancel}}><i class="fab fa-light fa-window-maximize fa-lg"></i><< Back</a>
+    <div>
+        <div id="map" style="height: 620px; "></div>
+    </div>
+<br>
+<br>
+{% endblock %}
+
+{% block overlaymaps %}
+<script type="text/javascript">
+    var mineBoundaryJson = {{poly.location.geojson|safe}};
+    var claimPolyLayer = L.geoJSON(mineBoundaryJson).
+    layerControl.addOverlay(claimPolyLayer, "ClaimBoundary");
+</script>
+{% endblock %}
+
+    {% block map_centre %}
+{% include 'map_java/map_centre.html' %}
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

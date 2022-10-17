@@ -1,0 +1,76 @@
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Mandate </h5>
+					<hr>
+					<h3>{{ mandate }} </h3>
+				</div>
+			</div>
+			<br>
+		<div class="card card-body">
+			<h5>Field Activity</h5>
+			<hr>
+                <p><a class="btn btn-outline-success btn-sm btn-block" href="{% url 'investor/field_request_create.html' pk=mandate.id %}">Initiate Field Activity</a></p>
+		</div>
+			<br>
+	</div>
+
+	<div class="col-md-1">
+	{% if mandate.date_created %}
+		<div class="date">
+<!--			<h5>{{ mandate.date_created }}</h5>-->
+		</div>
+	{% endif%}
+	</div>
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Mandate Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md">
+                    <p>Date Created</p>
+                    <p>Cart Request</p>
+                    <p>Mandate Request</p>
+                    <p>Valid Until</p>
+                    <p>Mandate Cost</p>
+				</div>
+
+				<div class="col-md">
+                    <p>{{ mandate.date_created }}</p>
+                    <div class="line_content">
+                        <div class="line-list">
+                    		<p><a class="text-success" href="{% url 'investor/investview/cart/mandate_request.html' pk=cart.id %}">{{ cart }}</a></p>
+                        </div>
+                    </div>
+                    <div class="line_content">
+                        <div class="line-list">
+                    		<p><a class="text-success" href="{% url 'investor/investview/mandate_request/services.html' pk=mandate_request.id %}">{{ mandate_request }}</a></p>
+                        </div>
+                    </div>
+                    <p>{{ mandate.valid }}</p>
+                    <p>$ {{ mandate_request.mandateproforma_set.all.last.amount }}</p>
+                </div>
+			</div>
+            <div class="row">
+                <div class="col-md">
+                    <p>Mines </p>
+                </div>
+                <div class="col-md">
+                    <div class="line_content">
+                        <div class="line-list">
+                    		<a class="text-success" href="{% url 'investor/investview/mine/claims.html' pk=mandate_request.cart_mine_match.cartminerelation_set.all.last.mine.id %}"><p>{{ mandate_request.cart_mine_match.cartminerelation_set.all.last.mine }}</p></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+		</div>
+	</div>
+	<br>
+
+</div>

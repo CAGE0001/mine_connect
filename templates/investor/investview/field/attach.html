@@ -1,0 +1,118 @@
+{% extends 'investor/investor_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'investor/info/investview_field_activity.html' %}
+<br>
+{% if attach_count != 0 %}
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Attachments</h5></a>
+        </div>
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if attach_count > 10 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{attach_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md-2">
+            <h5>Date Created</h5>
+            </div>
+            <div class="col-md-2">
+            <h5>Service Provider</h5>
+            </div>
+            <div class="col-md">
+                <h5>Name</h5>
+            </div>
+            <div class="col-md-2">
+                <h5>Type</h5>
+            </div>
+        </div>
+		<br>
+		{% for attach in attach_filter.qs %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{{ MEDIA_URL }}{{ attach.pdf.url }}" target="_blank">
+                <div class="row">
+                    <div class="col-md-2">
+                        <p>{{attach.date_created }}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{attach.author}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ attach.pdf.url }}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{ attach.type }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+<br>
+<br>
+{% if attach_count != 0 %}
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Remarks</h5></a>
+        </div>
+    </div>
+        <br>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		{% for acquit in acquitals %}
+		<div class="list_content">
+            <div class="list-line">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-md">
+                            <h5>{{acquit.player}}</h5>
+                        </div>
+                        <div class="col-md">
+                            <h5>{{acquit.date_created }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="card-body">
+                    <div class="col-md">
+                        <p>{{ acquit.comment }}</p>
+                    </div>
+                </div>
+                <hr>
+            </div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+<br>
+<br>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends 'mine_owner/owner_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+
+       {% include 'mineview_mine_detail_info.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/mineview.html' pk=mine.id %}">Mining Claims</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/mineview/field.html' pk=mine.id %}">Field Visits</a>
+        </div>
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Reports</h5></a>
+        </div>
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if report_count > 10 %}
+                <form method="get">
+
+                    {{report_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% if report_count != 0 %}
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md-2">
+            <h5>Capture Date</h5>
+            </div>
+            <div class="col-md">
+            <h5>Type</h5>
+            </div>
+            <div class="col-md-2">
+            <h5>Date Created</h5>
+            </div>
+        </div>
+		<br>
+		{% for report in report_filter.qs %}
+		<div class="list_content">
+            <div class="list-line"><a href="{% url 'mine_report_detail.html' pk=report.id %}">
+                <div class="row">
+                    <div class="col-md-2">
+                        <p>{{report.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{report.type }}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{ report.report_date }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+<br>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/mineview.html' pk=mine.id %}">Mining Claims</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/mineview/field.html' pk=mine.id %}">Field Visits</a>
+        </div>
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Certificates</h5></a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if certificate_count > 10 %}
+                <form method="get">
+
+                    {{cert_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md-2">
+            <h5>Capture Date</h5>
+            </div>
+            <div class="col-md">
+            <h5>Type</h5>
+            </div>
+            <div class="col-md-2">
+            <h5>Date Created</h5>
+            </div>
+        </div>
+		<br>
+		{% for report in cert_filter.qs %}
+		<div class="list_content">
+            <div class="list-line"><a href="{% url 'mine_certificate_detail.html' pk=report.id %}">
+                <div class="row">
+                    <div class="col-md-2">
+                        <p>{{report.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{report.type}}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{ report.issue_date }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endblock %}
+
+    {% block map_centre %}
+<script type="text/javascript">
+    var map_view = {{mineloc.lat_long}};
+    var zoom = 16
+</script>
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'field_activity_info.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md-9">
+            <h4>Attachments and Reports</h4>
+        </div>
+        <div class="col-md">
+        {% if acquit %}
+            {% else %}
+            <a class="text-success" href="{% url 'field_attach_new.html' pk=field_activity.id %}">New Attachment</a>
+        {% endif %}
+        </div>
+    </div>
+    <br>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Date Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Service Provider</h5>
+            </div>
+            <div class="col-md">
+            <h5>Type</h5>
+            </div>
+            <div class="col-md">
+            <h5>Name</h5>
+            </div>
+            <div class="col-md">
+            <h5>Status</h5>
+            </div>
+        </div>
+		<br>
+		{% for attach in attach_filter.qs %}
+		<div class="list_content">
+            <div class="list-line">
+                <div class="row"><a href="{% url 'field_attach_detail.html' pk=attach.id %}">
+                    <div class="col-md">
+                        <p>{{attach.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{attach.author}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{attach.type}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ attach.name }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ attach.status }}</p>
+                    </div>
+                </a></div>
+            </div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+</div>
+<br>
+<br>
+{% endblock %}

@@ -1,0 +1,87 @@
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Field Activity  {{ field_activity.id }}</h5>
+					<hr>
+					<h3>{{ field_activity.subject }} </h3>
+				</div>
+			</div>
+			<br>
+        <br>
+		<div class="card card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <p>Mine Requirements</p>
+                </div>
+                <div class="col-md">
+                    {% for item in requirements %}
+                    {{ item }}<br>
+                    {% endfor %}
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-4">
+                    <p>Service Providers</p>
+                </div>
+                <div class="col-md">
+                    {% for service in services %}
+                    <a class="text-success" href="{% url 'services/provider_detail.html' pk=service.provider.id %}">{{ service.provider }}</a><br>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6"></div>
+                <div class="col-md">
+                </div>
+            </div>
+		</div>
+	</div>
+
+	{% if field_activity.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Field Activity Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md-4">
+                    <p>Date Created</p>
+                    <p>Investor</p>
+                    <p>Cart Request</p>
+                    <p>Mandate Request</p>
+                    <p>Mandate</p>
+                    <p>Mine</p>
+                    <p>Beginning</p>
+                    <p>Ending</p>
+                    <p>Status</p>
+                    <p>Subject</p>
+                </div>
+
+				<div class="col-md">
+                    <p>{{ field_activity.date_created }}</p>
+                    <p><a class="text-success" href="{% url 'player_detail.html' pk=field_activity.proforma.field_request.mandate.mandate_request.cart_mine_match.cart_request.investor.player.id %}">{{ field_activity.proforma.field_request.mandate.mandate_request.cart_mine_match.cart_request.investor.player }}</a></p>
+                    <p><a class="text-success" href="{% url 'investor/cart_request_detail.html' pk=field_activity.proforma.field_request.mandate.mandate_request.cart_mine_match.cart_request.id %}">{{ field_activity.proforma.field_request.mandate.mandate_request.cart_mine_match.cart_request }}</a></p>
+                    <p><a class="text-success" href="{% url 'investor/mandate_request_detail.html' pk=field_activity.proforma.field_request.mandate.mandate_request.id %}">{{ field_activity.proforma.field_request.mandate.mandate_request }}</a></p>
+                    <p><a class="text-success" href="{% url 'investor/mandate_detail.html' pk=field_activity.proforma.field_request.mandate.id %}">{{ field_activity.proforma.field_request.mandate }}</a></p>
+                    <p><a class="text-success" href="{% url 'mine_detail_carts.html' pk=field_activity.proforma.field_request.mandate.mandate_request.mine.id %}">{{ field_activity.proforma.field_request.mandate.mandate_request.mine }}</a></p>
+                    <p>{{ field_activity.from_date }}</p>
+                    <p>{{ field_activity.to_date }}</p>
+                    <p>{{ field_activity.status }}</p>
+                    <p>{{ field_activity.subject }}</p>
+                </div>
+			</div>
+		</div>
+	</div>
+</div>
+    <br>

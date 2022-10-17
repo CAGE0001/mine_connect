@@ -1,0 +1,41 @@
+
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Service</h5>
+            </div>
+            <div class="col-md">
+            <h5>Date Beginning</h5>
+            </div>
+            <div class="col-md">
+            <h5>Date Ending</h5>
+            </div>
+        </div>
+		<br>
+		{% for activity in activities %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{% url 'field_activity_detail.html' pk=activity.0.id %}">
+                <div class="row">
+                    <div class="col-md">
+                    <p>{{activity.0.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ activity.0.subject }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ activity.0.from_date }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ activity.0.to_date }}</p>
+                    </div>
+                </div>
+                </a>
+            </div>
+		</div>
+		{% endfor %}
+	</div>
+</div>

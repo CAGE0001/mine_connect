@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<br>
+<div>
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md">
+                <h3>{{field_request}} - Field Support Costs ...</h3>
+                    {% for cost in costs %}
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{ cost.cost_type }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ cost.cost }}</p>
+                    </div>
+                </div>
+                    {% endfor %}
+            </div>
+        </div>
+    </div>
+    <br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+    <div>
+        <form method="POST" class="player-form">{% csrf_token %}
+            <br>
+            <div class="group-form">
+            {{ form|crispy}}
+            </div>
+            <br>
+            <div class="card-footer">
+                <div class="row">
+                <div class="col-md-6"></div>
+                    <div class="col-md">
+                        {% if costs %}
+                        <a class="btn btn-primary  btn-block btn-sm" href="{% url 'investor/field_proforma_new.html' pk=field_request.id %}">Done</a>
+                        {% else %}
+                        <a class="btn btn-primary  btn-block btn-sm" href="{{ cancel }}">Cancel</a>
+                        {% endif %}
+                    </div>
+                    <div class="col-md">
+                        <button type="submit" class="btn btn-outline-success btn-block btn-sm" value="Create">Save Request</button>
+                    </div>
+                </div>
+            </div>
+            </form>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends 'mine_owner/owner_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+       {% include 'mineview_mine_detail_info.html' %}
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-block" ><h5>Mining Claims</h5></a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_owner/mineview/field.html' pk=mine.id %}">Field Visits</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/mineview/reports.html' pk=mine.id %}">Reports</a>
+        </div>
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if claim_count > 10 %}
+                <form method="get">
+
+                    {{claims_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% if claim_count != 0 %}
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Name</h5>
+            </div>
+            <div class="col-md">
+            <h5>Type</h5>
+            </div>
+            <div class="col-md">
+            <h5>Reg Number</h5>
+            </div>
+            <div class="col-md">
+            <h5>Status</h5>
+            </div>
+        </div>
+		<br>
+		{% for claim in claims_filter.qs %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{% url 'mine_owner/claim_detail.html' pk=claim.claim.id %}">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{claim.claim.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{claim.claim.name}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ claim.claim.type }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ claim.claim.reg_number }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ claim.claim.status }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+<br>
+<br>
+{% endblock %}
+
+    {% block map_centre %}
+<script type="text/javascript">
+    var map_view = {{mineloc.lat_long}};
+    var zoom = 16
+</script>
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

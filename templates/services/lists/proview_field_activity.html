@@ -1,0 +1,49 @@
+<div class="card-body bg-white">
+    <div class="row">
+        <div class="col-md">
+            <h5>Activity</h5>
+        </div>
+        <div class="col-md">
+            <h5>Start Date</h5>
+        </div>
+        <div class="col-md">
+            <h5>End Date</h5>
+        </div>
+        <div class="col-md">
+            <h5>Status</h5>
+        </div>
+    </div>
+    {% for field in activities %}
+        <br>
+    <div class="list_content">
+        <div class="list-line"><a class="text-success" href="{% url 'services/proview/field/detail_attach.html' pk=field.id %}">
+        <div class="row">
+            <div class="col-md">
+                <p>{{ field.subject }}</p>
+            </div>
+            {% if field.from_date %}
+            <div class="col-md">
+                <p>{{ field.from_date }}</p>
+            </div>
+            {% else %}
+            <div class="col-md">
+                <p>Input Start Date</p>
+            </div>
+            {% endif %}
+            {% if field.status == 'Completed' %}
+            <div class="col-md">
+                <p>{{ field.to_date }}</p>
+            </div>
+            {% else %}
+            <div class="col-md">
+                <p>Pending</p>
+            </div>
+            {% endif %}
+            <div class="col-md">
+                <p>{{ field.status }}</p>
+            </div>
+        </div>
+        </a></div>
+    </div>
+    {% endfor %}
+</div>

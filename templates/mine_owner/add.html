@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<br>
+<div>
+    <div class="card-header">
+        <div class="row">
+            <h3>New Mine Owner Info ...</h3>
+        </div>
+        <div class="row">
+            <div class="col-md">
+            <p>Player</p>
+            </div>
+            <div class="col-md">
+            <p>{{ player.name }}</p>
+            </div>
+        </div>
+        
+    </div>
+    <div>
+        <form method="POST" class="player-form">{% csrf_token %}
+            <br>
+            <div class="group-form">
+            {{ form|crispy}}
+            </div>
+            <br>
+            <div class="card-footer">
+                <div class="row">
+                <div class="col-md-6"></div>
+                    <div class="col-md">
+                        <a class="btn btn-primary  btn-block btn-sm" href="">Cancel</a>
+                    </div>
+                    <div class="col-md">
+                        <button type="submit" class="btn btn-outline-success btn-block btn-sm" value="Create">Save Request</button>
+                    </div>
+                </div>
+            </div>
+            </form>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

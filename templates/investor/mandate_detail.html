@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+{% load leaflet_tags %}
+
+       {% include 'investor/info/mandate.html' %}
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn  btn-block"><h5>Field Requests</h5></a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'investor/mandate_detail_field_activity.html' pk=mandate.id %}">Field Activity</a>
+        </div>
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if field_request_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{mine_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+       {% include 'investor/lists/mandate_request_field_req.html' %}
+
+<br>
+<br>
+{% endblock %}
+
+    {% block map_centre %}
+{% include 'map_java/map_centre.html' %}
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

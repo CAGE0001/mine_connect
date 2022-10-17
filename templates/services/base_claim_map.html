@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+{% load static %}
+{% load leaflet_tags %}
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width = device_width, initial-scale = 1">
+    <title>Mine Connect</title>
+    <link rel="stylesheet" type="text/css" href="{% static '/css/bootstrap.min.css'%}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css">
+    <link href="{% static 'fontawesomefree/css/all.min.css' %}" rel="stylesheet" type="text/css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+<style>
+
+
+.banner {
+  colour: white;
+  height: 6rems;
+}
+
+
+.footer {
+  background-color: #F3F3F9;
+  colour: white;
+  height: 6rems;
+}
+
+.log {
+  colour: ED3237;
+  height: 6rems;
+}
+
+.brand {
+  float: left;
+  padding: 18px 60px
+}
+
+.logwrapper {
+  float: right;
+  padding-top: 15px;
+}
+
+.nav-bar {
+  background-color: #F3F3F9;
+  float: right;
+  padding-right: 30px;
+}
+
+.log {
+  float: left;
+  padding-top: 40px;
+  padding-right: 90px;
+}
+
+/* Style The Dropdown Button */
+.dropbtn {
+  background-color: success;
+  color: #32CD32;
+  padding: 7px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+
+/* The container div - needed to position the dropdown content */
+.dropdown {
+  position: relative;
+  display: inline-block;
+  margin-left: 20px;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 110px;
+  width: 100%;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+  color: black;
+  padding: 5px 10px;
+  text-decoration: none;
+  display: block;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover {background-color: #3e8e41}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown:hover .dropbtn {
+  background-color: #3e8e41;
+}
+
+/* Style The Dropdown1 Button */
+.dropbtn1 {
+  background-color: #f9f9f9;
+  color: white;
+  padding: 5px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+
+/* The container div - needed to position the dropdown content */
+.dropdown1 {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content1 {
+  display: none;
+  position: relative;
+  left: 100px;
+  background-color: #f9f9f9;
+  min-width: 110px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.dropdown-content1 a {
+  color: black;
+  padding: 5px 10px;
+  text-decoration: none;
+  display: block;
+
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content1 a:hover {
+  background-color: #3e8e41}
+
+/* Show the dropdown menu on hover */
+.dropdown1:hover .dropdown-content1 {
+  display: block;
+}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown1:hover .dropbtn1 {
+  background-color: #3e8e41;
+}
+
+/* Media  */
+
+@media(min-width: 0px) {
+    .group::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    .banner {
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+    }
+}
+</style>
+<style>
+
+/* list-line Content (Hidden by Default) */
+.list-line {
+  background-color: white;
+  color: black;
+  display: block;
+  min-width: 100%;
+<!--  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);-->
+}
+
+/* Change the background color of the list-line button when the list-content content is shown */
+.list_content:hover .list-line {
+  background-color: #90EE90;
+}
+/* Media  */
+
+@media(min-width: 0px) {
+    .body {
+      padding-top: 159px;
+    }
+}
+
+@media(min-width: 0px) {
+    .group::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+</style>
+<style>
+    #map {
+        width: 100%;
+        height: 100vh;
+    }
+</style>
+    {% leaflet_css %}
+    {% leaflet_js %}
+    {% block head %}
+
+    {% endblock %}
+</head>
+<body>
+<div  style="background-color: #F8F8FF">
+<div>
+       {% include 'services/nav_service.html' %}
+</div>
+<br>
+<br>
+<br>
+<br>
+    {% block content %}
+
+    {% endblock %}
+</div>
+</body>
+
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
+<script src="{% static 'fontawesomefree/js/all.min.js' %}"></script>
+<script type="text/javascript">
+    var map_view = [-17.824858, 31.053028];
+    var zoom = 8;
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    });
+    var baseMaps = {
+        "osm": osm,
+    };
+
+    var overLayMaps = {
+    };
+
+    function clearBackGround(feature) {
+    return {
+        fillColor: getColor(feature.properties.density),
+        fillOpacity: 0
+    };
+}
+</script>
+
+{% block basemaps %}
+
+{% endblock %}
+
+{% block overlaymaps %}
+
+{% endblock %}
+
+{% block map_centre %}
+
+{% endblock %}
+
+<script type="text/javascript">
+    var map = L.map('map').setView(map_view, zoom);
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    });
+    osm.addTo(map);
+
+    var circle = L.circle([-17.824858, 31.053028], {
+        color: 'red',
+        fillColor: '#f03',
+        fillOpacity: 0.5,
+        radius: 500
+    }).addTo(map);
+
+    var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
+</script>
+
+    {% block java %}
+
+    {% endblock %}
+
+</html>

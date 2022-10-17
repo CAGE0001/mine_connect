@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+
+<br>
+<br>
+<br>
+<br>
+
+<div class="row">
+<!--    <div class="col-md-1"></div>-->
+    <div class="col-md">
+        <div class="container">
+
+        </div>
+
+    </div>
+</div>
+
+<div class="row">
+	<div class="col-md-2"></div>
+    <div class="col-md-8">
+	    <div class="container">
+            <div class="card">
+                <div class="card-header bg-success"><h3>Confirm Authorisation of:</h3></div>
+                <div class="card-body">
+                    <h5>Trip Ref: {{ trip.pk }} </h5>
+					<hr>
+					<h3>{{ trip.origin }} - {{ trip.destination }} </h3>
+                    <br>
+                    <form method="POST" class="customer-form">{% csrf_token %}
+                        <br>
+                        <div class="group-form">
+                        {{ form|crispy}}
+                        </div>
+                        <br>
+                        <div class="card-footer">
+                            <div class="row">
+                            <div class="col-md-6"></div>
+                                <div class="col-md">
+                                    <a class="btn btn-primary  btn-block btn-sm" href="{% url 'individual.html' pk=trip.trip_pk %}">Individual</a>
+                                </div>
+                                <div class="col-md">
+                                    <a class="btn btn-primary  btn-block btn-sm" href="{% url 'corporate.html' pk=trip.trip_pk %}">Corporate</a>
+                                </div>
+                            </div>
+                        </div>
+                        </form>
+                </div>
+            </div>
+            <div>
+                {% for message in messages %}
+                <h3>{{ message }}</h3>
+                {% endfor %}
+            </div>
+        </div>
+	</div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+{% endblock %}

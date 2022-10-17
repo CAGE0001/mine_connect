@@ -1,0 +1,40 @@
+
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mandate request</h5>
+            </div>
+            <div class="col-md">
+            <h5>Valid Until</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mines</h5>
+            </div>
+        </div>
+		<br>
+		{% for mandate in mandate_list %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{% url 'investor/investview/mandate/services.html' pk=mandate.id %}">
+                <div class="row">
+                    <div class="col-md">
+                    <p>{{mandate.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{mandate.mandate_request}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ mandate.valid }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ mandate.mandate_request.mine }}
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>

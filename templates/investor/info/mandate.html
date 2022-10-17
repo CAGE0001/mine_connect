@@ -1,0 +1,77 @@
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+			<div class="row">
+				<div class="col-md">
+                    <h5>Mandate </h5>
+					<hr>
+					<h3>{{ mandate }} </h3>
+				</div>
+			</div>
+			<br>
+		<div id="map" style="height: 70%;"></div>
+	</div>
+
+	{% if mandate.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ mandate.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Mandate Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md-4">
+                    <p>Date Created</p>
+                    <p>Investor</p>
+                    <p>Cart Request</p>
+                    <p>Cart Match</p>
+                    <p>Mandate Request</p>
+                    <p>Valid Until</p>
+                    <p>Mandate Cost</p>
+				</div>
+
+				<div class="col-md">
+                    <p>{{ mandate.date_created }}</p>
+                    <div class="line_content">
+                        <div class="line-list">
+                    		<p><a class="text-success" href="{% url 'player_detail.html' pk=mandate.mandate_request.cart_mine_match.cart_request.investor.player.id %}">{{ mandate.mandate_request.cart_mine_match.cart_request.investor.player }}</a></p>
+                        </div>
+                    </div>
+                    <div class="line_content">
+                        <div class="line-list">
+                    		<p><a class="text-success" href="{% url 'investor/cart_request_detail.html' pk=mandate.mandate_request.cart_mine_match.cart_request.id %}">{{ mandate.mandate_request.cart_mine_match.cart_request }}</a></p>
+                        </div>
+                    </div>
+                    <p>{{ mandate.mandate_request.cart_mine_match }}</p>
+                    <div class="line_content">
+                        <div class="line-list">
+                    		<p><a class="text-success" href="{% url 'investor/mandate_request_detail.html' pk=mandate.mandate_request.id %}">{{ mandate.mandate_request }}</a></p>
+                        </div>
+                    </div>
+                    <p>{{ mandate.valid }}</p>
+                    <p>$ {{ mandate.mandate_request.mandateproforma_set.all.last.amount }}</p>
+                </div>
+			</div>
+            <div class="row">
+                <div class="col-md-4">
+                    <p>Mines </p>
+                </div>
+                <div class="col-md">
+                    <div class="line_content">
+                        <div class="line-list">
+                    		<a class="text-success" href="{% url 'mine_detail_mine.html' pk=mandate.mandate_request.mine.id %}"><p>{{ mandate.mandate_request.mine }}</p></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+		</div>
+	</div>
+
+</div>

@@ -1,0 +1,169 @@
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+        <div class="row">
+            <div class="col-md">
+                <h5>Field Request </h5>
+                <hr>
+                <h3>{{ field_request }} </h3>
+            </div>
+        </div>
+			<br>
+		<div class="card card-body">
+            <div class="row">
+                <div class="col-md-5">
+                    <h5>Field Activity</h5>
+                </div>
+                <div class="col-md">
+                    <h5>{{ field_request.service }}</h5>
+                </div>
+            </div>
+			<hr>
+            <div class="col=md">
+                <div class="row">
+                    <div class="col-md-4">
+                        <p>Amount</p>
+                    </div>
+                {% if field_request.fieldproforma_set.all %}
+                    <div class="col-md">
+                        <p>{{ field_request.fieldproforma_set.all.last.amount }}</p>
+                    </div>
+                {% else %}
+                    <div class="col-md">
+                        <p>Pending</p>
+                    </div>
+                {% endif %}
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <p>Service Providers</p>
+                    </div>
+                {% if field_request.service_req == 'False' %}
+                    <div class="col-md">
+                        <p>Not Required</p>
+                    </div>
+                {% else %}
+                    <div class="col-md">
+                        {% if services %}
+                            {% for item in services %}
+                                <div class="list_content">
+                                <div class="list-line">
+                                <div class="row">
+                                    <div class="col-md-5">
+                                        {{ item.quantity }} {{ item.provider_role }}<br>
+                                    </div>
+                                    <div class="col-md">
+                                        Quotes: <br>
+                                    </div>
+                                    <div class="col-md">
+                                        {{ item.fieldproviderquote_set.all.count }} <br>
+                                    </div>
+                                </div>
+                                </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                        <p>Pending</p>
+                        {% endif %}
+                        {% if field_request.status == 'Service Choice' %}
+                        {% else %}
+                        {% if not field_request.fieldproforma_set.all %}
+                        <br>
+                            <div class="row">
+                                <div class="col-md">
+                                    <p><a class="btn btn-outline-success btn-sm btn-block" href="{% url 'investor/request_service_provider.html' pk=field_request.id %}">Request Service Provider</a></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><a class="btn btn-outline-danger btn-sm btn-block" href="{% url 'investor/request_service_done.html' pk=field_request.id %}">Done</a></p>
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                {% endif %}
+                </div>
+                {% if field_request.fieldproforma_set.all %}
+					{% if field_request.fieldproforma_set.all.last.status == 'Pending' %}
+<!--                        <p><a class="btn btn-outline-success btn-sm btn-block" href="">Make Payment</a></p>-->
+					{% endif %}
+                {% endif %}
+            </div>
+		</div>
+        <br>
+        {% if not field_request.fieldproforma_set.all %}
+        <a class="btn btn-outline-success btn-block btn-sm" href="{% url 'investor/support_costs_new.html' pk=field_request.id %}">Create Proforma</a>
+        {% endif %}
+	</div>
+
+	{% if field_request.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ mandate.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Field Request Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md-4">
+                    <p>Date Created</p>
+                    <p>Investor</p>
+                    <p>Cart Request</p>
+                    <p>Cart Match</p>
+                    <p>Mandate Request</p>
+                    <p>Mandate</p>
+                    <p>Service</p>
+                    <p>Valid Until</p>
+                    <p>Status</p>
+				</div>
+
+				<div class="col-md">
+                    <p>{{ field_request.date_created }}</p>
+                    <p><a class="text-success" href="{% url 'player_detail.html' pk=field_request.mandate.mandate_request.cart_mine_match.cart_request.investor.player.id %}">{{ field_request.mandate.mandate_request.cart_mine_match.cart_request.investor.player }}</a></p>
+                    <p><a class="text-success" href="{% url 'investor/cart_request_detail.html' pk=field_request.mandate.mandate_request.cart_mine_match.cart_request.id %}">{{ field_request.mandate.mandate_request.cart_mine_match.cart_request }}</a></p>
+                    <p>{{ field_request.mandate.mandate_request.cart_mine_match }}</p>
+                    <p><a class="text-success" href="{% url 'investor/mandate_request_detail.html' pk=field_request.mandate.mandate_request.id %}">{{ field_request.mandate.mandate_request }}</a></p>
+                    <p><a class="text-success" href="{% url 'investor/mandate_detail.html' pk=field_request.mandate.id %}">{{ field_request.mandate }}</a></p>
+                    <p>{{ field_request.service }}</p>
+                    <p>{{ field_request.period }}</p>
+                    <p>{{ field_request.status }}</p>
+                </div>
+			</div>
+            {% if field_request.fieldproforma_set.all %}
+            <div class="row">
+                <div class="col-md-4">
+                    <p>Proforma</p>
+                    {% for invoice_rec in proforma.fieldinvoice_set.all.last %}
+                    {% if invoice_rec %}
+                    <p>Invoice</p>
+                    {% endif %}
+                    {% endfor %}
+                    {% for receipt_rec in invoice_rec.invoice.receipt_set.all.last %}
+                    {% if invoice_rec.invoice.receipt_set.all.count != 0 %}
+                    <p>Receipt</p>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="col-md">
+                    <a class="text-success" href="{% url 'investor/proforma_detail.html' pk=field_request.fieldproforma_set.all.last.id %}"><p>{{ field_request.fieldproforma_set.all.last }}</p></a>
+                    {% for invoice_rec in proforma.fieldinvoice_set.all.last %}
+                    {% if invoice_rec %}
+                    <a class="text-success" href="{% url 'invoice_detail.html' pk=invoice_rec.invoice.id %}"><p>{{ invoice_rec.invoice }}</p></a>
+                    {% endif %}
+                    {% endfor %}
+                    {% for receipt_rec in invoice_rec.invoice.receipt_set.all %}
+                    {% if invoice_rec.invoice.receipt_set.all.count != 0 %}
+                    <a class="text-success" href="{% url 'receipt_detail.html' pk=receipt_rec.id %}"><p>{{ receipt_rec }}</p></a>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+		</div>
+	</div>
+</div>

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'investor/info/cart_req.html' %}
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'investor/cart_request_detail.html' pk=cart_request.id %}">Mandate Requests</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'investor/cart_req_mandate.html' pk=cart_request.id %}">Mandates</a>
+        </div>
+        <div class="col-md">
+            <h5><a class="btn  btn-block">Field Requests</a></h5>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'investor/cart_field_activity.html' pk=cart_request.id %}">Field Activity</a>
+        </div>
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if mine_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{mine_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+       {% include 'investor/lists/mandate_request_field_req.html' %}
+
+<br>
+<br>
+{% endblock %}
+
+    {% block map_centre %}
+{% include 'map_java/cart_map_centre.html' %}
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/cart_mines_matched.html' %}
+    {% endblock %}

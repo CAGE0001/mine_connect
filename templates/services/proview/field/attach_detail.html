@@ -1,0 +1,42 @@
+{% extends 'services/service_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <h3>{{ attachment }} </h3>
+        </div>
+    </div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        {% if attachment.pdf %}
+        <img width="100%" class='img-responsive' src="{{ MEDIA_URL }}{{ attachment.pdf.url }}"/>
+        {% endif %}
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

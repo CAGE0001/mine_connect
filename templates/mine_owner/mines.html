@@ -1,0 +1,64 @@
+{% extends 'mine_owner/owner_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Mine Owner </h5>
+					<hr>
+					<h5>{{ player.name }} </h5>
+					<hr>
+					<h5>{{ mine_on.name }} </h5>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	{% if mine.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+	</div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        {% for mine in mines %}
+            {% if mine == mine_on %}
+            <div class="col-md">
+                <a class="btn  btn-block" ><h5>{{ mine.name }}</h5></a>
+            </div>
+            {% else %}
+            <div class="col-md">
+                <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/mineview.html' pk=mine.id %}">Investor </a>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+<br>
+<br>
+{% endblock %}

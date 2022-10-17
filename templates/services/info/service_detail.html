@@ -1,0 +1,29 @@
+
+<div class="card card-body">
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md">{{ record.name }}</div>
+            <div class="col-md">{{ record.from_date }} - {{ record.to_date }}</div>
+        </div>
+    </div>
+    <div class="card-body bg-white">
+        <div class="row">
+            <div class="col-md">
+                <p>Principal</p>
+                <p>Title</p>
+                <p>Role</p>
+                <p>Reference</p>
+                <p>Contact</p>
+                <p>Description</p>
+            </div>
+            <div class="col-md">
+                <p>{{ record.principal }}</p>
+                <p>{{ record.title }}</p>
+                <p>{{ record.name.service }} - {{ record.role }}</p>
+                <p>{{ record.reference }}</p>
+                <p>{{ record.ref_contact }}</p>
+                <p>{{ record.description }}</p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+                    <h5>Field Proforma </h5>
+					<hr>
+					<h3>{{ proforma.id }} </h3>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	{% if proforma.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ invoice.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+		<div class="card card-body">
+			<h5>Field Proforma Information</h5>
+			<hr>
+			<div class="row">
+				<div class="col-md">
+                    <p>Date</p>
+                    <p>Investor</p>
+                    <p>Field Request</p>
+                    <p>Admin margin</p>
+                    <p>Total costs</p>
+				</div>
+
+				<div class="col-md">
+                    <p>{{ proforma.date_created }}</p>
+                    <p><a class="text-success" href="{% url 'player_detail.html' pk=investor.player.id %}">{{investor}}</a></p>
+                    <p><a class="text-success" href="{% url 'investor/field_request_detail.html' pk=proforma.field_request.id %}">{{ proforma.field_request }}</a></p>
+                    <p>{{ proforma.admin_premium.premium }} %</p>
+                    <p>{{ proforma.amount }}</p>
+                </div>
+			</div>
+		</div>
+	</div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card card-body">
+    <div class="card-header bg-success">
+        <h5>Support Costs</h5>
+    </div>
+    <div class="card-body bg-white">
+        <div class="row">
+            <div class="col-md">
+                <h5>Cost Type</h5>
+            </div>
+            <div class="col-md">
+                <h5>Budget</h5>
+            </div>
+            <div class="col-md">
+                <h5>Final</h5>
+            </div>
+        </div>
+        {% for record in support_costs %}
+        <div class="row">
+            <div class="col-md">
+                <p>$ {{ record.cost_type }}</p>
+            </div>
+            <div class="col-md">
+                <p>$ {{ record.cost }}</p>
+            </div>
+            <div class="col-md">
+                <p>$ {{ record.amount }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<br>
+<div class="card card-body">
+    <div class="card-header bg-success">
+        <h5>Service Costs</h5>
+    </div>
+    <div class="card-body bg-white">
+        <div class="row">
+            <div class="col-md">
+                <h5>Service Provider</h5>
+            </div>
+            <div class="col-md">
+                <h5>Amount</h5>
+            </div>
+        </div>
+        {% for record in service_costs %}
+        <div class="row">
+            <div class="col-md">
+                <p>{{ record.provider }}</p>
+            </div>
+            <div class="col-md">
+                <p>$ {{ record.cost }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

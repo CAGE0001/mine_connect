@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+{% load leaflet_tags %}
+
+       {% include 'investor/info/mandate.html' %}
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'investor/mandate_detail.html' pk=mandate.id %}">Field Requests</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-block"><h5>Field Activity</h5></a>
+        </div>
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if quote_list.count > 5 %}
+                <form method="get">
+
+                    {{provider_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Created</h5>
+            </div>
+            <div class="col-md">
+            <h5>Service</h5>
+            </div>
+            <div class="col-md">
+            <h5>Date Beginning</h5>
+            </div>
+            <div class="col-md">
+            <h5>Date Ending</h5>
+            </div>
+        </div>
+		<br>
+		{% for activity in activities %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{% url 'field_activity_detail.html' pk=activity.id %}">
+                <div class="row">
+                    <div class="col-md">
+                    <p>{{activity.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ activity.subject }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ activity.from_date }}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ activity.to_date }}</p>
+                    </div>
+                </div>
+                </a>
+            </div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+<br>
+<br>
+{% endblock %}
+
+    {% block map_centre %}
+{% include 'map_java/map_centre.html' %}
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

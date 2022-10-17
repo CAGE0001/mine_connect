@@ -1,0 +1,52 @@
+{% extends 'investor/investor_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'investor/info/investview_mandate.html' %}
+<br>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'investor/investview/mandate/services.html' pk=mandate.id %}">Field Requests</a>
+        </div>
+        {% if activities %}
+        <div class="col-md">
+            <a class="btn  btn-block" ><h5>Field Activity</h5></a>
+        </div>
+        {% endif %}
+        {% if quote_count %}
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'investor/investview/mandate/field_quote.html' pk=mandate.id %}">Field Quotes</a>
+        </div>
+        {% endif %}
+    </div>
+        <br>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            {% if quote_count > 5 %}
+<!--						<div class="card card-body">-->
+                <form method="get">
+
+                    {{field_request_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+<!--						</div>-->
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+       {% include 'investor/lists/mandate_request_field_act_face.html' %}
+
+<br>
+<br>
+{% endblock %}

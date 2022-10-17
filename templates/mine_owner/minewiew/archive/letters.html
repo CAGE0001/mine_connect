@@ -1,0 +1,97 @@
+{% extends 'mine_owner/owner_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+{% load leaflet_tags %}
+<br>
+<br>
+<br>
+<div class="row">
+    <br>
+<div class="col-md-3">
+        <form method="get">
+            <div class="row">
+                <div class="form col-md">
+                {{ letters_filter.form|crispy}}
+                </div>
+            </div>
+            <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+        </form>
+</div>
+<div class="col-md">
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-block" ><h5>Letters</h5></a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/minewiew_archive_agreements.html' %}">Agreements</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/minewiew_archive_receipts.html' %}">Receipts</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/minewiew_archive_others.html' %}">Others</a>
+        </div>
+    </div>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Date</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mine</h5>
+            </div>
+            <div class="col-md">
+            <h5>Type</h5>
+            </div>
+            <div class="col-md">
+            <h5>To/From</h5>
+            </div>
+        </div>
+		<br>
+		{% for claim in letters_filter.qs %}
+		<div class="list_content">
+            <a class="list-line" href="{% url 'mine_owner/mineview_archive_letter_detail.html' pk=claim.id %}">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{claim.report_date}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{claim.mine}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{claim.type}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ claim.other_party }}</p>
+                    </div>
+                </div>
+            </a>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+</div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+{% endblock %}
+
+    {% block map_centre %}
+{% include 'map_java/map_centre.html' %}
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

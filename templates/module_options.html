@@ -1,0 +1,117 @@
+{% load static %}
+{% load crispy_forms_tags %}
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{% static '/css/bootstrap.min.css'%}">
+</head>
+<body>
+<div  style="background-color: lightgray">
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+<div class="row">
+    <div class="col-md"></div>
+        <div class="col-md-8" style="text-align: center">
+            <h3>MINING CONNECT DIGITAL PLATFORM</h3>
+        </div>
+    <div class="col-md"></div>
+</div>
+    <br>
+    <br>
+    <div class="row">
+    <div class="col-md" style="text-align: center">
+        <div>
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+    <div class="row">
+        <div class="col-md"></div>
+        <div class="col-md-4">
+            <br>
+            <div class="card-header ">
+            {% if logger.internal == True %}
+                <div class="row">
+                    <div class="col-md"></div>
+                    <div class="col-md-6">
+                    <a class="btn btn-outline-success btn-block" href="{% url 'index.html' %}">Administration</a>
+                    </div>
+                    <div class="col-md"></div>
+                </div>
+            {% endif %}
+            <br>
+            {% if logger.mine_owner == True %}
+                <div class="row">
+                    <div class="col-md"></div>
+                    <div class="col-md-6">
+                    <a class="btn btn-outline-success btn-block" href="{% url 'mine_owner/owner_index.html' %}">Mine Owner</a>
+                    </div>
+                    <div class="col-md"></div>
+                </div>
+            {% endif %}
+            <br>
+            {% if logger.investor == True %}
+                <div class="row">
+                    <div class="col-md"></div>
+                    <div class="col-md-6">
+                    <a class="btn btn-outline-success btn-block" href="{% url 'investor/investor_index.html' %}">Investor</a>
+                    </div>
+                    <div class="col-md"></div>
+                </div>
+            {% endif %}
+            <br>
+            {% if logger.service_provider == True %}
+                <div class="row">
+                    <div class="col-md"></div>
+                    <div class="col-md-6">
+                    <a class="btn btn-outline-success btn-block" href="{% url 'services/provider_index.html' %}">Service Provider</a>
+                    </div>
+                    <div class="col-md"></div>
+                </div>
+            {% endif %}
+            </div>
+            <br>
+            <div>
+                <div class="row">
+                    <div class="col-md"></div>
+                    <div class="col-md-6">
+                    <a class="btn btn-outline-danger btn-block" href="{% url 'confirm_logout.html' %}">Log Out</a>
+                    </div>
+                    <div class="col-md"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md"></div>
+    </div>
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+</div>
+</body>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+</html>
