@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<br>
+<div class="card-header">
+    <h3>Works Images - {{item}}</h3>
+</div>
+<br>
+<div class="row">
+<div class="col-md-2">
+        <a class="btn btn-outline-success btn-block btn-sm" href="{% url 'works_image_add' pk=item.id %}">Add Image</a>
+        <br>
+        <a class="btn btn-outline-success btn-block btn-sm" href="{% url 'works_activity_add' pk=item.id %}">Activity</a>
+</div>
+<div class="col-md-4">
+        <div class="card-body">
+            {% for record in devs %}
+            <div class="list_content">
+                <div class="list-line">
+                    <div class="row">
+                        <div class="col-md">
+                            {{ record.dev_date }}
+                        </div>
+                        <div class="col-md">
+                            {{ record.comment }} km
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if devs.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ devs.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ devs.number }} of {{ devs.paginator.num_pages }}.
+                </span>
+
+                {% if devs.has_next %}
+                    <a href="?page={{ devs.next_page_number }}">next</a>
+                    <a href="?page={{ devs.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+</div>
+<div class="col-md">
+{% for pic in page_obj %}
+        {% if pic.image %}
+            <img width="100%" class='img-responsive' src="{{ MEDIA_URL }}{{ pic.image.url }}"/>
+        {% endif %}
+{% endfor %}
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Image {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+</div>
+</div>
+<br>
+<br>
+{% endblock %}

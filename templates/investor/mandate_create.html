@@ -9,8 +9,21 @@
 <br>
 <div class="row">
     <div class="col-md">
-    <div class="card-header bg-success">
-        <h3>{{ mandate_request }} - New Mandate ...</h3>
+    <div class="card-header">
+        <h3>{{ mandate_request }} - Create Mandate ...</h3>
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <p>Requested Purpose: </p>
+                <p>Duration: </p>
+                <p>Commencing: </p>
+            </div>
+            <div class="col-md">
+                <p>{{ mandate_request.purpose }}</p>
+                <p>{{ mandate_request.duration }} Days</p>
+                <p>{{ mandate_request.period }}</p>
+            </div>
+        </div>
     </div>
 <br>
 <div class="row">

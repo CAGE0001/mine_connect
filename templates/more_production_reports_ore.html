@@ -25,12 +25,12 @@
         {% endif %}
         {% if ore_count != 0 %}
         <div class="col-md">
-            <a class="btn btn-success btn-block btn-sm">Ore</a>
+            <a class="btn btn-block "><h5>Ore</h5></a>
         </div>
         {% endif %}
         {% if waste_count != 0 %}
         <div class="col-md">
-            <a class="btn btn-success btn-block btn-sm" href="{% url 'more_production_reports_waste.html' pk=mine.id %}"><h5>Waste</h5></a>
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'more_production_reports_waste.html' pk=mine.id %}">Waste</a>
         </div>
         {% endif %}
     </div>

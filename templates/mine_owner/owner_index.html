@@ -58,7 +58,6 @@
 
 	<div class="col-md-1">
 		<div class="date">
-<!--			<h5>{{ driver.date_created }}</h5>-->
 		</div>
 	</div>
 	<div class="col-md-6">
@@ -89,8 +88,10 @@
 
 {% block java %}
 <script type="text/javascript">
+{% if min_loc_count != 0  %}
     {% for e in min_locs %}
     var mineMarkers = L.marker({{e.lat_long}}).addTo(map).bindPopup('<a href="{% url 'mine_owner/mineview.html' pk=e.name.id %}">{{e}}<a>');
     {% endfor %}
-</script>minelocs
+{% endif %}
+</script>
 {% endblock %}

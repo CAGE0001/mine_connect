@@ -52,3 +52,13 @@
 <br>
 <br>
 {% endblock %}
+
+    {% block java %}
+<script type="text/javascript">
+
+        {% for e in min_locs %}
+        var mineMarkers = L.marker({{e.lat_long}}).addTo(map).bindPopup('<a href="{% url 'investor/investview/mine/claims.html' pk=e.name.id %}">{{e.name}}<a>');
+        {% endfor %}
+</script>
+
+    {% endblock %}

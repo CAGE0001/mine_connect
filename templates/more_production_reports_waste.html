@@ -58,7 +58,6 @@
         <div class="col-md-6"></div>
     </div>
 </div>
-{% if waste_count != 0 %}
 <div class="card-body bg-white">
 	<div class="col-md">
 		<div class="row">
@@ -98,7 +97,24 @@
 		{% endfor %}
 	</div>
 </div>
-{% endif %}
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if waste.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ waste.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ waste.number }} of {{ waste.paginator.num_pages }}.
+                </span>
+
+                {% if waste.has_next %}
+                    <a href="?page={{ waste.next_page_number }}">next</a>
+                    <a href="?page={{ waste.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
 <br>
 <br>
 {% endblock %}

@@ -1,9 +1,7 @@
+<!DOCTYPE html>
+<html lang="en">
 {% load static %}
 {% load crispy_forms_tags %}
-
-<!DOCTYPE html>
-
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
@@ -12,23 +10,25 @@
 </head>
 <body>
 <div  style="background-color: lightgray">
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
 <div class="row">
-    <div class="col-md"></div>
-        <div class="col-md-8" style="text-align: center">
-            <h3 class="alignment: centre">MINING CONNECT DIGITAL PLATFORM</h3>
+    <div class="col-md-1"></div>
+    <div class="col-md-3">
+    <div class="brand">
+        <img style="padding: 10px 10px; height: 80px; " src="{% static 'images/logo_trans.png' %}">
+    </div>
+    </div>
+        <div class="col-md-6" style="text-align: right">
+            <div style="row">
+                <p  style="font-size: 50px;">Mining Connect</p>
+            </div>
         </div>
-    <div class="col-md"></div>
 </div>
-    <br>
-    <br>
-    <div class="row">
+
+<div class="row">
+    <div class="col-md-4"></div>
+        <div class="col-md-4">
+            <br><br><br><br><br><br>
+
     <div class="col-md" style="text-align: center">
         <div>
         {% for message in messages %}
@@ -36,29 +36,40 @@
         {% endfor %}
         </div>
     </div>
-</div>
-    <div class="row">
-        <div class="col-md"></div>
-        <div class="col-md-6">
-            <br>
+            <br><br>
             <div class="card-header bg-success">
-                <h4>Login</h4>
+                <h3 style="text-align: center; ">Log In</h3>
             </div>
-            <div class="card-body">
+            <div class="card-body bg-white">
                 <form action="login" method="post">
                {% csrf_token %}
-                <input type="text" name="user_name" placeholder="Username">
-                    <br>
-                    <hr>
-                <input type="password" name="password" placeholder="Password">
-                    <br>
-                    <hr>
-                <input type="submit">
+                    <div style="row">
+                        <div style="col-md">
+                            <input type="text" name="user_name" placeholder="Username" style="width: 100%; ">
+                        </div>
+                        <br>
+                        <div style="col-md">
+                            <input type="password" name="password" placeholder="Password" style="width: 100%;">
+                        </div>
+                        <br>
+                        <div class="row">
+                        <div class ="col-md">
+                            <input type="submit" class="btn btn-outline-success btn-block btn-sm">
+                        </div>
+                        <div class ="col-md" style="text-align: right; ">
+                            <a href="" >Forgot your password?</a>
+                        </div>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
-        <div class="col-md"></div>
-    </div>
+    <div class="col-md"></div>
+</div>
+    <br>
+    <br>
+    <div class="row">
+</div>
 
     <br>
     <br>

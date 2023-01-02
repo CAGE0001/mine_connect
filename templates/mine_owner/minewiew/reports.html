@@ -31,6 +31,7 @@
         <br>
     <div class="row">
         <div class="col-md">
+            <a><i class="fa-solid fa-plus"></i><h5>Hello</h5></a>
         </div>
         <div class="col-md">
         </div>
@@ -64,8 +65,8 @@
 		<br>
 		<div class="list_content">
 		{% for report in filter.qs %}
-            <div class="list-line">
-                <div class="row"><a href="{% url 'mineview/report_detail.html' pk=report.id %}">
+            <div class="list-line"><a class="text-success" href="{{ MEDIA_URL }}{{ report.pdf.url }}">
+                <div class="row">
                     <div class="col-md-2">
                         <p>{{report.date_created}}</p>
                     </div>
@@ -75,8 +76,8 @@
                     <div class="col-md-2">
                         <p>{{ report.report_date }}</p>
                     </div>
-                </a></div>
-            </div>
+                </div>
+            </a></div>
 		</div>
 		{% endfor %}
 	</div>

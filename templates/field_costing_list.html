@@ -10,19 +10,15 @@
 <div class="row">
     <br>
     <div class="col-md-3">
-        <div class="card-header">
             <form method="get">
                 <div class="row">
                     <div class="form col-md">
                     {{ filter.form|crispy}}
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6"></div>
                 <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
-                </div>
+
             </form>
-        </div>
      </div>
     <div class="col-md">
         <div class="card-header">
@@ -45,7 +41,7 @@
                     </div>
                 </div>
                 <br>
-                {% for record in wins_count %}
+                {% for record in page_obj %}
                 <div class="list_content">
                     <div class="list-line"><a class="text-success" href="{% url 'field_proforma_new.html' pk=record.id %}">
                         <div class="row">
@@ -67,6 +63,24 @@
                 </div>
                 {% endfor %}
             </div>
+        </div>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
         </div>
     </div>
 </div>

@@ -1,8 +1,9 @@
 import django_filters
 from django import forms
+from django.db.models import Q
 from .models import *
 from django.forms import MultipleChoiceField, ChoiceField, Form, Select, widgets
-from django.forms.widgets import NumberInput
+from django.forms.widgets import NumberInput, CheckboxSelectMultiple
 from datetime import timedelta, timezone, date
 from leaflet.forms.widgets import LeafletWidget
 from leaflet.forms.fields import PolygonField
@@ -37,7 +38,26 @@ class IndividualForm(forms.ModelForm):
             'dob',
             'nationality',
             'nid',
+            'agents',
         ]
+
+    def __init__(self, *args, **kwargs):
+        super(IndividualForm, self).__init__(*args, **kwargs)
+        agent_list =[]
+
+        for user in User.objects.all():
+            if CorpAgentRelation.objects.filter(agent_id=user.id).exists():
+                pass
+            else:
+                if SyndAgentRelation.objects.filter(agent_id=user.id).exists():
+                    pass
+                else:
+                    if IndiAgentRelation.objects.filter(agent_id=user.id).exists():
+                        pass
+                    else:
+                        agent_list.append(user.id)
+
+        self.fields['agents'].queryset = User.objects.filter(id__in=agent_list)
 
 
 class IndiStatUpdate(forms.ModelForm):
@@ -89,6 +109,24 @@ class CorporateForm(forms.ModelForm):
             'reg_number',
             'agents'
         ]
+
+    def __init__(self, *args, **kwargs):
+        super(CorporateForm, self).__init__(*args, **kwargs)
+        agent_list =[]
+
+        for user in User.objects.all():
+            if CorpAgentRelation.objects.filter(agent_id=user.id).exists():
+                pass
+            else:
+                if SyndAgentRelation.objects.filter(agent_id=user.id).exists():
+                    pass
+                else:
+                    if IndiAgentRelation.objects.filter(agent_id=user.id).exists():
+                        pass
+                    else:
+                        agent_list.append(user.id)
+
+        self.fields['agents'].queryset = User.objects.filter(id__in=agent_list)
 
 
 class WorkHistoryForm(forms.ModelForm):
@@ -197,15 +235,34 @@ class SyndicateForm(forms.ModelForm):
             'agents',
         ]
 
+    def __init__(self, *args, **kwargs):
+        super(SyndicateForm, self).__init__(*args, **kwargs)
+        agent_list =[]
+
+        for user in User.objects.all():
+            if CorpAgentRelation.objects.filter(agent_id=user.id).exists():
+                pass
+            else:
+                if SyndAgentRelation.objects.filter(agent_id=user.id).exists():
+                    pass
+                else:
+                    if IndiAgentRelation.objects.filter(agent_id=user.id).exists():
+                        pass
+                    else:
+                        agent_list.append(user.id)
+
+        self.fields['agents'].queryset = User.objects.filter(id__in=agent_list)
+
 
 class MandateForm(forms.ModelForm):
     valid = forms.DateField(widget=NumberInput(attrs={'type': 'date'}))
+    status = forms.ChoiceField(choices=MANDATESTATUS, label='Mandate Purpose')
 
     class Meta:
         model = Mandate
         fields = [
             'valid',
-            'mine',
+            'status',
         ]
 
 
@@ -320,10 +377,6 @@ class FieldForm(forms.ModelForm):
             'mine_owner_requirements',
         ]
 
-    # def __init__(self, providers, *args, **kwargs):
-    #     super(FieldForm, self).__init__(*args, **kwargs)
-    #     self.fields['provider'].queryset = ServiceProv.objects.filter(mine_attach='None')
-
 
 class RequestProviderForm(forms.ModelForm):
     quantity = forms.IntegerField()
@@ -380,7 +433,7 @@ class PlayerForm(forms.ModelForm):
         model = Player
         fields = [
             # 'name',
-            'phone_number',
+            # 'phone_number',
             'email',
             'bank',
             'bank_account',
@@ -398,7 +451,7 @@ class PlayerEditForm(forms.ModelForm):
         model = Player
         fields = [
             # 'name',
-            'phone_number',
+            # 'phone_number',
             'email',
             'bank',
             'bank_account',
@@ -465,7 +518,12 @@ class MineClaimForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(MineClaimForm, self).__init__(*args, **kwargs)
-        self.fields['claim'].queryset = MiningClaim.objects.filter(mine_attach='None')
+        claims = MineClaimRelation.objects.all()
+        claim_list = []
+        for claim in claims:
+            claim_list.append(claim.claim.id)
+
+        self.fields['claim'].queryset = MiningClaim.objects.filter(~Q(id__in=claim_list))
 
 
 class AttachReportForm(forms.ModelForm):
@@ -476,10 +534,109 @@ class AttachReportForm(forms.ModelForm):
         model = MineReports
         fields = [
             'report_date',
-            'mine',
             'type',
             'pdf',
         ]
+
+
+class AttachLetterForm(forms.ModelForm):
+    report_date = forms.DateField(widget=NumberInput(attrs={'type': 'date'}), label='Date')
+    pdf = forms.FileField()
+
+    class Meta:
+        model = MineLetters
+        fields = [
+            'report_date',
+            'type',
+            'other_party',
+            'subject',
+            'mine',
+            'pdf',
+        ]
+
+    def __init__(self, player=None, *args, **kwargs):
+        super(AttachLetterForm, self).__init__(*args, **kwargs)
+        owner_list = MineOwnerRelation.objects.filter(owner_id=player.id, status='Current')
+        mine_list = []
+        for owner in owner_list:
+            mine_list.append(owner.mine.id)
+        if player:
+            self.fields['mine'].queryset = Mine.objects.filter(id__in=mine_list)
+
+
+class AttachReceiptForm(forms.ModelForm):
+    report_date = forms.DateField(widget=NumberInput(attrs={'type': 'date'}))
+    pdf = forms.FileField()
+
+    class Meta:
+        model = MineReceipts
+        fields = [
+            'report_date',
+            'type',
+            'issued_by',
+            'rec_number',
+            'mine',
+            'pdf',
+        ]
+
+    def __init__(self, player=None, *args, **kwargs):
+        super(AttachReceiptForm, self).__init__(*args, **kwargs)
+        owner_list = MineOwnerRelation.objects.filter(owner_id=player.id, status='Current')
+        mine_list = []
+        for owner in owner_list:
+            mine_list.append(owner.mine.id)
+        if player:
+            self.fields['mine'].queryset = Mine.objects.filter(id__in=mine_list)
+
+
+class AttachAgreementForm(forms.ModelForm):
+    report_date = forms.DateField(widget=NumberInput(attrs={'type': 'date'}), label='Date Signed')
+    valid_to = forms.DateField(widget=NumberInput(attrs={'type': 'date'}), label='Valid Until')
+    pdf = forms.FileField()
+    addendum = forms.BooleanField()
+
+    class Meta:
+        model = MineAgreements
+        fields = [
+            'report_date',
+            'valid_to',
+            'type',
+            'counter_party',
+            'mine',
+            'pdf',
+        ]
+
+    def __init__(self, player=None, *args, **kwargs):
+        super(AttachAgreementForm, self).__init__(*args, **kwargs)
+        owner_list = MineOwnerRelation.objects.filter(owner_id=player.id, status='Current')
+        mine_list = []
+        for owner in owner_list:
+            mine_list.append(owner.mine.id)
+        if player:
+            self.fields['mine'].queryset = Mine.objects.filter(id__in=mine_list)
+
+
+class AttachOtherDocForm(forms.ModelForm):
+    report_date = forms.DateField(widget=NumberInput(attrs={'type': 'date'}))
+    pdf = forms.FileField()
+
+    class Meta:
+        model = OtherDocs
+        fields = [
+            'report_date',
+            'subject',
+            'mine',
+            'pdf',
+        ]
+
+    def __init__(self, player=None, *args, **kwargs):
+        super(AttachOtherDocForm, self).__init__(*args, **kwargs)
+        owner_list = MineOwnerRelation.objects.filter(owner_id=player.id, status='Current')
+        mine_list = []
+        for owner in owner_list:
+            mine_list.append(owner.mine.id)
+        if player:
+            self.fields['mine'].queryset = Mine.objects.filter(id__in=mine_list)
 
 
 class FieldAttachForm(forms.ModelForm):
@@ -511,21 +668,17 @@ class AttachCertForm(forms.ModelForm):
         model = MineCertificates
         fields = [
             'issue_date',
-            'mine',
             'type',
             'pdf',
         ]
 
 
 class AttachClaimCertForm(forms.ModelForm):
-    issue_date = forms.DateField(widget=NumberInput(attrs={'type': 'date'}))
     pdf = forms.ImageField()
 
     class Meta:
         model = ClaimRegCert
         fields = [
-            'issue_date',
-            'claim',
             'pdf',
         ]
 
@@ -569,6 +722,34 @@ class BeaconForm(forms.ModelForm):
     class Meta:
         model = Beacon
         fields = [
+            'latitude',
+            'longitude',
+        ]
+
+
+class AssayForm(forms.ModelForm):
+    sample_date = forms.DateField(widget=NumberInput(attrs={'type': 'date'}))
+
+    class Meta:
+        model = Assays
+        fields = [
+            'sample_date',
+            'mineral',
+            'assay',
+            'unit',
+        ]
+
+
+class SamplePointForm(forms.ModelForm):
+    sample_date = forms.DateField(widget=NumberInput(attrs={'type': 'date'}))
+    mineral = forms.ModelChoiceField(Elements.objects.all())
+    assay = forms.FloatField()
+    unit = forms.ModelChoiceField(AssayUnits.objects.all())
+
+    class Meta:
+        model = SamplePoint
+        fields = [
+            'name',
             'latitude',
             'longitude',
         ]
@@ -684,20 +865,101 @@ class MinePlantForm(forms.ModelForm):
     class Meta:
         model = MinePlant
         fields = [
+            'mine',
             'plant',
             'quantity',
+            'serial_number',
             'comment',
         ]
 
+    def __init__(self, player=None, *args, **kwargs):
+        super(MinePlantForm, self).__init__(*args, **kwargs)
+        owner_list = MineOwnerRelation.objects.filter(owner_id=player.id, status='Current')
+        mine_list = []
+        for owner in owner_list:
+            mine_list.append(owner.mine.id)
+        if player:
+            self.fields['mine'].queryset = Mine.objects.filter(id__in=mine_list)
+
 
 class MineYellowPlantForm(forms.ModelForm):
+    when_new = forms.DateField(widget=NumberInput(attrs={'type': 'date'}))
 
     class Meta:
         model = MineYellowPlant
         fields = [
             'plant',
+            'model',
+            'when_new',
             'quantity',
+            'serial_number',
             'comment',
+        ]
+
+
+class PlantImageForm(forms.ModelForm):
+    plant = forms.ImageField()
+
+    class Meta:
+        model = PlantImages
+        fields = [
+            'plant',
+        ]
+
+
+class PlantServiceForm(forms.ModelForm):
+    service_date = forms.DateField(widget=NumberInput(attrs={'type': 'date'}))
+    next_service = forms.DateField(widget=NumberInput(attrs={'type': 'date'}))
+
+    class Meta:
+        model = EquipmentService
+        fields = [
+            'service_date',
+            'next_service',
+            'comment',
+        ]
+
+
+class WorksDevForm(forms.ModelForm):
+    dev_date = forms.DateField(widget=NumberInput(attrs={'type': 'date'}))
+
+    class Meta:
+        model = WorksDev
+        fields = [
+            'dev_date',
+            'comment',
+        ]
+
+
+class PlantUsageForm(forms.ModelForm):
+    reading_date = forms.DateField(widget=NumberInput(attrs={'type': 'date'}))
+
+    class Meta:
+        model = EquipmentMileage
+        fields = [
+            'reading_date',
+            'mileage',
+            'usage_time',
+        ]
+
+
+class YellowImageForm(forms.ModelForm):
+    plant = forms.ImageField()
+
+    class Meta:
+        model = YellowImages
+        fields = [
+            'plant',
+        ]
+
+
+class WorksImageForm(forms.ModelForm):
+    plant = forms.ImageField()
+
+    class Meta:
+        model = WorksImages
+        fields = [
+            'plant',
         ]
 
 
@@ -706,14 +968,25 @@ class MineWorksForm(forms.ModelForm):
     class Meta:
         model = MineWorks
         fields = [
+            'mine',
             'works',
             'quantity',
             'comment',
         ]
 
+    def __init__(self, player=None, *args, **kwargs):
+        super(MineWorksForm, self).__init__(*args, **kwargs)
+        owner_list = MineOwnerRelation.objects.filter(owner_id=player.id, status='Current')
+        mine_list = []
+        for owner in owner_list:
+            mine_list.append(owner.mine.id)
+        if player:
+            self.fields['mine'].queryset = Mine.objects.filter(id__in=mine_list)
+
 
 class MandateRequestForm(forms.ModelForm):
-    period = forms.DateField(widget=NumberInput(attrs={'type': 'date'}))
+    duration = forms.IntegerField(label='Duration in Days')
+    period = forms.DateField(widget=NumberInput(attrs={'type': 'date'}), label='Inception Date')
 
     class Meta:
         model = MandateRequest
@@ -811,6 +1084,7 @@ class CartRequestForm(forms.ModelForm):
             'min_grade',
             'grade_unit',
             'invest_type',
+            'country',
             'location',
             'polygon',
         ]

@@ -24,16 +24,16 @@
 <div class="card-header">
     <div class="row">
         <div class="col-md">
-            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_owner/mineview_archive_letters.html' %}">Letters</a>
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mineview_archive_letters.html' pk=player.id %}">Letters</a>
         </div>
         <div class="col-md">
-            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/minewiew_archive_agreements.html' %}">Agreements</a>
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'minewiew_archive_agreements.html' pk=player.id %}">Agreements</a>
         </div>
         <div class="col-md">
             <a class="btn btn-block"><h5>Receipts</h5></a>
         </div>
         <div class="col-md">
-            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/minewiew_archive_others.html' %}">Others</a>
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'minewiew_archive_others.html' pk=player.id %}">Others</a>
         </div>
     </div>
 </div>
@@ -54,9 +54,9 @@
             </div>
         </div>
 		<br>
-		{% for claim in receipts_filter.qs %}
+		{% for claim in page_obj2 %}
 		<div class="list_content">
-            <div class="list-line"><a href="{% url 'mine_owner/mineview_archive_receipt_detail.html' pk=claim.id %}">
+            <div class="list-line"><a class="text-success" target="_blank" href="{{ MEDIA_URL }}{{ claim.pdf.url }}">
                 <div class="row">
                     <div class="col-md">
                         <p>{{claim.report_date}}</p>
@@ -76,6 +76,24 @@
 		{% endfor %}
 	</div>
 </div>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj2.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj2.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj2.number }} of {{ page_obj2.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj2.has_next %}
+                    <a href="?page={{ page_obj2.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj2.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
 </div>
 </div>
 <br>

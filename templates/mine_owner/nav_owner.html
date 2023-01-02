@@ -21,27 +21,38 @@
           <a class="dropbtn" href="{% url 'mine_owner/profile.html' %}" ><h5>Profile</h5></a>
           </div>
           <div class="dropdown">
-          <a class="dropbtn" href="{% url 'mine_owner/mineview_archive_letters.html' %}"><h5>Archives</h5></a>
+          <a class="dropbtn" href="{% url 'mineview_archive_letters.html' %}"><h5>Archives</h5></a>
+            <div class="dropdown-content">
+            </div>
           </div>
           <div class="dropdown">
           <a class="dropbtn" href="{% url 'mine_owner/accounts.html' %}"><h5>Accounts</h5></a>
           </div>
-        {% if user.is_authenticated %}
-          <div class="dropdown">
-              <a class="dropbtn" href="{% url 'confirm_logout.html' %}"><h5>Log Out</h5></a>
-          </div>
-        {% else %}
-          <div class="dropdown">
-              <a class="dropbtn" href="{% url 'logout' %}"><h5>Log In</h5></a>
-          </div>
-        {% endif %}
         </div>
         </div>
     </div>
     <div class="col-md-2">
+        <br>
+          <div class="dropdown">
+            <div class="row">
+                <div class="col-md"></div>
+                <div class="col-md">
+                    <i class="fa-regular fa-user" style="font-size:30px;color:success;"></i>
+                </div>
+                <div class="col-md"></div>
+            </div>
         {% if user.is_authenticated %}
-                <p class="log">{{ user.username}}</p>
+                <p style="text-align: center; ">{{ user.username}}</p>
         {% endif %}
+            <div class="dropdown-content">
+                {% if user.is_authenticated %}
+                      <a href="{% url 'confirm_logout.html' %}"><p>Log Out</p></a>
+                      <a href="{% url 'password_change' %}"><p>Reset Password</p></a>
+                {% else %}
+                      <a href="{% url 'logout' %}"><p>Log In</p></a>
+                {% endif %}
+            </div>
+          </div>
     </div>
     </div>
 </div>

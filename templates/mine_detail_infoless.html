@@ -9,7 +9,7 @@
 				<div class="col-md">
                     <h5>Mine </h5>
 					<hr>
-					<h3>{{ mine.name }} </h3>
+					<a class="text-success" href="{% url 'mine_detail_carts.html' pk=mine.id %}"><h3>{{ mine.name }} </h3></a>
 				</div>
 			</div>
 			<br>
@@ -50,7 +50,7 @@
                     <p>{{ mine.reserves_proven }} Metric Tonnes</p>
                     <p>{{ mine.reserves_possible }} Metric Tonnes</p>
                     <p>{{ mine.reserves_probable }} Metric Tonnes</p>
-                    <p>{{ mine.status }}</p>
+                    <p>{{ mine.insp_status }}</p>
                 {% for mineral in mine.minemineral_set.all %}
                     <p>{{ mineral.mineral }}</p>
                 {% endfor %}

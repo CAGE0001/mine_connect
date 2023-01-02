@@ -10,8 +10,6 @@
     <link rel="stylesheet" type="text/css" href="{% static '/css/bootstrap.min.css'%}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css">
     <link href="{% static 'fontawesomefree/css/all.min.css' %}" rel="stylesheet" type="text/css">
-<!--    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">-->
-<!--    <link rel="stylesheet" href="http://fortawesome.github.io/Font-Awesome/assets/font-awesome/css/font-awesome.css">-->
 <style>
 
 
@@ -202,6 +200,9 @@
     }
 }
 </style>
+    {% block button %}
+
+    {% endblock %}
 <style>
 
 @font-face {
@@ -284,31 +285,7 @@
 <script type="text/javascript">
     var map_view = [-17.824858, 31.053028];
     var zoom = 8;
-    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    });
-    var baseMaps = {
-        "osm": osm,
-    };
-
-    var overLayMaps = {
-    };
-
-    function clearBackGround(feature) {
-    return {
-        fillColor: getColor(feature.properties.density),
-        fillOpacity: 0
-    };
-}
 </script>
-
-{% block basemaps %}
-
-{% endblock %}
-
-{% block overlaymaps %}
-
-{% endblock %}
 
 {% block map_centre %}
 
@@ -319,7 +296,22 @@
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     });
+
     osm.addTo(map);
+
+    var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
+
+    var baseMaps = {
+        "Osm": osm,
+        "Esri_WorldImagery": Esri_WorldImagery,
+    };
+
+    var overLayMaps = {
+    };
+
+    var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
 
     var circle = L.circle([-17.824858, 31.053028], {
         color: 'red',
@@ -328,12 +320,20 @@
         radius: 500
     }).addTo(map);
 
-    var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
 </script>
 
-    {% block java %}
+{% block basemaps %}
 
-    {% endblock %}
+{% endblock %}
+
+{% block overlaymaps %}
+
+{% endblock %}
+
+{% block java %}
+
+{% endblock %}
+
 </body>
 
 </html>

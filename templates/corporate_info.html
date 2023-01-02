@@ -1,21 +1,19 @@
 
 <div class="row">
     <div class="col-md">
-        <p>Name</p>
-        <p>Company Type</p>
-        <p>Date of Registration</p>
-        <p>Nationality</p>
-        <p>Registration Number</p>
-        <p>Agents</p>
+        Name<br>
+        Date of Registration<br>
+        Nationality<br>
+        Registration Number<br>
+        Agents<br>
     </div>
     <div class="col-md">
-        <p>{{ corp.name }}</p>
-        <p>{{ corp.type }}</p>
-        <p>{{ corp.doi }}</p>
-        <p>{{ corp.nationality }}</p>
-        <p>{{ corp.reg_number }}</p>
+        {{ corp.name }} {{ corp.type }}<br>
+        {{ corp.doi }}<br>
+        {{ corp.nationality }}<br>
+        {{ corp.reg_number }}<br>
         {% for member in corp.corpagentrelation_set.all %}
-        <p>{{ member.agent }}</p>
+        {{ member.agent.first_name }} {{ member.agent.last_name }}<br>
         {% endfor %}
     </div>
 </div>

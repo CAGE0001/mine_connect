@@ -29,10 +29,7 @@
             <a class="btn  btn-block"><h5>Reports</h5></a>
         </div>
     </div>
-        <br>
     <div class="row">
-        <div class="col-md">
-        </div>
         <div class="col-md">
         </div>
         <div class="col-md-3"></div>
@@ -62,10 +59,9 @@
             <h5>Date Created</h5>
             </div>
         </div>
-		<br>
-		{% for report in report_filter.qs %}
+		{% for report in page_obj %}
 		<div class="list_content">
-            <div class="list-line"><a href="{% url 'mine_report_detail.html' pk=report.id %}">
+            <div class="list-line"><a class="text-success" href="{{ MEDIA_URL }}{{ report.pdf.url }}">
                 <div class="row">
                     <div class="col-md-2">
                         <p>{{report.date_created}}</p>
@@ -83,7 +79,24 @@
 	</div>
 </div>
 {% endif %}
-<br>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
 <br>
 <div class="card-header">
     <div class="row">
@@ -98,8 +111,6 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md">
-        </div>
         <div class="col-md">
         </div>
         <div class="col-md-3"></div>
@@ -128,10 +139,9 @@
             <h5>Date Created</h5>
             </div>
         </div>
-		<br>
 		{% for report in cert_filter.qs %}
 		<div class="list_content">
-            <div class="list-line"><a href="{% url 'mine_certificate_detail.html' pk=report.id %}">
+            <div class="list-line"><a class="text-success" href="{% url 'mine_certificate_detail.html' pk=report.id %}">
                 <div class="row">
                     <div class="col-md-2">
                         <p>{{report.date_created}}</p>

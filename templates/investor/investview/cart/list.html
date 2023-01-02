@@ -23,8 +23,7 @@
     <div class="col-md">
         <div class="card-header">
             <h3>Cart Items</h3>
-        </div>
-        <div class="card-body bg-white">
+            <br>
             <div class="row">
                 <div class="col-md">
                 <h5>Date</h5>
@@ -39,10 +38,11 @@
                 <h5>Valid</h5>
                 </div>
             </div>
-            <br>
-            {% for record in filter.qs %}
+        </div>
+        <div class="card-body bg-white">
+            {% for record in page_obj %}
             <div class="list_content">
-                <div class="list-line"><a class="text-success" href="{% url 'investor/investview/cart/mandate_request.html' pk=record.id %}">
+                <div class="list-line"><a class="text-success" href="{% url 'investor/investview/cart_request_detail.html' pk=record.id %}">
                     <div class="row">
                         <div class="col-md">
                         <p>{{record.date_created}}</p>
@@ -62,6 +62,23 @@
             {% endfor %}
         </div>
         <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
     </div>
 </div>
 <br>

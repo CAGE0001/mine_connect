@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+	<br>
+	<br>
+	<br>
+
+<div class="row">
+	<div class="col-md-5">
+<!--		<div class="card card-body">-->
+			<div class="row">
+				<div class="col-md">
+					<a class="text-success" href="{% url 'player_detail.html' pk=player.id %}"><h3>{{ player.name }} </h3></a>
+				</div>
+			</div>
+			<br>
+	</div>
+
+	{% if mine.date_created %}
+	<div class="col-md-1">
+		<div class="date">
+<!--			<h5>{{ driver.date_created }}</h5>-->
+		</div>
+	</div>
+	{% endif%}
+	<div class="col-md-6">
+	</div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'player_archive' pk=player.id %}">Letters</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_archive_receipts' pk=player.id %}">Receipts</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-block" ><h5>Agreements</h5></a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_archive_others' pk=player.id %}">Others</a>
+        </div>
+    </div>
+</div>
+<br>
+<div class="row">
+<div class="col-md-3">
+        <form method="get">
+            <div class="row">
+                <div class="form col-md">
+                {{ agreement_filter.form|crispy}}
+                </div>
+            </div>
+            <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+        </form>
+</div>
+<div class="col-md">
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md">
+            <h5>Date</h5>
+            </div>
+            <div class="col-md">
+            <h5>Mine</h5>
+            </div>
+            <div class="col-md">
+            <h5>Type</h5>
+            </div>
+            <div class="col-md">
+            <h5>Other Party</h5>
+            </div>
+        </div>
+		<br>
+		{% for claim in agreement_filter.qs %}
+		<div class="list_content">
+            <div class="list-line"><a class="text-success" href="{{ MEDIA_URL }}{{ claim.pdf.url }}">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{claim.report_date}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{claim.mine}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{claim.type}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{ claim.other_party }}</p>
+                    </div>
+                </div>
+            </a></div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+</div>
+</div>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+{% endblock %}

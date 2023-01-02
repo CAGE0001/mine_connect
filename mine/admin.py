@@ -144,7 +144,7 @@ admin.site.register(MineInvestReq, MineInvestReqAdmin)
 
 
 class MineAdmin(admin.ModelAdmin):
-    list_display = ('name', 'resource_type')
+    list_display = ('name', 'country')
 
 
 admin.site.register(Mine, MineAdmin)
@@ -198,8 +198,15 @@ class MineReportsAdmin(admin.ModelAdmin):
 admin.site.register(MineReports, MineReportsAdmin)
 
 
+class RasterAdmin(admin.ModelAdmin):
+    list_display = ('type', 'description')
+
+
+admin.site.register(Raster, RasterAdmin)
+
+
 class ClaimRegCertAdmin(admin.ModelAdmin):
-    list_display = ('claim', 'issue_date')
+    list_display = ('claim', 'pdf')
 
 
 admin.site.register(ClaimRegCert, ClaimRegCertAdmin)
@@ -234,6 +241,20 @@ class MandateRequestAdmin(admin.ModelAdmin):
 
 admin.site.register(MandateRequest, MandateRequestAdmin)
 admin.site.register(MineMandateRequest)
+
+
+class CountryRasterRelationAdmin(admin.ModelAdmin):
+    list_display = ('mine', 'raster')
+
+
+admin.site.register(MineRasterRelation)
+
+
+class CountryRasterRelationAdmin(admin.ModelAdmin):
+    list_display = ('country', 'raster')
+
+
+admin.site.register(CountryRasterRelation, CountryRasterRelationAdmin)
 
 
 class MandateAdmin(admin.ModelAdmin):

@@ -4,7 +4,7 @@
 <style>
 .expand{
     position:absolute;
-    top:170px;
+    top:115px;
     right:50px;
     z-index: 1000;
 }
@@ -27,7 +27,7 @@
             </div>
         </div>
     </div>
-    <a class="expand" href={{cancel}} ><i class="fab fa-light fa-window-maximize fa-lg"></i><< Back</a>
+    <a class="expand" href={{cancel}} ><i class="fa-solid fa-compress" style="font-size:30px;color:success;"></i></a>
     <div>
         <div id="map" style="height: 620px; "></div>
     </div>
@@ -35,18 +35,26 @@
 <br>
 {% endblock %}
 
-{% block overlaymaps %}
-<script type="text/javascript">
-    var mineBoundaryJson = {{poly.location.geojson|safe}};
-    var claimPolyLayer = L.geoJSON(mineBoundaryJson).
-    layerControl.addOverlay(claimPolyLayer, "ClaimBoundary");
-</script>
-{% endblock %}
-
-    {% block map_centre %}
-{% include 'map_java/map_centre.html' %}
+    {% block java %}
+    <script type="text/javascript">
+    var claimList = []
+    {% for poly in claims %}
+    var claimBoundaryLayer = L.geoJSON().addTo(map);
+    var claimJson = {{poly.name.miningclaimpolygon_set.all.last.location.geojson|safe}};
+    claimBoundaryLayer.addData(claimJson).bindPopup('<a href="{% url 'mine_owner/mining_claim_map.html' pk=poly.name.id %}">{{poly.name}}</a><hr><p>{{poly.name.area}} Hectares</p>');
+    {% endfor %}
+    </script>
     {% endblock %}
 
-    {% block java %}
-{% include 'map_java/mine_location.html' %}
+    {% block map_centre %}
+    <script type="text/javascript">
+    var zoom = 14
+    </script>
+        {% include 'map_java/map_centre.html' %}
+    {% endblock %}
+
+    {% block overlaymaps %}
+    <script type="text/javascript">
+        layerControl.addOverlay(claimBoundaryLayer, "Mining Claims");
+    </script>
     {% endblock %}

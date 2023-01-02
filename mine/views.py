@@ -1,11 +1,13 @@
 from calmjs.parse.unparsers.extractor import value
+from django.urls import reverse_lazy
 
 from .forms import *
 from .filters import *
-from .models import *
+from django.core.paginator import Paginator
 from django.contrib import messages, sessions
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.auth.models import User, auth
+from django.contrib.auth.views import PasswordChangeView, PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from collections import defaultdict
 from sequences import get_next_value
@@ -20,7 +22,6 @@ from .serializers import *
 from rest_framework_gis import serializers
 from django.http import JsonResponse
 import kwargs as kwargs
-from django.db.models import Sum
 from django.db.models.functions import Now
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.defaultfilters import register
@@ -28,8 +29,7 @@ from django.utils import timezone
 from django.forms import inlineformset_factory
 from django.db.models.functions import Concat
 from django.contrib.gis.geos import Polygon, Point, GEOSGeometry
-
-
+from django.db.models import Q
 
 @register.filter
 def media(form):
@@ -40,12 +40,14 @@ def index(request):
     return render(request, 'index.html')
 
 
+@login_required(login_url='login.html')
 def owner_index(request):
 
     player = request.user.playeruserrelation_set.all().last().player
     alerts = Alerts.objects.filter(status='Active')
     mines = MineOwnerRelation.objects.filter(owner_id=player.id)
     min_locs = []
+    min_loc_count = len(min_locs)
     for min in mines:
         mineloc = MineLocation.objects.filter(name_id=min.mine.id).last()
         min_locs.append(mineloc)
@@ -55,10 +57,12 @@ def owner_index(request):
         'alerts': alerts,
         'mines': mines,
         'min_locs': min_locs,
+        'min_loc_count': min_loc_count,
     }
     return render(request, 'mine_owner/owner_index.html', context)
 
 
+@login_required(login_url='login.html')
 def investor_index(request):
 
     player = request.user.playeruserrelation_set.all().last().player
@@ -71,6 +75,7 @@ def investor_index(request):
     return render(request, 'investor/investor_index.html', context)
 
 
+@login_required(login_url='login.html')
 def provider_index(request):
 
     player = request.user.playeruserrelation_set.all().last().player
@@ -112,30 +117,57 @@ def confirm_logout(request):
     return render(request, 'confirm_logout.html', context)
 
 
+class PasswordsChangeView(PasswordChangeView):
+    form_class = PasswordChangeForm
+    success_url = reverse_lazy('module_options.html')
+
+
 @login_required(login_url='login.html')
 def logout(request):
     auth.logout(request)
     return redirect('/')
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def module_options(request):
 
     player = PlayerUserRelation.objects.filter(party=request.user).last().player
     alerts = Alerts.objects.filter(player=player)
     logger = PlayerUserRelation.objects.filter(party=request.user).last()
-    player = request.user.playeruserrelation_set.all().last().player
+    logger_list = []
+    logger_count = len(logger_list)
+    if logger.status == 'Active':
+        if logger.internal == True:
+            logger_list.append('index.html')
+        if logger.mine_owner == True:
+            logger_list.append('mine_owner/owner_index.html')
+        if logger.investor == True:
+            logger_list.append('investor/investor_index.html')
+        if logger.service_provider == True:
+            logger_list.append('services/provider_index.html')
+        if logger_count == 1:
+            context = {
+                'player': player,
+                'alerts': alerts,
+            }
+            return render(request, logger_list[0], context)
 
-    context = {
-        'logger': logger,
-        'player': player,
-        'alerts': alerts,
-    }
-    return render(request, 'module_options.html', context)
+        context = {
+            'logger': logger,
+            'player': player,
+            'alerts': alerts,
+        }
+        return render(request, 'module_options.html', context)
+
+    else:
+        messages.info(request, 'Invalid Credentials')
+        return redirect('/')
 
 
-# @login_required(login_url='login.html')
+
+
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def add_individual(request):
 
@@ -144,6 +176,11 @@ def add_individual(request):
     cancel = request.META.get('HTTP_REFERER')
     individuals = IndRecord.objects.all()
     individuals_filter = IndiRecordFilter(request.GET, queryset=individuals)
+    records = individuals_filter.qs
+
+    paginator = Paginator(records, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     if request.method == 'POST':
         form = IndividualForm(request.POST)
@@ -157,18 +194,19 @@ def add_individual(request):
                 context = {
                     'form': form,
                     'filter': individuals_filter,
+                    'page_obj': page_obj,
                     'type': 'individual',
                     'cancel': cancel,
                     'alerts': alerts,
                 }
                 return render(request, 'add_individual.html', context)
-
-            # if record.dob >= record.date_created - timedelta(years=18):
-            #     messages.info(request, 'Individual too young to be registered')
-            #     return render(request, 'add_individual.html', {'form': form, 'filter': individuals_filter})
-
             record.author = request.user
             record.save()
+
+            indi = IndRecord.objects.filter(dob=record.dob, nid=record.nid).last()
+            for item in record.agents.all():
+                IndiAgentRelation.objects.create(individual=indi.id, agent_id=item.id)
+
             return redirect('add_individual.html')
 
     else:
@@ -177,6 +215,7 @@ def add_individual(request):
     context = {
         'form': form,
         'filter': individuals_filter,
+        'page_obj': page_obj,
         'type': 'individual',
         'cancel': cancel,
         'alerts': alerts,
@@ -184,7 +223,7 @@ def add_individual(request):
     return render(request, 'add_individual.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def individual_edit(request, pk):
 
@@ -222,7 +261,7 @@ def individual_edit(request, pk):
     return render(request, 'individual_edit.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def individual_detail(request, pk):
 
@@ -238,7 +277,7 @@ def individual_detail(request, pk):
     return render(request, 'individual_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def company_detail(request, pk):
 
@@ -254,7 +293,7 @@ def company_detail(request, pk):
     return render(request, 'company_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def syndicate_detail(request, pk):
 
@@ -270,7 +309,7 @@ def syndicate_detail(request, pk):
     return render(request, 'syndicate_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def syndicate_edit(request, pk):
 
@@ -304,7 +343,7 @@ def syndicate_edit(request, pk):
     return render(request, 'syndicate_edit.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def corporate_edit(request, pk):
 
@@ -338,7 +377,7 @@ def corporate_edit(request, pk):
     return render(request, 'corporate_edit.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def add_corporate(request):
 
@@ -347,6 +386,12 @@ def add_corporate(request):
     cancel = request.META.get('HTTP_REFERER')
     companies = CorpRecord.objects.all()
     company_filter = CorpRecordFilter(request.GET, queryset=companies)
+    records = company_filter.qs
+
+    paginator = Paginator(records, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    corp = None
 
     if request.method == 'POST':
         form = CorporateForm(request.POST)
@@ -365,6 +410,11 @@ def add_corporate(request):
 
             record.author = request.user
             record.save()
+
+            corp = CorpRecord.objects.filter(name=record.name, reg_number=record.reg_number).last()
+            for item in record.agents.all():
+                CorpAgentRelation.objects.create(company=corp.id, agent_id=item.id)
+
             return redirect('add_corporate.html')
 
     else:
@@ -373,13 +423,14 @@ def add_corporate(request):
     context = {
         'form': form,
         'filter': company_filter,
+        'page_obj': page_obj,
         'cancel': cancel,
         'alerts': alerts,
     }
     return render(request, 'add_corporate.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def add_syndicate(request):
 
@@ -388,6 +439,12 @@ def add_syndicate(request):
     cancel = request.META.get('HTTP_REFERER')
     syndicates = Syndicate.objects.all()
     syndicate_filter = SyndRecordFilter(request.GET, queryset=syndicates)
+    records = syndicate_filter.qs
+
+    paginator = Paginator(records, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    synd = None
 
     if request.method == 'POST':
         form = SyndicateForm(request.POST)
@@ -399,13 +456,15 @@ def add_syndicate(request):
             if Syndicate.objects.filter(name=record.name).exists():
                 messages.info(request, 'Entity already exists')
                 return render(request, 'add_syndicate.html', {'form': form, 'filter': syndicate_filter})
-
-            # if record.dor >= record.date_created:
-            #     messages.info(request, 'Syndicate date of incorporation defective')
-            #     return render(request, 'add_syndicate.html', {'form': form, 'filter': syndicate_filter})
-
             record.author = request.user
             record.save()
+
+            synd = Syndicate.objects.filter(name=record.name, dor=record.dor).last()
+            for item in record.agents.all():
+                SyndAgentRelation.objects.create(syndicate=synd.id, agent_id=item.id)
+            for item in record.member.all():
+                SyndMemberRelation.objects.create(syndicate=synd.id, member_id=item.id)
+
             return redirect('add_syndicate.html', )
 
     else:
@@ -414,13 +473,14 @@ def add_syndicate(request):
     context = {
         'form': form,
         'filter': syndicate_filter,
+        'page_obj': page_obj,
         'cancel': cancel,
         'alerts': alerts,
     }
     return render(request, 'add_syndicate.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def ind_player_new(request, pk):
 
@@ -432,7 +492,7 @@ def ind_player_new(request, pk):
 
     if request.method == 'POST':
         form = PlayerForm(request.POST)
-        form1= IndiStatUpdate(request.POST, instance=post)
+        form1 = IndiStatUpdate(request.POST, instance=post)
         if form.is_valid():
             record = form.save(commit=False)
             record.ref = pk
@@ -469,7 +529,7 @@ def ind_player_new(request, pk):
     return render(request, 'ind_player_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def player_individuals_list(request):
 
@@ -477,15 +537,21 @@ def player_individuals_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = IndRecord.objects.filter(status='None')
     filter = PlayerIndFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'individuals_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def player_company_list(request):
 
@@ -493,30 +559,41 @@ def player_company_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = CorpRecord.objects.filter(status='None')
     filter = PlayerCorpFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'company_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_mandate_list(request):
 
     player = PlayerUserRelation.objects.filter(party=request.user).last().player
     alerts = Alerts.objects.filter(player=player)
-    player = request.user.playeruserrelation_set.all().last().player
     investor = player.investor_set.all().last()
     cart_requests = CartRequest.objects.filter(investor=investor)
-    filter_mandates = Mandate.objects.all()
+    filter_mandates = Mandate.objects.filter(mandate_request__cart_mine_match__cart_request__investor=investor)
     filter = MandateListFilter(request.GET, queryset=filter_mandates)
     filter_mandates = filter.qs
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     mandate_list = []
     mandate_count = len(mandate_list)
-    mandate_requests = 0
-    mandate = 0
+    mandate_requests = None
+    mandate = None
     if cart_requests:
         for cart_request in cart_requests:
             cart_mine_matches = cart_request.cartminematch_set.all()
@@ -525,11 +602,13 @@ def investview_mandate_list(request):
                     mandate_requests = cart_mine_match.mandaterequest_set.all()
                     if mandate_requests:
                         for mandate_request in mandate_requests:
-                            mandate = filter_mandates.filter(mandate_request=mandate_request).last()
-                            mandate_list.append(mandate)
+                            mandate = Mandate.objects.filter(mandate_request=mandate_request).last()
+                            if mandate:
+                                mandate_list.append(mandate)
 
     context = {
         'filter': filter,
+        'page_obj': page_obj,
         'mandate_list': mandate_list,
         'mandate_count': mandate_count,
         'alerts': alerts,
@@ -537,7 +616,7 @@ def investview_mandate_list(request):
     return render(request, 'investor/investview/mandate/list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_field_request_list(request):
 
@@ -545,9 +624,15 @@ def investview_field_request_list(request):
     alerts = Alerts.objects.filter(player=player)
     investor = player.investor_set.all().last()
     cart_requests = CartRequest.objects.filter(investor_id=investor.id)
-    filter_requests = FieldReq.objects.all()
+    filter_requests = FieldReq.objects.filter(mandate__mandate_request__cart_mine_match__cart_request__investor=investor)
     filter = InvestorFieldReqFilter(request.GET, queryset=filter_requests)
     filter_requests = filter.qs
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     request_list = []
     request_count = len(request_list)
     mandate_requests = 0
@@ -570,6 +655,7 @@ def investview_field_request_list(request):
 
     context = {
         'filter': filter,
+        'page_obj': page_obj,
         'request_list': request_list,
         'mandate_count': request_count,
         'alerts': alerts,
@@ -577,7 +663,7 @@ def investview_field_request_list(request):
     return render(request, 'investor/investview/fieldreq/list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def player_syndicate_list(request):
 
@@ -586,14 +672,19 @@ def player_syndicate_list(request):
     records = Syndicate.objects.filter(status='None')
     filter = PlayerSyndFilter(request.GET, queryset=records)
 
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'syndicate_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mandate_proforma_list(request):
 
@@ -601,15 +692,21 @@ def mandate_proforma_list(request):
     alerts = Alerts.objects.filter(player=online)
     records = MandateProforma.objects.all()
     filter = MandateProformaFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'mandate_proforma_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def corp_player_new(request, pk):
 
@@ -625,7 +722,7 @@ def corp_player_new(request, pk):
         if form.is_valid():
             record = form.save(commit=False)
             record.ref = pk
-            record.name = corp.name
+            record.name = corp.name + " " + corp.type
             record.type = 'Corporate'
             record = form.save(commit=False)
 
@@ -658,14 +755,14 @@ def corp_player_new(request, pk):
     return render(request, 'corp_player_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def synd_player_new(request, pk):
 
     player = PlayerUserRelation.objects.filter(party=request.user).last().player
     alerts = Alerts.objects.filter(player=player)
     synd = Syndicate.objects.get(id=pk)
-    post = get_object_or_404(CorpRecord, id=pk)
+    post = get_object_or_404(Syndicate, id=pk)
     cancel = request.META.get('HTTP_REFERER')
 
     if request.method == 'POST':
@@ -707,7 +804,7 @@ def synd_player_new(request, pk):
     return render(request, 'synd_player_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_cart_request_new(request, pk):
 
@@ -745,7 +842,7 @@ def investview_cart_request_new(request, pk):
     return render(request, 'investor/investview/cart/request.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def player_edit(request, pk):
 
@@ -772,13 +869,14 @@ def player_edit(request, pk):
     return render(request, 'player_edit.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_new(request):
 
     player = PlayerUserRelation.objects.filter(party=request.user).last().player
     alerts = Alerts.objects.filter(player=player)
     cancel = request.META.get('HTTP_REFERER')
+    mine = None
     if request.method == 'POST':
         form = NewMineForm(request.POST)
         if form.is_valid():
@@ -789,9 +887,11 @@ def mine_new(request):
             if Mine.objects.filter(name=record.name).exists():
                 messages.info(request, 'Entity already exists')
                 return render(request, 'mine_new.html', {'form': form})
-
             record.author = request.user
             record.save()
+            mine = Mine.objects.filter(name=record.name).last()
+            for item in record.mineral.all():
+                MineMineral.objects.create(mine_id=record.mine.id, mineral_id=item.id, author=request.user)
 
             return redirect('mine_list.html')
 
@@ -805,7 +905,7 @@ def mine_new(request):
     return render(request, 'mine_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_edit(request, pk):
 
@@ -834,7 +934,7 @@ def mine_edit(request, pk):
     return render(request, 'mine_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mineview_production_mineral(request, pk, template):
 
@@ -916,7 +1016,7 @@ def mineview_production_mineral(request, pk, template):
     return render(request, 'mineview_production_mineral.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mineview_production_ore(request, pk):
 
@@ -998,7 +1098,7 @@ def mineview_production_ore(request, pk):
     return render(request, 'mineview_production_ore.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mineview_production_waste(request, pk):
 
@@ -1080,7 +1180,7 @@ def mineview_production_waste(request, pk):
     return render(request, 'mineview_production_waste.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def more_production_reports(request, pk, template):
 
@@ -1121,6 +1221,10 @@ def more_production_reports(request, pk, template):
                 else:
                     mineral_production.append(produce)
                 n += 1
+        records = minerals
+        paginator = Paginator(records, 10)
+        page_number = request.GET.get('page')
+        minerals = paginator.get_page(page_number)
 
     if products.filter(material='Ore'):
         ore = products.filter(material='Ore')
@@ -1136,6 +1240,10 @@ def more_production_reports(request, pk, template):
                 else:
                     ore_production.append(produce)
                 n += 1
+        records = ore
+        paginator = Paginator(records, 10)
+        page_number = request.GET.get('page')
+        ore = paginator.get_page(page_number)
 
     if products.filter(material='Waste'):
         waste = products.filter(material='Waste')
@@ -1151,21 +1259,37 @@ def more_production_reports(request, pk, template):
                 else:
                     waste_production.append(produce)
                 n += 1
+        records = waste
+        paginator = Paginator(records, 10)
+        page_number = request.GET.get('page')
+        waste = paginator.get_page(page_number)
 
     if mine.mineworks_set.all():
         works = mine.mineworks_set.all()
         works_filter = MineviewWorksFilter(request.GET, queryset=works)
         works = works_filter.qs
+        records = works
+        paginator = Paginator(records, 10)
+        page_number = request.GET.get('page')
+        works = paginator.get_page(page_number)
     if mine.minelabour_set.all():
         labour = mine.minelabour_set.all().last()
     if mine.mineplant_set.all():
         plant = mine.mineplant_set.all()
         plant_filter = MineviewPlantFilter(request.GET, queryset=plant)
         plant = plant_filter.qs
+        records = plant
+        paginator = Paginator(records, 10)
+        page_number = request.GET.get('page')
+        plant = paginator.get_page(page_number)
     if mine.mineyellowplant_set.all():
         mobile = mine.mineyellowplant_set.all()
         mobile_filter = MineviewMobileFilter(request.GET, queryset=mobile)
         mobile = mobile_filter.qs
+        records = mobile
+        paginator = Paginator(records, 10)
+        page_number = request.GET.get('page')
+        mobile = paginator.get_page(page_number)
 
     context = {
         'mine': mine,
@@ -1191,7 +1315,7 @@ def more_production_reports(request, pk, template):
     return render(request, template, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def more_mine_reports(request, pk):
 
@@ -1214,7 +1338,7 @@ def more_mine_reports(request, pk):
     return render(request, 'more_mine_reports.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def more_mine_attach(request, pk):
 
@@ -1237,7 +1361,7 @@ def more_mine_attach(request, pk):
     return render(request, 'more_mine_attach.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_attach_report(request, pk):
 
@@ -1249,13 +1373,15 @@ def mine_attach_report(request, pk):
         form = AttachReportForm(request.POST, request.FILES)
         if form.is_valid():
             record = form.save(commit=False)
-            if MineReports.objects.filter(mine=record.mine, type=record.type, report_date=record.report_date).exists():
+            record.mine_id = mine.id
+            if MineReports.objects.filter(mine_id=mine.id, type=record.type, report_date=record.report_date).exists():
                 messages.info(request, 'Report already Exists')
-                return render(request, 'mine_attach_report.html', {'form': form})
+                redirect(cancel)
             record.author = request.user
             record.date_created = Now()
             record.save()
-        return redirect('more_mine_report.html')
+
+            return redirect(cancel)
 
     form = AttachReportForm()
     context = {
@@ -1267,7 +1393,7 @@ def mine_attach_report(request, pk):
     return render(request, 'mine_attach_report.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_attach_certificate(request, pk):
 
@@ -1279,13 +1405,15 @@ def mine_attach_certificate(request, pk):
         form = AttachCertForm(request.POST, request.FILES)
         if form.is_valid():
             record = form.save(commit=False)
-            if MineReports.objects.filter(mine=record.mine, type=record.type, report_date=record.report_date).exists():
+            record.mine_id = mine.id
+            if MineCertificates.objects.filter(mine=record.mine, type=record.type, issue_date=record.issue_date).exists():
                 messages.info(request, 'Certificate already Exists')
-                return render(request, 'mine_attach_certificate.html', {'form': form})
+                redirect(cancel)
             record.author = request.user
             record.date_created = Now()
             record.save()
-        return redirect('more_mine_attach.html')
+
+        return redirect(cancel)
 
     form = AttachCertForm()
     context = {
@@ -1297,7 +1425,135 @@ def mine_attach_certificate(request, pk):
     return render(request, 'mine_attach_certificate.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def attach_letter(request, pk):
+
+    player = Player.objects.get(id=pk)
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
+    if request.method == 'POST':
+        form = AttachLetterForm(request.POST, request.FILES, player=player)
+        if form.is_valid():
+            record = form.save(commit=False)
+            record.player_id = player.id
+            if MineLetters.objects.filter(mine_id=record.mine_id, type=record.type, report_date=record.report_date, other_party=record.other_party, subject=record.subject).exists():
+                messages.info(request, 'Report already Exists')
+                redirect(player_detail.html, pk=player.id)
+            record.author = request.user
+            record.date_created = Now()
+            record.save()
+
+        return redirect(player_detail.html, pk=player.id)
+
+    form = AttachLetterForm(player=player)
+    context = {
+        'player': player,
+        'form': form,
+        'cancel': cancel,
+        'alerts': alerts,
+    }
+    return render(request, 'add_letter.html', context)
+
+
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def attach_receipt(request, pk):
+
+    player = Player.objects.get(id=pk)
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
+    if request.method == 'POST':
+        form = AttachReceiptForm(request.POST, request.FILES, player=player)
+        if form.is_valid():
+            record = form.save(commit=False)
+            record.player_id = player.id
+            if MineReceipts.objects.filter(mine_id=record.mine_id, type=record.type, report_date=record.report_date, issued_by=record.issued_by, rec_number=record.rec_number).exists():
+                messages.info(request, 'Report already Exists')
+                redirect(player_detail.html, pk=player.id)
+            record.author = request.user
+            record.date_created = Now()
+            record.save()
+        return redirect(player_detail.html, pk=player.id)
+
+    form = AttachReceiptForm(player=player)
+    context = {
+        'player': player,
+        'form': form,
+        'cancel': cancel,
+        'alerts': alerts,
+    }
+    return render(request, 'add_receipt.html', context)
+
+
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def attach_agreement(request, pk):
+
+    player = Player.objects.get(id=pk)
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
+    object = None
+    if request.method == 'POST':
+        form = AttachAgreementForm(request.POST, request.FILES, player=player)
+        if form.is_valid():
+            record = form.save(commit=False)
+            record.player_id = player.id
+            if MineAgreements.objects.filter(mine_id=record.mine_id, type=record.type, report_date=record.report_date, counter_party=record.counter_party).exists():
+                messages.info(request, 'Report already Exists')
+                redirect(player_detail.html, pk=player.id)
+            record.author = request.user
+            record.date_created = Now()
+            record.save()
+
+            if record.addendum == True:
+                object = MineAgreements.objects.filter(mine_id=record.mine_id, type=record.type, report_date=record.report_date, counter_party=record.counter_party).last()
+                MineAgreementAddendum.objects.Create(principal_id=record.addendum, addendum=object.id)
+
+        return redirect(cancel)
+
+    form = AttachAgreementForm(player=player)
+    context = {
+        'player': player,
+        'form': form,
+        'cancel': cancel,
+        'alerts': alerts,
+    }
+    return render(request, 'add_agreement.html', context)
+
+
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def attach_other_doc(request, pk):
+
+    player = Player.objects.get(id=pk)
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
+    if request.method == 'POST':
+        form = AttachOtherDocForm(request.POST, request.FILES, player=player)
+        if form.is_valid():
+            record = form.save(commit=False)
+            record.player_id = player.id
+            if OtherDocs.objects.filter(mine_id=record.mine_id, report_date=record.report_date, subject=record.subject).exists():
+                messages.info(request, 'Report already Exists')
+                redirect(cancel)
+            record.author = request.user
+            record.date_created = Now()
+            record.save()
+
+        return redirect(cancel)
+
+    form = AttachOtherDocForm(player=player)
+    context = {
+        'player': player,
+        'form': form,
+        'cancel': cancel,
+        'alerts': alerts,
+    }
+    return render(request, 'add_other_doc.html', context)
+
+
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_add_claim(request, pk):
 
@@ -1323,7 +1579,7 @@ def mine_add_claim(request, pk):
                 form1.status = 'Attached'
                 form1.save()
 
-                return redirect('mine_detail_mine.html', pk=mine.id)
+            return redirect('mine_detail_mine.html', pk=mine.id)
 
     form = MineClaimForm()
     form1 = ClaimStatusForm(instance=post)
@@ -1336,7 +1592,7 @@ def mine_add_claim(request, pk):
     return render(request, 'mine_add_claim.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def claim_reg_cert_add(request, pk):
 
@@ -1348,9 +1604,16 @@ def claim_reg_cert_add(request, pk):
         form = AttachClaimCertForm(request.POST, request.FILES)
         if form.is_valid():
             record = form.save(commit=False)
+            record.claim_id = claim.id
             if ClaimRegCert.objects.filter(claim_id=record.claim_id).exists():
                 messages.info(request, 'Certificate already Exists')
-                return render(request, 'claim_reg_cert_add.html', {'form': form})
+                context = {
+                    'claim': claim,
+                    'form': form,
+                    'cancel': cancel,
+                    'alerts': alerts,
+                }
+                return render(request, 'claim_reg_cert_add.html', context)
             record.author = request.user
             record.date_created = Now()
             record.save()
@@ -1366,7 +1629,7 @@ def claim_reg_cert_add(request, pk):
     return render(request, 'claim_reg_cert_add.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_mine_detail(request, pk, template):
 
@@ -1508,7 +1771,7 @@ def proview_mine_detail(request, pk, template):
     return render(request, template, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_detail(request, pk, template):
 
@@ -1516,8 +1779,14 @@ def mine_detail(request, pk, template):
     alerts = Alerts.objects.filter(player=player)
     cancel = request.META.get('HTTP_REFERER')
     mine = Mine.objects.get(id=pk)
+    sample_points = SamplePoint.objects.filter(mine=mine)
+    mine_area = 0
     mineloc = MineLocation.objects.filter(name_id=mine.id).last()
     polygon = mine.minepolygon_set.all().last()
+    works_filter = None
+    plant_filter = None
+    mobile_filter = None
+
     reports = mine.minereports_set.all()[:2]
     attachments = mine.minecertificates_set.all()[:2]
     visit_requests_list = []
@@ -1544,8 +1813,10 @@ def mine_detail(request, pk, template):
     claims = claims_filter.qs
     claimpoly = []
     for claim in claims:
+        mine_area = mine_area + claim.claim.area
         if claim.claim.miningclaimpolygon_set.all():
-            claimpoly.append(claim.claim.miningclaimpolygon_set.all().last())
+            polygon = claim.claim.miningclaimpolygon_set.all().last()
+            claimpoly.append(polygon)
 
     cart_matches = CartMineRelation.objects.filter(mine=mine)
     cart_filter = CartMatchFilter(request.GET, queryset=cart_matches)
@@ -1583,9 +1854,9 @@ def mine_detail(request, pk, template):
                         mineral_production[i][1] = mineral_production[i][1] + prod.quantity
                     else:
                         if prod.material == 'ore':
-                            ore_production =+ prod.quantity
+                            ore_production += prod.quantity
                         else:
-                            waste_production =+ prod.quantity
+                            waste_production += prod.quantity
 
     if mine.mineworks_set.all():
         works = mine.mineworks_set.all()
@@ -1636,6 +1907,7 @@ def mine_detail(request, pk, template):
 
     context = {
         'mine': mine,
+        'mine_area': mine_area,
         'poly': polygon,
         'mineloc': mineloc,
         'claims_filter': claims_filter,
@@ -1672,13 +1944,17 @@ def mine_detail(request, pk, template):
         'mobile': mobile,
         'reports': reports,
         'attachments': attachments,
+        'works_filter': works_filter,
+        'plant_filter': plant_filter,
+        'mobile_filter': mobile_filter,
+        'sample_points': sample_points,
         'alerts': alerts,
         'cancel': cancel,
     }
     return render(request, template, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mandate_proforma_new(request, pk):
 
@@ -1698,18 +1974,12 @@ def mandate_proforma_new(request, pk):
 
             if MandateProforma.objects.filter(mandate_request=mandate_request).exists():
                 messages.info(request, 'Proforma already exists')
-                context = {
-                    'form': form,
-                    'mandate_request': mandate_request,
-                    'rates': rates,
-                    'cancel': cancel,
-                    'alerts': alerts,
-                }
-                return render(request, 'mandate_proforma_new.html', context)
+                return redirect('mandate_request_detail.html', pk=mandate_request.id)
 
             record.author = request.user
             record.save()
-            return redirect('mandate_request_detail.html', pk=mandate_request.id)
+
+        return redirect('mandate_request_detail.html', pk=mandate_request.id)
 
     else:
         form = MandateProformaForm()
@@ -1723,7 +1993,7 @@ def mandate_proforma_new(request, pk):
     return render(request, 'mandate_proforma_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def support_costs_new(request, pk):
 
@@ -1791,7 +2061,7 @@ def support_costs_new(request, pk):
         return render(request, 'investor/support_costs_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_activity_create(request, pk):
 
@@ -1845,7 +2115,7 @@ def field_activity_create(request, pk):
         return render(request, 'investor/field_activity_create.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_activity_edit(request, pk):
 
@@ -1880,7 +2150,7 @@ def field_activity_edit(request, pk):
         return render(request, 'investor/field_activity_edit.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_activity_attach_new(request, pk):
 
@@ -1917,7 +2187,7 @@ def field_activity_attach_new(request, pk):
         return render(request, 'field_attach_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_field_activity_attach_new(request, pk):
 
@@ -1954,7 +2224,7 @@ def proview_field_activity_attach_new(request, pk):
         return render(request, 'services/proview/field/attach_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_field_activity_acquit(request, pk):
 
@@ -1992,7 +2262,7 @@ def proview_field_activity_acquit(request, pk):
         return render(request, 'services/proview/field/acquit.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_activity_acquit(request, pk):
 
@@ -2029,7 +2299,7 @@ def field_activity_acquit(request, pk):
         return render(request, 'field_acquit.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_field_activity_create(request, pk):
 
@@ -2083,7 +2353,7 @@ def investview_field_activity_create(request, pk):
         return render(request, 'investor/investview/field/add.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_field_activity_edit(request, pk):
 
@@ -2117,7 +2387,7 @@ def investview_field_activity_edit(request, pk):
         }
         return render(request, 'investor/investview/field/edit.html', context)
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_proforma_new(request, pk):
 
@@ -2179,7 +2449,7 @@ def field_proforma_new(request, pk):
     }
     return render(request, 'field_proforma_new.html', context)
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_new(request, pk):
 
@@ -2229,7 +2499,7 @@ def field_new(request, pk):
     return render(request, 'field_proforma_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mining_claim_new(request):
 
@@ -2260,7 +2530,7 @@ def mining_claim_new(request):
     return render(request, 'mining_claim_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mining_claim_edit(request, pk):
 
@@ -2293,7 +2563,7 @@ def mining_claim_edit(request, pk):
     return render(request, 'mining_claim_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def attach_to_mine(request, pk):
 
@@ -2324,7 +2594,7 @@ def attach_to_mine(request, pk):
     return render(request, 'attach_to_mine.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mining_claim_detail(request, pk, template):
 
@@ -2333,14 +2603,15 @@ def mining_claim_detail(request, pk, template):
     cancel = request.META.get('HTTP_REFERER')
     claim = MiningClaim.objects.get(id=pk)
     mineloc = None
+    poly = None
+    if claim.miningclaimpolygon_set.all():
+        poly = claim.miningclaimpolygon_set.all().last()
     if MiningClaimLocation.objects.filter(name_id=pk):
         mineloc = MiningClaimLocation.objects.filter(name_id=pk).last()
     beacons = Beacon.objects.filter(mining_claim=claim)
     beacon_count = len(beacons)
     certificate = claim.claimregcert_set.all().last()
-    poly = None
-    if claim.miningclaimpolygon_set.all():
-        poly = claim.miningclaimpolygon_set.all().last()
+
 
     context = {
         'claim': claim,
@@ -2359,7 +2630,7 @@ def geo_jason(request, queryset, serialiser):
     return
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mining_claim_list(request):
 
@@ -2368,6 +2639,11 @@ def mining_claim_list(request):
     claims = MiningClaim.objects.all()
     claims_filter = ClaimsFilter(request.GET, queryset=claims)
     claims = claims_filter.qs
+    records = claims
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     location_list = []
     marker = None
     for claim in claims:
@@ -2377,13 +2653,14 @@ def mining_claim_list(request):
 
     context = {
         'filter': claims_filter,
+        'page_obj': page_obj,
         'alerts': alerts,
         'locations': location_list,
     }
     return render(request, 'mining_claim_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_list(request):
 
@@ -2392,21 +2669,28 @@ def mine_list(request):
     mines = Mine.objects.all()
     mine_filter = MineFilter(request.GET, queryset=mines)
     mines = mine_filter.qs
+    records = mines
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     location_list = []
     marker = None
     for mine in mines:
         if MineLocation.objects.filter(name_id=mine.id).last():
             marker = MineLocation.objects.filter(name_id=mine.id).last()
             location_list.append(marker)
+
     context = {
         'filter': mine_filter,
         'alerts': alerts,
         'locations': location_list,
+        'page_obj': page_obj,
     }
     return render(request, 'mine_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mineview_archive(request, template):
 
@@ -2420,30 +2704,58 @@ def mineview_archive(request, template):
     agreements_filter = None
     receipts_filter = None
     others_filter = None
+    records = None
+    records1 = None
+    records2 = None
+    records3 = None
+    page_obj = None
+    page_obj1 = None
+    page_obj2 = None
+    page_obj3 = None
     if MineLetters.objects.filter(player=player):
         letters = player.mineletters_set.all()
-        letters_filter = MineviewArchiveLetterFilter(request.GET, queryset=letters)
+        letters_filter = MineviewArchiveLetterFilter(request.GET, queryset=letters, player=player)
+        records = letters_filter.qs
+        paginator = Paginator(records, 15)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
     if MineAgreements.objects.filter(player=player):
         agreements = player.mineagreements_set.all()
         agreements_filter = MineviewArchiveAgreementFilter(request.GET, queryset=agreements)
+        records1 = agreements_filter.qs
+        paginator1 = Paginator(records1, 15)
+        page_number1 = request.GET.get('page')
+        page_obj1 = paginator1.get_page(page_number1)
     if MineReceipts.objects.filter(player=player):
         receipts = player.minereceipts_set.all()
         receipts_filter = MineviewArchiveReceiptFilter(request.GET, queryset=receipts)
+        records2 = receipts_filter.qs
+        paginator2 = Paginator(records2, 15)
+        page_number2 = request.GET.get('page')
+        page_obj2 = paginator2.get_page(page_number2)
     if OtherDocs.objects.filter(player=player):
         others = player.otherdocs_set.all()
         others_filter = MineviewArchiveOtherFilter(request.GET, queryset=others)
+        records3 = others_filter.qs
+        paginator3 = Paginator(records3, 15)
+        page_number3 = request.GET.get('page')
+        page_obj3 = paginator3.get_page(page_number3)
 
     context = {
         'letters_filter': letters_filter,
         'agreements_filter': agreements_filter,
         'receipts_filter': receipts_filter,
         'others_filter': others_filter,
+        'page_obj': page_obj,
+        'page_obj1': page_obj1,
+        'page_obj2': page_obj2,
+        'page_obj3': page_obj3,
         'alerts': alerts,
     }
     return render(request, template, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_employee_new(request, pk):
 
@@ -2479,7 +2791,7 @@ def mine_employee_new(request, pk):
     return render(request, 'mining_employee_new.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_employee_edit(request, pk):
 
@@ -2512,7 +2824,7 @@ def mine_employee_edit(request, pk):
     return render(request, 'mine_employee_edit.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_employee_list(request):
 
@@ -2528,7 +2840,7 @@ def mine_employee_list(request):
     return render(request, 'mine_employee_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_report_list(request):
 
@@ -2536,15 +2848,21 @@ def mine_report_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = MineReports.objects.all()
     filter = MineReportFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'mine_report_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_report_detail(request, pk):
     online = PlayerUserRelation.objects.filter(party=request.user).last().player
@@ -2558,7 +2876,7 @@ def mine_report_detail(request, pk):
     return render(request, 'mine_report_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mineview_mine_report_detail(request, pk):
     online = PlayerUserRelation.objects.filter(party=request.user).last().player
@@ -2572,7 +2890,7 @@ def mineview_mine_report_detail(request, pk):
     return render(request, 'mineowner/report_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_mine_report_detail(request, pk):
     online = PlayerUserRelation.objects.filter(party=request.user).last().player
@@ -2586,7 +2904,7 @@ def investview_mine_report_detail(request, pk):
     return render(request, 'investor/investview/mine/report_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_mine_report_detail(request, pk):
 
@@ -2601,7 +2919,7 @@ def proview_mine_report_detail(request, pk):
     return render(request, 'services/proview/mine/report_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_certificate_list(request):
 
@@ -2609,15 +2927,319 @@ def mine_certificate_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = MineCertificates.objects.all()
     filter = MineCertificateFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'mine_certificate_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def plant_pictures(request, pk):
+
+    player = PlayerUserRelation.objects.filter(party=request.user).last().player
+    alerts = Alerts.objects.filter(player=player)
+
+    plant_pics = PlantImages.objects.filter(plant_id=pk)
+    item = MinePlant.objects.get(id=pk)
+    services = EquipmentService.objects.filter(fixed_plant_id=pk)
+    distances = EquipmentMileage.objects.filter(fixed_plant_id=pk)
+    records = plant_pics
+
+    paginator = Paginator(records, 2)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    paginator1 = Paginator(services, 8)
+    page_number1 = request.GET.get('page')
+    service = paginator1.get_page(page_number1)
+
+    paginator2 = Paginator(distances, 8)
+    page_number2 = request.GET.get('page')
+    mileage = paginator2.get_page(page_number2)
+
+    context = {
+        'alerts': alerts,
+        'page_obj': page_obj,
+        'item': item,
+        'service':service,
+        'mileage': mileage,
+    }
+    return render(request, 'pictures.html', context)
+
+
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def yellow_pictures(request, pk):
+
+    player = PlayerUserRelation.objects.filter(party=request.user).last().player
+    alerts = Alerts.objects.filter(player=player)
+
+    plant_pics = YellowImages.objects.filter(plant_id=pk)
+    item = MineYellowPlant.objects.get(id=pk)
+    services = EquipmentService.objects.filter(mobile_plant_id=pk)
+    distances = EquipmentMileage.objects.filter(mobile_plant_id=pk)
+    records = plant_pics
+
+    paginator = Paginator(records, 2)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    paginator1 = Paginator(services, 8)
+    page_number1 = request.GET.get('page')
+    service = paginator1.get_page(page_number1)
+
+    paginator2 = Paginator(distances, 8)
+    page_number2 = request.GET.get('page')
+    mileage = paginator2.get_page(page_number2)
+
+    context = {
+        'alerts': alerts,
+        'page_obj': page_obj,
+        'item': item,
+        'service':service,
+        'mileage': mileage,
+    }
+    return render(request, 'yellow_pictures.html', context)
+
+
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def works_pictures(request, pk):
+
+    player = PlayerUserRelation.objects.filter(party=request.user).last().player
+    alerts = Alerts.objects.filter(player=player)
+
+    plant_pics = WorksImages.objects.filter(plant_id=pk)
+    item = MineWorks.objects.get(id=pk)
+    work_devs = WorksDev.objects.filter(works_id=pk)
+
+    records = plant_pics
+    paginator = Paginator(records, 2)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    paginator3 = Paginator(work_devs, 12)
+    page_number3 = request.GET.get('page')
+    devs = paginator3.get_page(page_number3)
+
+    context = {
+        'alerts': alerts,
+        'page_obj': page_obj,
+        'item': item,
+        'devs': devs,
+    }
+    return render(request, 'works_pictures.html', context)
+
+
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def add_picture_plant(request, pk):
+
+    player = PlayerUserRelation.objects.filter(party=request.user).last().player
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
+    item = MinePlant.objects.get(id=pk)
+    image_count = PlantImages.objects.filter(plant_id=pk).count()
+
+    if request.method == 'POST':
+        form = PlantImageForm(request.POST, request.FILES)
+        if form.is_valid():
+            record = form.save(commit=False)
+            record.plant_id = item.id
+            record.date_created = Now()
+            record.save()
+
+        return redirect(cancel)
+
+    form = PlantImageForm()
+
+    context = {
+        'alerts': alerts,
+        'form': form,
+        'item': item,
+        'image_count': image_count,
+        'cancel': cancel,
+    }
+    return render(request, 'add_picture.html', context)
+
+
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def add_picture_mobile(request, pk):
+
+    player = PlayerUserRelation.objects.filter(party=request.user).last().player
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
+    item = MineYellowPlant.objects.get(id=pk)
+    image_count = YellowImages.objects.filter(plant_id=pk).count()
+
+    if request.method == 'POST':
+        form = YellowImageForm(request.POST, request.FILES)
+        if form.is_valid():
+            record = form.save(commit=False)
+            record.plant_id = item.id
+            record.date_created = Now()
+            record.save()
+
+        return redirect(cancel)
+
+    form = YellowImageForm()
+
+    context = {
+        'alerts': alerts,
+        'form': form,
+        'item': item,
+        'image_count': image_count,
+        'cancel': cancel,
+    }
+    return render(request, 'add_picture.html', context)
+
+
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def add_picture_works(request, pk):
+
+    player = PlayerUserRelation.objects.filter(party=request.user).last().player
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
+    item = MineWorks.objects.get(id=pk)
+    image_count = WorksImages.objects.filter(plant_id=pk).count()
+
+    if request.method == 'POST':
+        form = WorksImageForm(request.POST, request.FILES)
+        if form.is_valid():
+            record = form.save(commit=False)
+            record.plant_id = item.id
+            record.date_created = Now()
+            record.save()
+
+        return redirect(cancel)
+
+    form = WorksImageForm()
+
+    context = {
+        'alerts': alerts,
+        'form': form,
+        'item': item,
+        'image_count': image_count,
+        'cancel': cancel,
+    }
+    return render(request, 'add_picture.html', context)
+
+
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def add_service(request, pk, source):
+
+    player = PlayerUserRelation.objects.filter(party=request.user).last().player
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
+    item = None
+    if request.method == 'POST':
+        form = PlantServiceForm(request.POST)
+        if form.is_valid():
+            record = form.save(commit=False)
+            if source == 'plant':
+                item = MinePlant.objects.get(id=pk)
+                record.fixed_plant_id = pk
+            else:
+                item = MineYellowPlant.objects.get(id=pk)
+                record.mobile_plant_id = pk
+            record.date_created = Now()
+            record.author = request.user
+            record.save()
+
+        return redirect(cancel)
+    else:
+        form = PlantServiceForm()
+
+    context = {
+        'alerts': alerts,
+        'form': form,
+        'item': item,
+        'source': source,
+        'cancel': cancel,
+    }
+    return render(request, 'add_service.html', context)
+
+
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def plant_usage(request, pk, source):
+
+    player = PlayerUserRelation.objects.filter(party=request.user).last().player
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
+    item = None
+    if request.method == 'POST':
+        form = PlantUsageForm(request.POST)
+        if form.is_valid():
+            record = form.save(commit=False)
+            if source == 'plant':
+                item = MinePlant.objects.get(id=pk)
+                record.fixed_plant_id = pk
+            else:
+                item = MineYellowPlant.objects.get(id=pk)
+                record.mobile_plant_id = pk
+            record.date_created = Now()
+            record.author = request.user
+            record.save()
+
+        return redirect(cancel)
+    else:
+        form = PlantUsageForm()
+
+    context = {
+        'alerts': alerts,
+        'form': form,
+        'item': item,
+        'source': source,
+        'cancel': cancel,
+    }
+    return render(request, 'add_usage.html', context)
+
+
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def add_works_activity(request, pk, source):
+
+    player = PlayerUserRelation.objects.filter(party=request.user).last().player
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
+    item = MineWorks.objects.get(id=pk)
+    if request.method == 'POST':
+        form = WorksDevForm(request.POST)
+        if form.is_valid():
+            record = form.save(commit=False)
+            record.works_id = pk
+            record.date_created = Now()
+            record.author = request.user
+            record.save()
+
+        return redirect(cancel)
+    else:
+        form = WorksDevForm()
+
+    context = {
+        'alerts': alerts,
+        'form': form,
+        'item': item,
+        'source': source,
+        'cancel': cancel,
+    }
+    return render(request, 'work_devs.html', context)
+
+
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_certificate_detail(request, pk):
 
@@ -2632,7 +3254,22 @@ def mine_certificate_detail(request, pk):
     return render(request, 'mine_certificate_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def view_image_detail(request, pk):
+
+    player = PlayerUserRelation.objects.filter(party=request.user).last().player
+    alerts = Alerts.objects.filter(player=player)
+    certificate = MineCertificates.objects.get(id=pk)
+
+    context = {
+        'certificate': certificate,
+        'alerts': alerts,
+    }
+    return render(request, 'mine_certificate_detail.html', context)
+
+
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def claim_reg_cert_detail(request, pk):
 
@@ -2647,7 +3284,7 @@ def claim_reg_cert_detail(request, pk):
     return render(request, 'claim_reg_cert_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_field_attach_detail(request, pk):
 
@@ -2662,7 +3299,7 @@ def proview_field_attach_detail(request, pk):
     return render(request, 'services/proview/field/attach_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mineview_claim_reg_cert_detail(request, pk):
 
@@ -2677,7 +3314,7 @@ def mineview_claim_reg_cert_detail(request, pk):
     return render(request, 'mine_owner/claim_reg_cert_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def claim_reg_cert_list(request):
 
@@ -2685,15 +3322,21 @@ def claim_reg_cert_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = ClaimRegCert.objects.all()
     filter = ClaimRegFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'claim_reg_cert_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_activity_list(request):
 
@@ -2701,15 +3344,21 @@ def field_activity_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = Field.objects.all()
     filter = FieldFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'investor/field_activity_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_request_list(request):
 
@@ -2717,15 +3366,21 @@ def field_request_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = FieldReq.objects.all()
     filter = FieldReqFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'investor/field_request_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_proforma_ready(request):
 
@@ -2752,7 +3407,7 @@ def field_proforma_ready(request):
     return render(request, 'field_proforma_ready.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_costing_list(request):
 
@@ -2761,6 +3416,11 @@ def field_costing_list(request):
     field_requests = FieldReq.objects.filter(status='Service Choice')
     filter = FieldReqReadyFilter(request.GET, queryset=field_requests)
     wins_count = []
+    records = wins_count
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     if field_requests:
         for field_request in field_requests:
             services = field_request.serviceprovrequired_set.all()
@@ -2776,13 +3436,14 @@ def field_costing_list(request):
 
     context = {
         'filter': filter,
+        'page_obj': page_obj,
         'alerts': alerts,
         'wins_count': wins_count,
     }
     return render(request, 'field_costing_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_proforma_list(request):
 
@@ -2798,7 +3459,7 @@ def field_proforma_list(request):
     return render(request, 'field_proforma_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mandate_list(request):
 
@@ -2806,15 +3467,21 @@ def mandate_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = Mandate.objects.all()
     filter = MandateFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'investor/mandate_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mandate_request_list(request):
 
@@ -2822,15 +3489,21 @@ def mandate_request_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = MandateRequest.objects.all()
     filter = MandateRequestFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'investor/mandate_request_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mandate_proforma_ready(request):
 
@@ -2854,7 +3527,7 @@ def mandate_proforma_ready(request):
     return render(request, 'mandate_proforma_ready.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def cart_match_list(request):
 
@@ -2862,15 +3535,21 @@ def cart_match_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = CartMineMatch.objects.all()
     filter = CartMineMatchFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'investor/cart_match_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def cart_mine_match_list(request):
 
@@ -2886,7 +3565,7 @@ def cart_mine_match_list(request):
     return render(request, 'investor/cart_mine_match_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def cart_request_list(request):
 
@@ -2894,33 +3573,44 @@ def cart_request_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = CartRequest.objects.all()
     filter = CartRequestFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'investor/cart_request_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_cart_request_list(request):
 
-    player = PlayerUserRelation.objects.filter(party=request.user).last().player
-    alerts = Alerts.objects.filter(player=player)
     player = request.user.playeruserrelation_set.all().last().player
+    alerts = Alerts.objects.filter(player=player)
     investor = player.investor_set.all().last()
-    records = CartRequest.objects.filter(investor=investor)
+    records = CartRequest.objects.filter(investor_id=investor.id)
     filter = CartRequestFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'investor/investview/cart/list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investor_list(request):
 
@@ -2928,15 +3618,21 @@ def investor_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = Investor.objects.all()
     filter = InvestorFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'investor/list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def receipt_list(request):
 
@@ -2944,15 +3640,21 @@ def receipt_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = Receipt.objects.all()
     filter = ReceiptFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'receipt_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_fieldreq_detail(request, pk):
 
@@ -2987,7 +3689,7 @@ def proview_fieldreq_detail(request, pk):
     return render(request, 'services/proview/fieldreq/claims.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_fieldreq_quote(request, pk):
 
@@ -3023,7 +3725,7 @@ def proview_fieldreq_quote(request, pk):
     return render(request, 'services/proview/fieldreq/quote.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_fieldreq_attach(request, pk):
 
@@ -3059,7 +3761,7 @@ def proview_fieldreq_attach(request, pk):
     return render(request, 'services/proview/fieldreq/attach.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def quote_detail(request, pk):
 
@@ -3074,7 +3776,7 @@ def quote_detail(request, pk):
     return render(request, 'quote_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def provider_fieldreq_list(request):
 
@@ -3117,7 +3819,7 @@ def provider_fieldreq_list(request):
     return render(request, 'services/proview/fieldreq/list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def provider_fieldreq_quoted_list(request):
 
@@ -3129,6 +3831,11 @@ def provider_fieldreq_quoted_list(request):
     mine_list = []
     records = None
     mine = None
+    records = service_list
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     if ServiceProvRequired.objects.all():
         records = FieldProviderQuote.objects.filter(provider=provider)
         filter = ProviderQuoteFilter(request.GET, queryset=records)
@@ -3156,13 +3863,14 @@ def provider_fieldreq_quoted_list(request):
         'filter': filter,
         'alerts': alerts,
         'service_list': service_list,
+        'page_obj': page_obj,
         'locations': location_list,
         'map_centre': map_centre,
     }
     return render(request, 'services/proview/fieldreq/quoted_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def invoice_list(request):
 
@@ -3170,22 +3878,28 @@ def invoice_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = Invoice.objects.all()
     filter = InvoiceFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'invoice_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mandate_request_detail(request, pk):
 
     player = PlayerUserRelation.objects.filter(party=request.user).last().player
     alerts = Alerts.objects.filter(player=player)
     mandate_request = MandateRequest.objects.get(id=pk)
-    mine = mandate_request.minemandaterequest_set.all().last().mine
+    mine = mandate_request.mine
     mineloc = None
     polygon = None
     if MineLocation.objects.filter(name_id=mine.id):
@@ -3208,7 +3922,7 @@ def mandate_request_detail(request, pk):
     return render(request, 'investor/mandate_request_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mandate_detail(request, pk):
 
@@ -3244,7 +3958,7 @@ def mandate_detail(request, pk):
     return render(request, 'investor/mandate_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_cart_match(request, pk):
 
@@ -3275,10 +3989,10 @@ def investview_cart_match(request, pk):
             record.author = request.user
             record.save()
 
-            for cart in cart_request.carttminerelation_set.all():
+            for cart in record.mines.all():
                 if form1.is_valid():
                     form1 = form.save(commit=False)
-                    form1.mine_id = cart.mine.id
+                    form1.mine_id = cart
                     form1.investor_id = cart_request.investor.id
                     form1.valid = record.valid
                     form1.date_created = Now()
@@ -3298,17 +4012,20 @@ def investview_cart_match(request, pk):
     return render(request, 'investor/investview_cart_match.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
-def investview_request_mandates(request, pk, pk1):
+def investview_request_mandates(request, pk):
 
     cancel = request.META.get('HTTP_REFERER')
     player = PlayerUserRelation.objects.filter(party=request.user).last().player
     alerts = Alerts.objects.filter(player=player)
-    cart_mine = CartMineRelation.objects.get(id=pk)
+    cart_mine = CartMineRelation.objects.filter(mine_id=pk).last()
+    mine = Mine.objects.get(id=pk)
     cart_mine_match = cart_mine.cart
     cart_request = cart_mine_match.cart_request
-    mine = Mine.objects.get(id=pk1)
+    if cart_request.valid <= timezone.now():
+        messages.info(request, str(cart_request) + ' expired')
+        return redirect(cancel)
 
     if request.method == 'POST':
         form = MandateRequestForm(request.POST)
@@ -3320,7 +4037,7 @@ def investview_request_mandates(request, pk, pk1):
             record = form.save(commit=False)
             mandate_req_last = MandateRequest.objects.filter(cart_mine_match_id=cart_mine_match.id).last()
             if mandate_req_last:
-                if mandate_req_last.exists() and mandate_req_last.period <= record.period:
+                if mandate_req_last.exists() and (mandate_req_last.period + datetime.timedelta(days=mandate_req_last.duration))<= record.period:
                     messages.info(request, str(cart_mine_match.mine) + ' Mandate already exists')
                     context = {
                             'mine': mine,
@@ -3358,7 +4075,7 @@ def investview_request_mandates(request, pk, pk1):
     return render(request, 'investor/investview_request_mandates.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_cart_detail(request, pk, template):
 
@@ -3366,15 +4083,22 @@ def investview_cart_detail(request, pk, template):
     player = PlayerUserRelation.objects.filter(party=request.user).last().player
     alerts = Alerts.objects.filter(player=player)
     cart_match = CartMineMatch.objects.filter(cart_request_id=pk).last()
-    mines_matched = CartMineRelation.objects.filter(cart_id=pk)
+    mines_matched = cart_match.mines.all()
     mines_available = []
     mines_remaining = []
+    polygons = []
+    min_locs = []
+    for min in mines_matched:
+        mineloc = MineLocation.objects.filter(name=min).last()
+        pol = MinePolygon.objects.filter(name=min).last()
+        polygons.append(pol)
+        min_locs.append(mineloc)
     if mines_matched:
         for match in mines_matched:
-            if MandateRequest.objects.filter(cart_mine_match=match.cart):
+            if MandateRequest.objects.filter(cart_mine_match=CartMineRelation.objects.filter(mine=match).last().cart):
                 pass
             else:
-                if match.cart.valid < datetime.now():
+                if cart_match.valid < datetime.now().date():
                     pass
                 else:
                     mines_available.append(match)
@@ -3411,6 +4135,8 @@ def investview_cart_detail(request, pk, template):
         'cart_request': cart_request,
         'cart_match': cart_match,
         'mines_matched': mines_matched,
+        'min_locs': min_locs,
+        'polygons': polygons,
         'mandate_request_filter': mandate_request_filter,
         'mandate_request_count': mandate_request_count,
         'mandate_requests': mandate_requests,
@@ -3424,7 +4150,7 @@ def investview_cart_detail(request, pk, template):
     return render(request, template, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def cart_request_detail(request, pk, template):
 
@@ -3432,23 +4158,24 @@ def cart_request_detail(request, pk, template):
     player = PlayerUserRelation.objects.filter(party=request.user).last().player
     alerts = Alerts.objects.filter(player=player)
     cart_match = CartMineMatch.objects.filter(cart_request_id=pk).last()
-    mines_matched = CartMineRelation.objects.filter(cart_id=pk)
+    mines_matched = cart_match.mines.all()
     mines_available = []
     mines_remaining = []
     polygons = []
     min_locs = []
     for min in mines_matched:
-        mineloc = MineLocation.objects.filter(name_id=min.mine.id).last()
-        pol = min.mine.minepolygon_set.all().last()
+        mineloc = MineLocation.objects.filter(name=min).last()
+        pol = MinePolygon.objects.filter(name=min).last()
         polygons.append(pol)
         min_locs.append(mineloc)
     cart_req_mandate = 'investor/cart_req_mandate.html'
     if mines_matched:
         for match in mines_matched:
-            if MandateRequest.objects.filter(cart_mine_match=match.cart):
+
+            if MandateRequest.objects.filter(cart_mine_match=CartMineRelation.objects.filter(mine=match).last().cart):
                 pass
             else:
-                if match.cart.valid < datetime.now():
+                if cart_match.valid < datetime.now().date():
                     pass
                 else:
                     mines_available.append(match)
@@ -3499,53 +4226,7 @@ def cart_request_detail(request, pk, template):
     return render(request, template, context)
 
 
-# @login_required(login_url='login.html')
-# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
-def cart_match_detail(request, pk):
-
-    context = {}
-    return render(request, 'investor/cart_match_detail.html', context)
-
-
-def investview_field_req(request, pk):
-
-    field_request = FieldReq.objects.get(id=pk)
-    player = PlayerUserRelation.objects.filter(party=request.user).last().player
-    alerts = Alerts.objects.filter(player=player)
-    services = ServiceProvRequired.objects.filter(field_request_id=field_request.id)
-    quotes = []
-    quote_count = len(quotes)
-    quotations = FieldProviderQuote.objects.all()
-    provider_filter = FieldProviderQuoteFilter(request.GET, queryset=quotations)
-    quotations = provider_filter.qs
-    if services:
-        for service in services:
-            if quotations:
-                quote_items = quotations.filter(service_ref_id=service.id)
-                for quote in quotations:
-                    quotes.append(quote)
-    activity_count = 0
-    activities = None
-    proforma = field_request.fieldproforma_set.all().last()
-    if proforma:
-        activities = proforma.field_set.all()
-        activity_count = len(activities)
-
-    context = {
-        'quotes': quotes,
-        'field_request': field_request,
-        'activities': activities,
-        'activity_count': activity_count,
-        'quote_count': quote_count,
-        'provider_filter': provider_filter,
-        'services': services,
-        'alerts': alerts,
-    }
-
-    return (request, context)
-
-
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_field_req_act_detail(request, pk):
 
@@ -3587,7 +4268,7 @@ def investview_field_req_act_detail(request, pk):
     return render(request, 'investor/investview/fieldreq/field_activity.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_field_req_quote_detail(request, pk):
 
@@ -3629,7 +4310,7 @@ def investview_field_req_quote_detail(request, pk):
     return render(request, 'investor/investview/fieldreq/field_quote.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_field_quotation(request, pk):
 
@@ -3653,7 +4334,7 @@ def investview_field_quotation(request, pk):
     return render(request, 'investor/investview/quote_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_quote_accept_confirm(request, pk):
 
@@ -3710,7 +4391,7 @@ def investview_quote_accept_confirm(request, pk):
     return render(request, 'investor/investview/quote_accept_confirm.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_field_proforma_pay(request, pk):
 
@@ -3755,8 +4436,12 @@ def investview_field_proforma_pay(request, pk):
                 form1 = form1.save(commit=False)
                 form1.invoice_ref = post2.id
                 form1.payer_id = post2.payer.id
-                form1.amount = post2.amount
                 form1.payee_id = 1
+                form1.amount = post2.amount
+                form1 = form1.save(commit=False)
+                form1.payer_balance = post2.payer.trxn_balance - post2.amount
+                form1.payee_balance = post2.amount + Player.objects.get(id=1).trxn_balance
+                form1.purpose_id = 2
                 form1.date_created = Now()
                 form1.author = request.user
                 form1.save()
@@ -3804,7 +4489,7 @@ def investview_field_proforma_pay(request, pk):
     return render(request, 'investor/investview/field_proforma_pay.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_quote_counter(request, pk):
 
@@ -3831,7 +4516,7 @@ def investview_quote_counter(request, pk):
     return render(request, 'investor/investview/quote_counter.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_mandate_invoice_detail(request, pk):
 
@@ -3847,7 +4532,7 @@ def investview_mandate_invoice_detail(request, pk):
     return render(request, 'investor/investview/mandate/invoice_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_field_detail(request, pk):
 
@@ -3896,7 +4581,7 @@ def investview_field_act(request, pk):
     return (request, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_field_act_attach(request, pk):
 
@@ -3950,7 +4635,7 @@ def investview_mandate(request, pk):
     return (request, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_mandate_field_act(request, pk):
 
@@ -3999,7 +4684,7 @@ def investview_mandate_field_act(request, pk):
     return render(request, 'investor/investview/mandate/field_activity.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_mandate_field_req(request, pk):
 
@@ -4048,7 +4733,7 @@ def investview_mandate_field_req(request, pk):
     return render(request, 'investor/investview/mandate/services.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_mandate_field_quote(request, pk):
 
@@ -4143,7 +4828,7 @@ def mandate_req(request, pk):
     return render(request, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_mandate_request_field_act(request, pk):
 
@@ -4197,7 +4882,7 @@ def investview_mandate_request_field_act(request, pk):
     return render(request, 'investor/investview/mandate_request/field_activity.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_mandate_request_field_req(request, pk):
 
@@ -4252,7 +4937,7 @@ def investview_mandate_request_field_req(request, pk):
     return render(request, 'investor/investview/mandate_request/services.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_mandate_request_field_quote(request, pk):
 
@@ -4305,7 +4990,7 @@ def investview_mandate_request_field_quote(request, pk):
     return render(request, 'investor/investview/mandate_request/field_quote.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investor_mandate_request_detail(request, pk):
 
@@ -4357,7 +5042,7 @@ def investor_mandate_request_detail(request, pk):
     return render(request, 'investor/mandate_request_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investor_mandate_request_field_req_detail(request, pk):
 
@@ -4418,7 +5103,7 @@ def investor_mandate_request_field_req_detail(request, pk):
     return render(request, 'investor/mandate_request_field_req.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investor_mandate_request_field_act_detail(request, pk):
 
@@ -4479,7 +5164,7 @@ def investor_mandate_request_field_act_detail(request, pk):
     return render(request, 'investor/mandate_request_field_act.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investor_mandate_detail(request, pk):
 
@@ -4487,7 +5172,7 @@ def investor_mandate_detail(request, pk):
     alerts = Alerts.objects.filter(player=player)
     mandate = Mandate.objects.get(id=pk)
     mandate_request = mandate.mandate_request
-    mine = mandate.mandate_request.minemandaterequest_set.all().last().mine
+    mine = mandate.minemandaterelation_set.all().last().mine
     mineloc = None
     polygon = None
     if MineLocation.objects.filter(name_id=mine.id):
@@ -4543,7 +5228,9 @@ def field_active(request, pk, template):
     online = PlayerUserRelation.objects.filter(party=request.user).last().player
     alerts = Alerts.objects.filter(player=online)
     field_activity = Field.objects.filter(id=pk).last()
-    attachments = field_activity.fieldattachments_set.all()
+    attachments = None
+    if field_activity.fieldattachments_set.all():
+        attachments = field_activity.fieldattachments_set.all()
     attach_filter = ServiceAttachFilter(request.GET, queryset=attachments)
     attachments = attach_filter.qs
     attach_count = len(attachments)
@@ -4561,10 +5248,10 @@ def field_active(request, pk, template):
         'requirements': requirements,
     }
 
-    return render (request, template, context)
+    return render(request, template, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_activity_detail(request, pk):
 
@@ -4592,7 +5279,7 @@ def field_activity_detail(request, pk):
     return render(request, 'field_activity_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_field_activity_detail(request, pk):
 
@@ -4617,7 +5304,7 @@ def proview_field_activity_detail(request, pk):
     return render(request, 'services/proview/field/detail_attach.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_activity_quotes(request, pk):
 
@@ -4627,7 +5314,7 @@ def field_activity_quotes(request, pk):
     return render(request, 'field_activity_detail_tasks.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_activity_attach(request, pk):
 
@@ -4637,7 +5324,7 @@ def field_activity_attach(request, pk):
     return render(request, 'field_activity_detail_attach.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mandate_detail_field_activity(request, pk):
 
@@ -4696,7 +5383,7 @@ def mandate_detail_field_activity(request, pk):
     return render(request, 'investor/mandate_detail_field_activity.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def get_field_quote(request, pk):
 
@@ -4721,7 +5408,7 @@ def get_field_quote(request, pk):
     return render(request, 'get_field_quotes.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_request_detail(request, pk):
 
@@ -4766,7 +5453,7 @@ def field_request_detail(request, pk):
     return render(request, 'investor/field_request_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_request_detail_quote(request, pk):
 
@@ -4809,180 +5496,7 @@ def field_request_detail_quote(request, pk):
     return render(request, 'investor/field_request_detail_quote.html', context)
 
 
-# @login_required(login_url='login.html')
-# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
-def player(request, pk):
-
-    online = PlayerUserRelation.objects.filter(party=request.user).last().player
-    alerts = Alerts.objects.filter(player=online)
-    player = Player.objects.get(id=pk)
-    indi = 0
-    corp = 0
-    synd = 0
-    if player.type == 'Individual':
-        indi = IndRecord.objects.get(id=player.ref)
-    elif player.type == 'Corporate':
-        corp = CorpRecord.objects.get(id=player.ref)
-    else:
-        synd = Syndicate.objects.get(id=player.ref)
-
-    mines = MineOwnerRelation.objects.filter(owner=player)
-    mine_filter = PlayerMineFilter(request.GET, queryset=mines)
-    mine_count = len(mines)
-    investments = Investor.objects.filter(player=player).last()
-    if investments:
-        investor_status = 'Investor'
-    else:
-        investor_status = 'Not Investor'
-
-    carts = CartRequest.objects.filter(investor_id=pk)
-    cart_filter = CartRequestFilter(request.GET, queryset=carts)
-    carts = cart_filter.qs
-    services = ServiceProv.objects.filter(name=player)
-    service_count = len(services)
-    trxn_list = []
-    transactions = Trxns.objects.all()
-    trxn_filter = TrxnFilter(request.GET, queryset=transactions)
-    transactions = trxn_filter.qs
-    for actor in transactions:
-        if actor.payer == player:
-            trxn_list.append(player, '0')
-        elif actor.payee == player:
-            trxn_list.append(player, '1')
-        else:
-            pass
-    receipts = []
-    item = 0
-    invoices = Invoice.objects.filter(payer=player)
-    invoice_filter = InvoiceOwnerFilter(request.GET, queryset=invoices)
-    if invoices:
-        for invoice in invoices:
-            item = invoice.receipt_set.all().last()
-            receipts.append(invoice, item)
-
-    payment_count = len(trxn_list)
-    receipts_list = []
-    receipt_count = len(receipts_list)
-    for transact in Trxns.objects.filter(payer=player):
-        receipt = Receipt.objects.filter(trxn_ref=transact).last()
-        receipts_list.append(receipt)
-    pass
-
-
-# @login_required(login_url='login.html')
-# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
-def player_detail_mine(request, pk):
-
-    player = PlayerUserRelation.objects.filter(party=request.user).last().player
-    alerts = Alerts.objects.filter(player=player)
-    player = Player.objects.get(id=pk)
-    indi = 0
-    corp = 0
-    synd = 0
-    if player.type == 'Individual':
-        indi = IndRecord.objects.get(id=player.ref)
-    elif player.type == 'Corporate':
-        corp = CorpRecord.objects.get(id=player.ref)
-    else:
-        synd = Syndicate.objects.get(id=player.ref)
-
-    mines = MineOwnerRelation.objects.filter(owner=player)
-    mine_filter = PlayerMineFilter(request.GET, queryset=mines)
-    mine_count = len(mines)
-    investments = Investor.objects.filter(player=player).last()
-    if investments:
-        investor_status = 'Investor'
-    else:
-        investor_status = 'Not Investor'
-    min_locs = []
-    filter_mines = mine_filter.qs
-    for min in filter_mines:
-        minloc = MineLocation.objects.filter(name_id=min.mine.id).last()
-        min_locs.append(minloc)
-    carts = CartRequest.objects.filter(investor_id=pk)
-    cart_filter = CartRequestFilter(request.GET, queryset=carts)
-    carts = cart_filter.qs
-    services = ServiceProv.objects.filter(name=player)
-    service_count = len(services)
-    trxn_list = []
-    transactions = Trxns.objects.all()
-    trxn_filter = TrxnFilter(request.GET, queryset=transactions)
-    transactions = trxn_filter.qs
-    for actor in transactions:
-        if actor.payer == player:
-            trxn_list.append([player, '0'])
-        elif actor.payee == player:
-            trxn_list.append([player, '1'])
-        else:
-            pass
-    receipts = []
-    item = 0
-    invoices = Invoice.objects.filter(payer=player)
-    invoice_filter = InvoiceOwnerFilter(request.GET, queryset=invoices)
-    if invoices:
-        for invoice in invoices:
-            item = invoice.receipt_set.all().last()
-            receipts.append([invoice, item])
-
-    payment_count = len(trxn_list)
-    receipts_list = []
-    receipt_count = len(receipts_list)
-    for transact in Trxns.objects.filter(payer=player):
-        receipt = Receipt.objects.filter(trxn_ref=transact).last()
-        receipts_list.append(receipt)
-
-    context = {
-        'player': player,
-        'mines': mines,
-        'min_locs': min_locs,
-        'mine_filter': mine_filter,
-        'mine_count': mine_count,
-        'investments': investments,
-        'services': services,
-        'service_count': service_count,
-        'payments': trxn_list,
-        'payment_count': payment_count,
-        'receipts': receipts,
-        'receipt_count': receipt_count,
-        'investor_status': investor_status,
-        'carts': carts,
-        'cart_filter': cart_filter,
-        'trxn_filter': trxn_filter,
-        'invoice_filter': invoice_filter,
-        'indi': indi,
-        'corp': corp,
-        'synd': synd,
-        'alerts': alerts,
-    }
-    return render(request, 'player_detail_mines.html', context)
-
-
-# @login_required(login_url='login.html')
-# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
-def mine_owner_detail(request, pk):
-
-    mine_owner = MineOwnerRelation.objects.get(id=pk)
-    pk = mine_owner.owner.id
-    context = {}
-    player(request, pk)
-
-    return render(request, 'player_detail_mine.html', context)
-
-
-# @login_required(login_url='login.html')
-# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
-def service_provider_detail(request, pk):
-
-
-    service_provider = MineOwnerRelation.objects.get(id=pk)
-    pk = service_provider.name.id
-    context = {}
-    player(request, pk)
-
-    return render(request, 'player_detail_service.html', context)
-
-
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def add_mine_owner(request, pk):
 
@@ -5016,7 +5530,7 @@ def add_mine_owner(request, pk):
     return render(request, 'mine_owner/add.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def add_service_provider(request, pk):
 
@@ -5050,7 +5564,7 @@ def add_service_provider(request, pk):
     return render(request, 'services/add_provider.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_submit_quote(request, pk):
 
@@ -5102,7 +5616,7 @@ def proview_submit_quote(request, pk):
     return render(request, 'services/proview/submit_quote.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_accept_counter_offer(request, pk):
 
@@ -5154,7 +5668,7 @@ def proview_accept_counter_offer(request, pk):
     return render(request, 'services/proview/accept_counter_offer.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def add_investor(request, pk):
 
@@ -5168,7 +5682,6 @@ def add_investor(request, pk):
             record = form.save(commit=False)
             record.player_id = player.id
             record.date_created = Now()
-            record.save(commit=False)
 
             if Investor.objects.filter(player_id=record.player.id).exists():
                 messages.info(request, 'Entity already registered as an investor')
@@ -5190,7 +5703,7 @@ def add_investor(request, pk):
     return render(request, 'investor/add.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def add_beacon(request, pk):
 
@@ -5212,7 +5725,7 @@ def add_beacon(request, pk):
     claim_loc = None
     loc = None
     loc_obj = None
-    mineloc =  None
+    mineloc = None
     beacon_wkt = 0
     last_beacon = None
     lat = 0
@@ -5231,6 +5744,11 @@ def add_beacon(request, pk):
 
     if request.method == 'POST':
         form = BeaconForm(request.POST)
+        if claim_poly:
+            poly_object = get_object_or_404(MiningClaimPolygon, pk=claim_poly.id)
+            form1 = BeaconPolyForm(request.POST, instance=poly_object)
+        else:
+            form1 = BeaconPolyForm(request.POST)
         if form.is_valid():
             record = form.save(commit=False)
             record.mining_claim_id = claim.id
@@ -5275,7 +5793,7 @@ def add_beacon(request, pk):
                 if claim_poly:
                     if form1.is_valid():
                         poly_object = get_object_or_404(MiningClaimPolygon, pk=claim_poly.id)
-                        obj = form1.save(commit=False, instance=poly_object)
+                        obj = form1.save(commit=False)
                         obj.location = Polygon(coordinate_list, srid=4326)
                         obj.date_created = Now()
                         obj.save()
@@ -5294,9 +5812,9 @@ def add_beacon(request, pk):
         form = BeaconForm()
         if claim_poly:
             poly_object = get_object_or_404(MiningClaimPolygon, pk=claim_poly.id)
-            form1 = BeaconPolyForm(request.POST, instance=poly_object)
+            form1 = BeaconPolyForm(instance=poly_object)
         else:
-            form1 = BeaconPolyForm(request.POST)
+            form1 = BeaconPolyForm()
 
     context = {
         'form': form,
@@ -5310,7 +5828,97 @@ def add_beacon(request, pk):
     return render(request, 'add_beacon.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def new_sample(request, pk):
+
+    player = PlayerUserRelation.objects.filter(party=request.user).last().player
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
+    mine = Mine.objects.get(id=pk)
+    sample_points = SamplePoint.objects.filter(mine=mine)
+    # beacon_list = list(beacons)
+    assay_object = None
+    sample_point = None
+    mine_poly = MinePolygon.objects.filter(name=mine).last()
+    mineloc = MineLocation.objects.filter(name=mine).last().lat_long
+
+    if request.method == 'POST':
+        form = SamplePointForm(request.POST)
+        if form.is_valid():
+            record = form.save(commit=False)
+            record.mine_id = pk
+            record.date_created = Now()
+            record.author = request.user
+
+            sample_point = SamplePoint.objects.filter(mine_id=pk, name=record.name, latitude=record.latitude, longitude=record.longitude).last()
+            Assays.objects.Create(sample_date=record.sample_date, mineral_id=record.mineral, assay=record.assay, unit_id=record.unit, author=request.user)
+            assay_object = Assays.objects.filter(sample_date=record.sample_date, mineral_id=record.mineral, assay=record.assay, unit_id=record.unit, author=request.user).last()
+
+            SampleAssays.objects.Create(assay_id=assay_object.id, sample_point_id=sample_point.id)
+
+            return redirect(cancel)
+
+    else:
+        form = SamplePointForm()
+
+    context = {
+        'form': form,
+        'mine': mine,
+        'sample_points': sample_points,
+        'mine_poly': mine_poly,
+        'mineloc': mineloc,
+        'alerts': alerts,
+        'cancel': cancel,
+    }
+    return render(request, 'new_sample.html', context)
+
+
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def add_sample(request, pk):
+
+    player = PlayerUserRelation.objects.filter(party=request.user).last().player
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
+    sample_point = SamplePoint.objects.get(id=pk)
+    mine = sample_point.mine
+    sample_points = SamplePoint.objects.filter(mine=mine)
+    # beacon_list = list(beacons)
+    assay_object = None
+    sample_point = None
+    mine_poly = MinePolygon.objects.filter(name=mine).last()
+    mineloc =  MineLocation.objects.filter(name=mine).last().lat_long
+
+    if request.method == 'POST':
+        form = AssayForm(request.POST)
+        if form.is_valid():
+            record = form.save(commit=False)
+            record.date_created = Now()
+            record.author = request.user
+
+            assay_object = Assays.objects.filter(sample_date=record.sample_date, mineral_id=record.mineral, assay=record.assay, unit_id=record.unit, author=request.user).last()
+
+            SampleAssays.objects.Create(assay_id=assay_object.id, sample_point_id=pk)
+
+            return redirect(cancel)
+
+    else:
+        form = AssayForm()
+
+    context = {
+        'form': form,
+        'mine': mine,
+        'sample_points': sample_points,
+        'mine_poly': mine_poly,
+        'mineloc': mineloc,
+        'alerts': alerts,
+        'cancel': cancel,
+    }
+    return render(request, 'add_sample.html', context)
+
+
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def claim_poly(request, pk):
 
@@ -5324,7 +5932,7 @@ def claim_poly(request, pk):
     coordinate_list = []
     claim_loc = None
     loc = None
-    mineloc =  None
+    mineloc = None
     cb = "))"
     sep = ", "
     blank = " "
@@ -5389,7 +5997,7 @@ def claim_poly(request, pk):
     return render(request, 'add_claim_poly.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def claim_loc(request, pk):
 
@@ -5417,6 +6025,8 @@ def claim_loc(request, pk):
                 record.location = poly_object.location.centroid
                 record.date_created = Now()
                 record.save()
+
+                return redirect('mining_claim_detail.html', pk=pk)
         else:
             form = ClaimLocForm(request.POST)
             if form.is_valid():
@@ -5445,7 +6055,7 @@ def claim_loc(request, pk):
     return render(request, 'add_claim_loc.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def create_cart_request(request, pk):
 
@@ -5479,7 +6089,7 @@ def create_cart_request(request, pk):
     return render(request, 'investor/cart_request_create.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def create_mandate_request(request, pk):
 
@@ -5518,7 +6128,7 @@ def create_mandate_request(request, pk):
     return render(request, 'investor/mandate_request_create.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def create_work_history(request, pk):
 
@@ -5558,7 +6168,7 @@ def create_work_history(request, pk):
     return render(request, 'services/work_history.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def create_field_request(request, pk):
 
@@ -5573,19 +6183,30 @@ def create_field_request(request, pk):
             record.date_created = Now()
             record = form.save(commit=False)
 
+            if record.period >= mandate.valid:
+                messages.info(request, 'Field Request is out of Mandate period')
+                context = {
+                    'form': form,
+                    'mandate': mandate,
+                    'alerts': alerts,
+                }
+                return render(request, 'investor/field_request_create.html', context)
+
             if FieldReq.objects.filter(mandate_id=record.mandate.id, date_created=record.date_created, service=record.service, period=record.period).exists():
                 messages.info(request, 'Field Request already exists')
                 context = {
                     'form': form,
                     'mandate': mandate,
+                    'alerts': alerts,
                 }
                 return render(request, 'investor/field_request_create.html', context)
 
             if record.service_req == 'False':
-                    record.status = 'Service Choice'
-                    record.author = request.user
-                    record.save()
-                    return redirect('investor/investview/mandate/services.html', pk=mandate.id)
+                record.status = 'Service Choice'
+                record.author = request.user
+                record.save()
+
+                return redirect('investor/investview/mandate/services.html', pk=mandate.id)
 
             record.author = request.user
             record.save()
@@ -5602,7 +6223,7 @@ def create_field_request(request, pk):
     return render(request, 'investor/field_request_create.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def create_mandate(request, pk):
 
@@ -5617,16 +6238,16 @@ def create_mandate(request, pk):
             record.date_created = Now()
             record = form.save(commit=False)
 
-            if Mandate.objects.filter(mandate_request_id=record.mandate_request.id, date_created=record.date_created).exists():
+            if Mandate.objects.filter(mandate_request_id=record.mandate_request.id).exists():
                 messages.info(request, 'Mandate already exists')
-                context = {
-                    'form': form,
-                    'mandate_request': mandate_request,
-                }
-                return render(request, 'investor/mandate_create.html', context)
+                return redirect('investor/mandate_request_detail.html', pk=mandate_request.id)
 
             record.author = request.user
             record.save()
+
+            mandate = Mandate.objects.filter(mandate_request_id=record.mandate_request.id).last()
+            MineMandateRelation.objects.create(mine_id=mandate_request.mine.id, mandate_id=mandate.id, status=record.status, author=request.user)
+
             return redirect('investor/mandate_request_detail.html', pk=mandate_request.id)
 
     else:
@@ -5640,7 +6261,7 @@ def create_mandate(request, pk):
     return render(request, 'investor/mandate_create.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def create_cart_mine_match(request, pk):
 
@@ -5679,7 +6300,7 @@ def create_cart_mine_match(request, pk):
     return render(request, 'investor/create_cart_mine_match.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def edit_cart_mine_match(request, pk):
 
@@ -5734,19 +6355,7 @@ def edit_cart_mine_match(request, pk):
     return render(request, 'investor/edit_cart_mine_match.html', context)
 
 
-# @login_required(login_url='login.html')
-# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
-def mandate_detail(request, pk):
-
-    investor = Investor.objects.get(id=pk)
-    pk = investor.player.id
-    context = {}
-    player(request, pk)
-
-    return render(request, 'investor/mandate_detail.html', context)
-
-
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def service_face_detail(request, pk):
 
@@ -5834,7 +6443,7 @@ def service_face_detail(request, pk):
     return render(request, 'player_detail_service.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_owner_face_detail(request):
 
@@ -5848,7 +6457,7 @@ def mine_owner_face_detail(request):
     return render(request, 'player_detail_investor.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_owner_mines(request):
 
@@ -5902,7 +6511,7 @@ def mine_owner_mines(request):
     return render(request, 'mine_owner/mines.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mineview_erp(request, pk):
 
@@ -6052,7 +6661,7 @@ def mineview_erp(request, pk):
     return render(request, 'mine_owner/mineview/erp.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_owner_mineview(request, pk, template):
 
@@ -6060,13 +6669,18 @@ def mine_owner_mineview(request, pk, template):
     alerts = Alerts.objects.filter(player=player)
     cancel = request.META.get('HTTP_REFERER')
     mine = Mine.objects.get(id=pk)
+    mine_area = 0
     mineloc = MineLocation.objects.filter(name_id=mine.id).last()
     polygon = mine.minepolygon_set.all().last()
+    works_filter = None
+    plant_filter = None
+    mobile_filter = None
 
     records = mine.minereports_set.all()
     report_filter = MineOwnerReportFilter(request.GET, queryset=records)
     records = report_filter.qs
     report_count = len(records)
+
     reports = records[:2]
     certs = mine.minecertificates_set.all()
     cert_filter = MineOwnerCertificateFilter(request.GET, queryset=certs)
@@ -6088,6 +6702,14 @@ def mine_owner_mineview(request, pk, template):
 
     claims = MineClaimRelation.objects.filter(mine=mine)
     claims_filter = ClaimsFilter(request.GET, queryset=claims)
+    claims = claims_filter.qs
+    claimpoly = []
+    for claim in claims:
+        mine_area = mine_area + claim.claim.area
+        if claim.claim.miningclaimpolygon_set.all():
+            polygon = claim.claim.miningclaimpolygon_set.all().last()
+            claimpoly.append(polygon)
+
     minerals = MineMineral.objects.filter(mine_id=pk)
     cart_matches = CartMineRelation.objects.filter(mine=mine)
     cart_filter = CartMatchFilter(request.GET, queryset=claims)
@@ -6100,6 +6722,15 @@ def mine_owner_mineview(request, pk, template):
     mineral_production = []
     ore_production = 0
     waste_production = 0
+    products = mine.mineproduction_set.all()
+    mineral_count = len(products.filter(material='Mineral'))
+    ore_count = len(products.filter(material='Ore'))
+    waste_count = len(products.filter(material='Waste'))
+    filter = MoreProductionFilter(request.GET, queryset=products)
+    products = filter.qs
+    minerals = 0
+    ore = 0
+    waste = 0
     mineral_set = ['all',]
     units_set = []
     i = 0
@@ -6116,18 +6747,24 @@ def mine_owner_mineview(request, pk, template):
                         mineral_production[i][1] = mineral_production[i][1] + prod.quantity
                     else:
                         if prod.material == 'ore':
-                            ore_production =+ prod.quantity
+                            ore_production += prod.quantity
                         else:
-                            waste_production =+ prod.quantity
+                            waste_production += prod.quantity
 
     if mine.mineworks_set.all():
         works = mine.mineworks_set.all()
+        works_filter = MineviewWorksFilter(request.GET, queryset=works)
+        works = works_filter.qs
     if mine.minelabour_set.all():
         labour = mine.minelabour_set.all().last()
     if mine.mineplant_set.all():
         plant = mine.mineplant_set.all()
+        plant_filter = MineviewPlantFilter(request.GET, queryset=plant)
+        plant = plant_filter.qs
     if mine.mineyellowplant_set.all():
         mobile = mine.mineyellowplant_set.all()
+        mobile_filter = MineviewMobileFilter(request.GET, queryset=mobile)
+        mobile = mobile_filter.qs
 
     mandate_request = 0
     mandate = 0
@@ -6162,9 +6799,11 @@ def mine_owner_mineview(request, pk, template):
 
     context = {
         'mine': mine,
+        'mine_area': mine_area,
         'poly': polygon,
         'mineloc': mineloc,
         'claims_filter': claims_filter,
+        'claims': claimpoly,
         'minerals': minerals,
         'mandate_count': mandate_count,
         'visit_req_count': visit_req_count,
@@ -6180,11 +6819,16 @@ def mine_owner_mineview(request, pk, template):
         'mandate_request_list': mandate_request_list,
         'mandate_request_count': mandate_request_count,
         'filter': cart_filter,
+        'mineral_count': mineral_count,
+        'ore_count': ore_count,
+        'waste_count': waste_count,
         'mineral_production': mineral_production,
         'ore_production': ore_production,
         'waste_production': waste_production,
         'mineral_set': mineral_set,
         'units_set': units_set,
+        'ore': ore,
+        'waste': waste,
         'works': works,
         'labour': labour,
         'plant': plant,
@@ -6196,12 +6840,15 @@ def mine_owner_mineview(request, pk, template):
         'report_count': report_count,
         'cert_filter': cert_filter,
         'certificate_count': certificate_count,
+        'works_filter': works_filter,
+        'plant_filter': plant_filter,
+        'mobile_filter': mobile_filter,
         'cancel': cancel,
     }
     return render(request, template, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_owner_mineview_field(request, pk):
 
@@ -6352,7 +6999,7 @@ def mine_owner_mineview_field(request, pk):
     return render(request, 'mine_owner/mineview/field.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_owner_mineview_reports(request, pk):
 
@@ -6362,6 +7009,10 @@ def mine_owner_mineview_reports(request, pk):
     records = MineReports.objects.filter(mine_id=mine.id)
     filter = MineOwnerReportFilter(request.GET, queryset=records)
     records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     report_count = len(records)
     certificates = MineCertificates.objects.filter(mine=mine)
     cert_filter = MineOwnerCertificateFilter(request.GET, queryset=certificates)
@@ -6370,6 +7021,7 @@ def mine_owner_mineview_reports(request, pk):
 
     context = {
         'filter': filter,
+        'page_obj': page_obj,
         'mine': mine,
         'report_count': report_count,
         'cert_filter': cert_filter,
@@ -6380,7 +7032,7 @@ def mine_owner_mineview_reports(request, pk):
     return render(request, 'mine_owner/mineview_reports.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_owner_mineview_mandates(request, pk):
 
@@ -6531,7 +7183,7 @@ def mine_owner_mineview_mandates(request, pk):
     return render(request, 'mine_owner/mineview/mandates.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_owner_claimview(request, pk, template):
 
@@ -6559,7 +7211,7 @@ def mine_owner_claimview(request, pk, template):
     return render(request, template, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investor_profile(request):
 
@@ -6587,7 +7239,7 @@ def investor_profile(request):
     return render(request, 'investor/profile.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def provider_profile(request):
 
@@ -6618,7 +7270,7 @@ def provider_profile(request):
     return render(request, 'services/proview/profile.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_owner_profile(request):
 
@@ -6646,17 +7298,21 @@ def mine_owner_profile(request):
     return render(request, 'mine_owner/profile.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_owner_accounts(request):
 
     player = PlayerUserRelation.objects.filter(party=request.user).last().player
     alerts = Alerts.objects.filter(player=player)
-    player = PlayerUserRelation.objects.filter(party=request.user).last().player
     trxn_list = []
-    transactions = Trxns.objects.all()
+    transactions = Trxns.objects.filter(Q(payer=player) | Q(payee=player))
     trxn_filter = TrxnFilter(request.GET, queryset=transactions)
     transactions = trxn_filter.qs
+    records = transactions
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     for actor in transactions:
         if actor.payer == player:
@@ -6685,6 +7341,7 @@ def mine_owner_accounts(request):
         'receipts': receipts,
         'receipt_count': receipt_count,
         'trxn_filter': trxn_filter,
+        'page_obj': page_obj,
         'invoice_filter': invoice_filter,
         'alerts': alerts,
     }
@@ -6692,7 +7349,7 @@ def mine_owner_accounts(request):
     return render(request, 'mine_owner/accounts.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_accounts(request):
 
@@ -6703,6 +7360,11 @@ def proview_accounts(request):
     transactions = Trxns.objects.all()
     trxn_filter = TrxnFilter(request.GET, queryset=transactions)
     transactions = trxn_filter.qs
+    records = trxn_filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     for actor in transactions:
         if actor.payer == player:
@@ -6731,6 +7393,7 @@ def proview_accounts(request):
         'receipts': receipts,
         'receipt_count': receipt_count,
         'trxn_filter': trxn_filter,
+        'page_obj': page_obj,
         'invoice_filter': invoice_filter,
         'alerts': alerts,
     }
@@ -6738,7 +7401,7 @@ def proview_accounts(request):
     return render(request, 'services/proview/accounts.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_accounts(request):
 
@@ -6749,6 +7412,11 @@ def investview_accounts(request):
     transactions = Trxns.objects.all()
     trxn_filter = TrxnFilter(request.GET, queryset=transactions)
     transactions = trxn_filter.qs
+    records = trxn_filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     for actor in transactions:
         if actor.payer == player:
             trxn_list.append(player, 0)
@@ -6776,6 +7444,7 @@ def investview_accounts(request):
         'receipts': receipts,
         'receipt_count': receipt_count,
         'trxn_filter': trxn_filter,
+        'page_obj': page_obj,
         'invoice_filter': invoice_filter,
         'alerts': alerts,
     }
@@ -6783,7 +7452,7 @@ def investview_accounts(request):
     return render(request, 'investor/investview/trxn/lists.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_owner_list(request):
 
@@ -6791,16 +7460,22 @@ def mine_owner_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = MineOwnerRelation.objects.all()
     filter = MineOwnerFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
 
     return render(request, 'mine_owner/list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_view_list(request):
 
@@ -6809,16 +7484,22 @@ def mine_view_list(request):
     player = request.user.playeruserrelation_set.all().last()
     records = MineOwnerRelation.objects.filter(owner=player)
     filter = MineOwnerFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
 
     return render(request, 'mine_owner/list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def service_provider_list(request):
 
@@ -6826,16 +7507,22 @@ def service_provider_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = ServiceProv.objects.all()
     filter = ServiceProvFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
 
     return render(request, 'services/provider_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mand_req_invoice_create(request, pk):
 
@@ -6845,10 +7532,10 @@ def mand_req_invoice_create(request, pk):
     cancel = request.META.get('HTTP_REFERER')
     proforma = mandate_request.mandateproforma_set.all().last()
     invoice = 0
+    post = None
     if request.method == 'POST':
         form = InvoiceForm(request.POST)
         form1 = TrxnForm(request.POST)
-        form2 = TrxnMandateProForm(request.POST)
         if form.is_valid():
             record = form.save(commit=False)
             record.mandate_request_id = mandate_request.id
@@ -6860,7 +7547,6 @@ def mand_req_invoice_create(request, pk):
                 context = {
                     'form': form,
                     'form1': form1,
-                    'form2': form2,
                     'mandate_request': mandate_request,
                     'cancel': cancel,
                     'alerts': alerts,
@@ -6880,22 +7566,21 @@ def mand_req_invoice_create(request, pk):
                 form1.payer_id = mandate_request.cart_mine_match.cart_request.investor.player.id
                 form1.date_created = Now()
                 form1.author = request.user
-
                 form1.save()
 
                 item = mandate_request.mandateproforma_set.all().last()
                 post = get_object_or_404(MandateProforma, pk=item.id)
+                form2 = TrxnMandateProForm(request.POST, instance=post)
                 if form2.is_valid():
                     form2 = form2.save(commit=False)
                     form2.status = 'Confirmed'
                     form2.save()
 
-                    return redirect('investview_mandate_request.html', pk=mandate_request.id)
+                return redirect('investview_mandate_request.html', pk=mandate_request.id)
 
-    else:
-        form = InvoiceForm()
-        form1 = TrxnForm()
-        form2 = TrxnMandateProForm()
+    form = InvoiceForm()
+    form1 = TrxnForm()
+    form2 = TrxnMandateProForm(instance=post)
 
     context = {
         'form': form,
@@ -6908,9 +7593,9 @@ def mand_req_invoice_create(request, pk):
     return render(request, 'mand_req_invoice_create.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
-def invoice_detail(request, pk):
+def invoice_detail(request, pk, template):
 
     invoice = Invoice.objects.get(id=pk)
 
@@ -6918,10 +7603,10 @@ def invoice_detail(request, pk):
         'invoice': invoice,
     }
 
-    return render(request, 'invoice_detail.html', context)
+    return render(request, template, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def field_proforma_detail(request, pk):
 
@@ -6948,7 +7633,7 @@ def field_proforma_detail(request, pk):
     return render(request, 'investor/proforma_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def receipt_detail(request, pk):
 
@@ -6961,7 +7646,7 @@ def receipt_detail(request, pk):
     return render(request, 'receipt_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def trxn_detail(request, pk, template):
 
@@ -6987,7 +7672,7 @@ def trxn_detail(request, pk, template):
     return render(request, template, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def trxn_list(request):
 
@@ -6995,37 +7680,40 @@ def trxn_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = Trxns.objects.all()
     filter = TrxnsFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
 
     return render(request, 'trxn_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investorview_trxn_list(request):
 
     player = PlayerUserRelation.objects.filter(party=request.user).last().player
     alerts = Alerts.objects.filter(player=player)
     player = request.user.playeruserrelation_set.all().last().player
-    trxns = Trxns.objects.all()
+    trxns = Trxns.objects.filter(Q(payer=player) | Q(payee=player))
     filter = TrxFilter(request.GET, queryset=trxns)
     trxns = filter.qs
-    trxn_list = []
+    records = trxns
 
-    for trxn in trxns:
-        if trxn.payer_id == player.id:
-            trxn_list.append(trxn)
-        elif trxn.payee_id == player.id:
-            trxn_list.append(trxn)
-        else:
-            pass
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
+        'page_obj': page_obj,
         'player': player,
         'trxn_list': trxn_list,
         'alerts': alerts,
@@ -7034,7 +7722,7 @@ def investorview_trxn_list(request):
     return render(request, 'investor/investview/trxn/nav_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def player_detail_template(request, pk, template_name):
 
@@ -7119,11 +7807,10 @@ def player_detail_template(request, pk, template_name):
 
 # @login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
-def player_detail(request, pk):
+def player_detail(request, pk, template):
 
-    player = PlayerUserRelation.objects.filter(party=request.user).last().player
-    alerts = Alerts.objects.filter(player=player)
     player = Player.objects.get(id=pk)
+    alerts = Alerts.objects.filter(player=player)
     indi = 0
     corp = 0
     synd = 0
@@ -7135,9 +7822,14 @@ def player_detail(request, pk):
     else:
         synd = Syndicate.objects.get(id=player.ref)
 
-    mines = MineOwnerRelation.objects.filter(owner=player)
+    mines = MineOwnerRelation.objects.filter(owner_id=player.id)
     mine_filter = PlayerMineFilter(request.GET, queryset=mines)
     mine_count = len(mines)
+    mines = mine_filter.qs
+    min_locs = []
+    for mine in mines:
+        minloc = MineLocation.objects.filter(name_id=mine.mine.id).last()
+        min_locs.append(minloc)
     investments = Investor.objects.filter(player=player).last()
     if investments:
         investor_status = 'Investor'
@@ -7145,24 +7837,26 @@ def player_detail(request, pk):
     investor = player.investor_set.all().last()
     carts = None
     cart_filter = None
-    services = None
-    service_count = 0
     if PlayerUserRelation.objects.filter(player=player, investor=True):
         carts = CartRequest.objects.filter(investor_id=investor.id)
         cart_filter = CartRequestFilter(request.GET, queryset=carts)
         carts = cart_filter.qs
-    if PlayerUserRelation.objects.filter(player=player, service_provider=True):
-        services = ServiceProv.objects.filter(name=player)
-        service_count = len(services)
+    providers = ServiceProv.objects.filter(name_id=player.id)
+    provider = None
+    quotations = None
+    if providers:
+        provider = ServiceProv.objects.filter(name_id=player.id).last()
+        quotations = FieldProviderQuote.objects.filter(provider_id=provider.id)
+    service_count = len(providers)
     trxn_list = []
     transactions = Trxns.objects.all()
     trxn_filter = TrxnFilter(request.GET, queryset=transactions)
     transactions = trxn_filter.qs
     for actor in transactions:
         if actor.payer == player:
-            trxn_list.append([player, '0'])
+            trxn_list.append(actor)
         elif actor.payee == player:
-            trxn_list.append([player, '1'])
+            trxn_list.append(actor)
         else:
             pass
     receipts = []
@@ -7186,8 +7880,9 @@ def player_detail(request, pk):
         'mines': mines,
         'mine_filter': mine_filter,
         'mine_count': mine_count,
+        'min_locs': min_locs,
         'investments': investments,
-        'services': services,
+        'services': providers,
         'service_count': service_count,
         'payments': trxn_list,
         'payment_count': payment_count,
@@ -7202,94 +7897,11 @@ def player_detail(request, pk):
         'corp': corp,
         'synd': synd,
         'alerts': alerts,
+        'quotations': quotations,
     }
-    return render(request, 'player_detail.html', context)
+    return render(request, template, context)
 
-
-# @login_required(login_url='login.html')
-# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
-def player_detail_investor(request, pk):
-
-    player = PlayerUserRelation.objects.filter(party=request.user).last().player
-    alerts = Alerts.objects.filter(player=player)
-    player = Player.objects.get(id=pk)
-    indi = 0
-    corp = 0
-    synd = 0
-    if player.type == 'Individual':
-        indi = IndRecord.objects.get(id=player.ref)
-    elif player.type == 'Corporate':
-        corp = CorpRecord.objects.get(id=player.ref)
-    else:
-        synd = Syndicate.objects.get(id=player.ref)
-
-    mines = MineOwnerRelation.objects.filter(owner=player)
-    mine_filter = PlayerMineFilter(request.GET, queryset=mines)
-    mine_count = len(mines)
-    investments = Investor.objects.filter(player=player).last()
-    investor_status = 'Not Investor'
-    if investments:
-        investor_status = 'Investor'
-
-    investor = player.investor_set.all().last()
-    carts = CartRequest.objects.filter(investor_id=investor.id)
-    cart_filter = CartRequestFilter(request.GET, queryset=carts)
-    carts = cart_filter.qs
-    services = ServiceProv.objects.filter(name=player)
-    service_count = len(services)
-    trxn_list = []
-    transactions = Trxns.objects.all()
-    trxn_filter = TrxnFilter(request.GET, queryset=transactions)
-    transactions = trxn_filter.qs
-    for actor in transactions:
-        if actor.payer == player:
-            trxn_list.append([player, '0'])
-        elif actor.payee == player:
-            trxn_list.append([player, '1'])
-        else:
-            pass
-    receipts = []
-    item = 0
-    invoices = Invoice.objects.filter(payer=player)
-    invoice_filter = InvoiceOwnerFilter(request.GET, queryset=invoices)
-    if invoices:
-        for invoice in invoices:
-            item = invoice.receipt_set.all().last()
-            receipts.append([invoice, item])
-
-    payment_count = len(trxn_list)
-    receipts_list = []
-    receipt_count = len(receipts_list)
-    for transact in Trxns.objects.filter(payer=player):
-        receipt = Receipt.objects.filter(trxn_ref=transact).last()
-        receipts_list.append(receipt)
-
-    context = {
-        'player': player,
-        'mines': mines,
-        'mine_filter': mine_filter,
-        'mine_count': mine_count,
-        'investments': investments,
-        'services': services,
-        'service_count': service_count,
-        'payments': trxn_list,
-        'payment_count': payment_count,
-        'receipts': receipts,
-        'receipt_count': receipt_count,
-        'investor_status': investor_status,
-        'carts': carts,
-        'cart_filter': cart_filter,
-        'trxn_filter': trxn_filter,
-        'invoice_filter': invoice_filter,
-        'indi': indi,
-        'corp': corp,
-        'synd': synd,
-        'alerts': alerts,
-    }
-    return render(request, 'player_detail_investor.html', context)
-
-
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def player_detail_service(request, pk):
 
@@ -7375,173 +7987,7 @@ def player_detail_service(request, pk):
     return render(request, 'player_detail_service.html', context)
 
 
-# @login_required(login_url='login.html')
-# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
-def player_detail_receipts(request, pk):
-
-    player = PlayerUserRelation.objects.filter(party=request.user).last().player
-    alerts = Alerts.objects.filter(player=player)
-    player = Player.objects.get(id=pk)
-    indi = 0
-    corp = 0
-    synd = 0
-    if player.type == 'Individual':
-        indi = IndRecord.objects.get(id=player.ref)
-    elif player.type == 'Corporate':
-        corp = CorpRecord.objects.get(id=player.ref)
-    else:
-        synd = Syndicate.objects.get(id=player.ref)
-
-    mines = MineOwnerRelation.objects.filter(owner=player)
-    mine_filter = PlayerMineFilter(request.GET, queryset=mines)
-    mine_count = len(mines)
-    investments = Investor.objects.filter(player=player).last()
-    investor_status = 'Not Investor'
-    if investments:
-        investor_status = 'Investor'
-
-    investor = player.investor_set.all().last()
-    carts = CartRequest.objects.filter(investor_id=investor.id)
-    cart_filter = CartRequestFilter(request.GET, queryset=carts)
-    carts = cart_filter.qs
-    services = ServiceProv.objects.filter(name=player)
-    service_count = len(services)
-    trxn_list = []
-    transactions = Trxns.objects.all()
-    trxn_filter = TrxnFilter(request.GET, queryset=transactions)
-    transactions = trxn_filter.qs
-    for actor in transactions:
-        if actor.payer == player:
-            trxn_list.append([player, '0'])
-        elif actor.payee == player:
-            trxn_list.append([player, '1'])
-        else:
-            pass
-    receipts = []
-    item = 0
-    invoices = Invoice.objects.filter(payer=player)
-    invoice_filter = InvoiceOwnerFilter(request.GET, queryset=invoices)
-    if invoices:
-        for invoice in invoices:
-            item = invoice.receipt_set.all().last()
-            receipts.append([invoice, item])
-
-    payment_count = len(trxn_list)
-    receipts_list = []
-    receipt_count = len(receipts_list)
-    for transact in Trxns.objects.filter(payer=player):
-        receipt = Receipt.objects.filter(trxn_ref=transact).last()
-        receipts_list.append(receipt)
-
-    context = {
-        'player': player,
-        'mines': mines,
-        'mine_filter': mine_filter,
-        'mine_count': mine_count,
-        'investments': investments,
-        'services': services,
-        'service_count': service_count,
-        'payments': trxn_list,
-        'payment_count': payment_count,
-        'receipts': receipts,
-        'receipt_count': receipt_count,
-        'investor_status': investor_status,
-        'carts': carts,
-        'cart_filter': cart_filter,
-        'trxn_filter': trxn_filter,
-        'invoice_filter': invoice_filter,
-        'indi': indi,
-        'corp': corp,
-        'synd': synd,
-        'alerts': alerts,
-    }
-    return render(request, 'player_detail_receipts.html', context)
-
-
-# @login_required(login_url='login.html')
-# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
-def player_detail_payments(request, pk):
-
-    player = PlayerUserRelation.objects.filter(party=request.user).last().player
-    alerts = Alerts.objects.filter(player=player)
-    player = Player.objects.get(id=pk)
-    indi = 0
-    corp = 0
-    synd = 0
-    if player.type == 'Individual':
-        indi = IndRecord.objects.get(id=player.ref)
-    elif player.type == 'Corporate':
-        corp = CorpRecord.objects.get(id=player.ref)
-    else:
-        synd = Syndicate.objects.get(id=player.ref)
-
-    mines = MineOwnerRelation.objects.filter(owner=player)
-    mine_filter = PlayerMineFilter(request.GET, queryset=mines)
-    mine_count = len(mines)
-    investments = Investor.objects.filter(player=player).last()
-    investor_status = 'Not Investor'
-    if investments:
-        investor_status = 'Investor'
-
-    investor = player.investor_set.all().last()
-    carts = CartRequest.objects.filter(investor_id=investor.id)
-    cart_filter = CartRequestFilter(request.GET, queryset=carts)
-    carts = cart_filter.qs
-    services = ServiceProv.objects.filter(name=player)
-    service_count = len(services)
-    trxn_list = []
-    transactions = Trxns.objects.all()
-    trxn_filter = TrxnFilter(request.GET, queryset=transactions)
-    transactions = trxn_filter.qs
-    for actor in transactions:
-        if actor.payer == player:
-            trxn_list.append(actor)
-        elif actor.payee == player:
-            trxn_list.append(actor)
-        else:
-            pass
-    receipts = []
-    item = 0
-    invoices = Invoice.objects.filter(payer=player)
-    invoice_filter = InvoiceOwnerFilter(request.GET, queryset=invoices)
-    if invoices:
-        for invoice in invoices:
-            item = invoice.receipt_set.all().last()
-            receipts.append([invoice, item])
-
-    payment_count = len(trxn_list)
-    receipts_list = []
-    receipt_count = len(receipts_list)
-    for transact in Trxns.objects.filter(payer=player):
-        receipt = Receipt.objects.filter(trxn_ref=transact).last()
-        receipts_list.append(receipt)
-
-    context = {
-        'player': player,
-        'mines': mines,
-        'mine_filter': mine_filter,
-        'mine_count': mine_count,
-        'investments': investments,
-        'services': services,
-        'service_count': service_count,
-        'payments': trxn_list,
-        'payment_count': payment_count,
-        'receipts': receipts,
-        'receipt_count': receipt_count,
-        'investor_status': investor_status,
-        'carts': carts,
-        'cart_filter': cart_filter,
-        'trxn_filter': trxn_filter,
-        'invoice_filter': invoice_filter,
-        'indi': indi,
-        'corp': corp,
-        'synd': synd,
-        'alerts': alerts,
-    }
-    return render(request, 'player_detail_payments.html', context)
-
-
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def player_list(request):
 
@@ -7552,6 +7998,11 @@ def player_list(request):
     players = player_filter.qs
     total_list = []
     player_list = []
+    records = total_list
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     for player in players:
         player_list.append(player)
@@ -7574,12 +8025,81 @@ def player_list(request):
     context = {
         'filter': player_filter,
         'total_list': total_list,
+        'page_obj': page_obj,
         'alerts': alerts,
     }
     return render(request, 'player_list.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
+# @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
+def player_archive(request, pk, template):
+
+    player = Player.objects.filter(id=pk).last()
+    alerts = Alerts.objects.filter(player=player)
+    letters = None
+    agreements = None
+    receipts = None
+    others = None
+    letter_filter = None
+    agreement_filter = None
+    receipt_filter = None
+    doc_filter = None
+    records = None
+    records1 = None
+    records2 = None
+    records3 = None
+    page_obj = None
+    page_obj1 = None
+    page_obj2 = None
+    page_obj3 = None
+    if MineLetters.objects.filter(player=player):
+        letters = MineLetters.objects.filter(player_id=player.id)
+        letter_filter = MineviewArchiveLetterFilter(request.GET, queryset=letters)
+        records = letter_filter.qs
+        paginator = Paginator(records, 15)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+    if MineAgreements.objects.filter(player=player):
+        agreements = MineAgreements.objects.filter(player_id=player.id)
+        agreement_filter = MineviewArchiveAgreementFilter(request.GET, queryset=agreements)
+        records1 = agreement_filter.qs
+        paginator1 = Paginator(records1, 15)
+        page_number1 = request.GET.get('page')
+        page_obj1 = paginator1.get_page(page_number1)
+    if MineReceipts.objects.filter(player=player):
+        receipts = MineReceipts.objects.filter(player_id=player.id)
+        receipt_filter = MineviewArchiveReceiptFilter(request.GET, queryset=receipts)
+        records2 = receipt_filter.qs
+        paginator2 = Paginator(records2, 15)
+        page_number2 = request.GET.get('page')
+        page_obj2 = paginator2.get_page(page_number2)
+    if OtherDocs.objects.filter(player=player):
+        other_docs = OtherDocs.objects.filter(player_id=player.id)
+        doc_filter = MineviewArchiveOtherFilter(request.GET, queryset=other_docs)
+        records3 = doc_filter.qs
+        paginator3 = Paginator(records3, 15)
+        page_number3 = request.GET.get('page')
+        page_obj3 = paginator3.get_page(page_number3)
+
+
+    context = {
+        'player': player,
+        'letter_filter': letter_filter,
+        'receipt_filter': receipt_filter,
+        'agreement_filter': agreement_filter,
+        'doc_filter': doc_filter,
+        'template': template,
+        'page_obj': page_obj,
+        'page_obj1': page_obj1,
+        'page_obj2': page_obj2,
+        'page_obj3': page_obj3,
+        'alerts': alerts,
+    }
+    return render(request, template, context)
+
+
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def service(request, pk):
 
@@ -7601,7 +8121,7 @@ def service(request, pk):
     return render(request, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def owner_type(request, pk):
 
@@ -7623,7 +8143,7 @@ def owner_type(request, pk):
     return render(request, context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def service_history_detail(request, pk):
 
@@ -7639,7 +8159,7 @@ def service_history_detail(request, pk):
     return render(request, 'services/work_history_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def proview_service_history_detail(request, pk):
 
@@ -7655,7 +8175,7 @@ def proview_service_history_detail(request, pk):
     return render(request, 'services/proview/work_history_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mineview_service_history_detail(request, pk):
 
@@ -7671,7 +8191,7 @@ def mineview_service_history_detail(request, pk):
     return render(request, 'mine_owner/work_history_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_service_history_detail(request, pk):
 
@@ -7687,7 +8207,7 @@ def investview_service_history_detail(request, pk):
     return render(request, 'investor/work_history_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def service_detail(request, pk):
 
@@ -7711,7 +8231,7 @@ def service_detail(request, pk):
     return render(request, 'services/provider_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def investview_service_detail(request, pk):
 
@@ -7740,7 +8260,7 @@ def investview_service_detail(request, pk):
     return render(request, 'services/work_history_detail.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def service_detail_activity(request, pk):
 
@@ -7750,7 +8270,7 @@ def service_detail_activity(request, pk):
     return render(request, 'services/detail_activities.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def deactivate_alert(request, pk):
 
@@ -7780,7 +8300,7 @@ def deactivate_alert(request, pk):
     return render(request, 'deactivate_alert.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_production(request, pk):
 
@@ -7809,23 +8329,24 @@ def mine_production(request, pk):
     return render(request, 'mine_production.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_works(request, pk):
 
-    player = PlayerUserRelation.objects.filter(party=request.user).last().player
-    alerts = Alerts.objects.filter(player=player)
     mine = Mine.objects.get(id=pk)
+    player = MineOwnerRelation.objects.filter(mine_id=mine.id).last().owner
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
 
     if request.method == 'POST':
-        form = MineWorksForm(request.POST)
+        form = MineWorksForm(request.POST, player=player)
         if form.is_valid():
             record = form.save(commit=False)
             record.mine_id = mine.id
             record.date_created = Now()
             record.author = request.user
             record.save()
-            return redirect('mine_detail_mine.html',  pk=mine.id)
+            return redirect(cancel)
 
     else:
         form = MineWorksForm()
@@ -7838,7 +8359,7 @@ def mine_works(request, pk):
     return render(request, 'mine_works.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_labour(request, pk):
 
@@ -7867,23 +8388,24 @@ def mine_labour(request, pk):
     return render(request, 'mine_labour.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_plant(request, pk):
 
-    player = PlayerUserRelation.objects.filter(party=request.user).last().player
-    alerts = Alerts.objects.filter(player=player)
     mine = Mine.objects.get(id=pk)
+    player = MineOwnerRelation.objects.filter(mine_id=mine.id).last().owner
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
 
     if request.method == 'POST':
-        form = MinePlantForm(request.POST)
+        form = MinePlantForm(request.POST, player=player)
         if form.is_valid():
             record = form.save(commit=False)
             record.mine_id = mine.id
             record.date_created = Now()
             record.author = request.user
             record.save()
-            return redirect('mine_detail_mine.html',  pk=mine.id)
+            return redirect(cancel)
 
     else:
         form = MinePlantForm()
@@ -7896,13 +8418,14 @@ def mine_plant(request, pk):
     return render(request, 'mine_plant.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def mine_yellow_plant(request, pk):
 
-    player = PlayerUserRelation.objects.filter(party=request.user).last().player
-    alerts = Alerts.objects.filter(player=player)
     mine = Mine.objects.get(id=pk)
+    player = MineOwnerRelation.objects.filter(mine_id=mine.id).last().owner
+    alerts = Alerts.objects.filter(player=player)
+    cancel = request.META.get('HTTP_REFERER')
 
     if request.method == 'POST':
         form = MineYellowPlantForm(request.POST)
@@ -7912,7 +8435,7 @@ def mine_yellow_plant(request, pk):
             record.date_created = Now()
             record.author = request.user
             record.save()
-            return redirect('mine_detail_mine.html',  pk=mine.id)
+            return redirect(cancel)
 
     else:
         form = MineYellowPlantForm()
@@ -7925,7 +8448,7 @@ def mine_yellow_plant(request, pk):
     return render(request, 'mine_yellow_plant.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def request_service_provider(request, pk):
 
@@ -7975,7 +8498,7 @@ def request_service_provider(request, pk):
     return render(request, 'investor/request_service_provider.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def request_service_done(request, pk):
 
@@ -8005,7 +8528,7 @@ def request_service_done(request, pk):
     return render(request, 'investor/request_service_done.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def cash_in(request, pk):
 
@@ -8060,7 +8583,7 @@ def cash_in(request, pk):
     return render(request, 'cash_in.html', context)
 
 
-# @login_required(login_url='login.html')
+@login_required(login_url='login.html')
 # @allowed_users(allowed_roles=['admin', 'corporate_principal', 'delivery_request', 'delivery_initiator', 'accounts_changes', 'trip_originator'])
 def cash_out(request, pk):
 
@@ -8127,10 +8650,16 @@ def cash_list(request):
     alerts = Alerts.objects.filter(player=player)
     records = PlayerCash.objects.all()
     filter = CashFilter(request.GET, queryset=records)
+    records = filter.qs
+
+    paginator = Paginator(records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'filter': filter,
         'alerts': alerts,
+        'page_obj': page_obj,
     }
     return render(request, 'cash_list.html', context)
 

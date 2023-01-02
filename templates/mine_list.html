@@ -31,19 +31,19 @@
             <h3>Mines ...</h3>
         </div>
         <br>
-        <div id="map" class="col-md"></div>
+        <div id="map" class="col-md" style="height: 500px; "></div>
     </div>
 </div>
 <br>
 <div class="card-header">
     <div class="row">
-        <div class="col-md">
+        <div class="col-md-2">
         <h5>Date Created</h5>
         </div>
-        <div class="col-md">
+        <div class="col-md-3">
         <h5>Name</h5>
         </div>
-        <div class="col-md">
+        <div class="col-md-5">
         <h5>Owner</h5>
         </div>
         <div class="col-md">
@@ -52,19 +52,19 @@
     </div>
 </div>
     <div class="card-body bg-white">
-        {% for mine in filter.qs %}
+        {% for mine in page_obj %}
             <div class="list_content">
-                <div class="list-line"><a
+                <div class="list-line"><a class="text-success"
                         href="{% url 'mine_detail_carts.html' pk=mine.id %}">
                 <div class="row">
-                    <div class="col-md">
+                    <div class="col-md-2">
                     <p>{{mine.date_created}}</p>
                     </div>
-                    <div class="col-md">
+                    <div class="col-md-3">
                     <p>{{mine.name}}</p>
                     </div>
-                    <div class="col-md">
-                    <p>{{mine.mineownerrelation_set.all.last}}</p>
+                    <div class="col-md-5">
+                    <p>{{mine.mineownerrelation_set.all.last.owner}}</p>
                     </div>
                     {% for mineral in mine.minemineral_set.all %}
                     <div class="col-md">
@@ -77,6 +77,24 @@
             </div>
         {% endfor %}
     </div>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
 <br>
 <br>
 <br>
@@ -87,7 +105,7 @@
 <script type="text/javascript">
 
         {% for e in locations %}
-        var mineMarkers = L.marker({{e.lat_long}}).addTo(map).bindPopup('<a href="{% url 'mine_detail_carts.html' pk=e.name.id %}">{{e}}<a>');
+        var mineMarkers = L.marker({{e.lat_long}}).addTo(map).bindPopup('<a href="{% url 'mine_detail_carts.html' pk=e.name.id %}">{{e.name}}<a>');
         {% endfor %}
 </script>
 

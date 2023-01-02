@@ -46,13 +46,13 @@
                     </div>
                     <div class="line_content">
                         <div class="line-list">
-                    		<p><a class="text-success" href="{% url 'investor/cart_request_detail.html' pk=mandate.mandate_request.cart_mine_match.cart_request.id %}">{{ mandate.mandate_request.cart_mine_match.cart_request }}</a></p>
+                    		<p><a class="text-success" href="{% url 'investor/cart_request_detail.html' pk=mandate.mandate_request.cart_mine_match.cart_request.id %}">{{ mandate.mandate_request.cart_mine_match.cart_request.id }}</a></p>
                         </div>
                     </div>
-                    <p>{{ mandate.mandate_request.cart_mine_match }}</p>
+                    <p>{{ mandate.mandate_request.cart_mine_match.id }}</p>
                     <div class="line_content">
                         <div class="line-list">
-                    		<p><a class="text-success" href="{% url 'investor/mandate_request_detail.html' pk=mandate.mandate_request.id %}">{{ mandate.mandate_request }}</a></p>
+                    		<p><a class="text-success" href="{% url 'investor/mandate_request_detail.html' pk=mandate.mandate_request.id %}">{{ mandate.mandate_request.id }}</a></p>
                         </div>
                     </div>
                     <p>{{ mandate.valid }}</p>

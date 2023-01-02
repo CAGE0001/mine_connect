@@ -27,10 +27,12 @@
                     </div>
                 </div>
 
-			{% if mandate_request.mandateproforma_set.all.last.status == 'Pending' %}
-                <p><a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mand_req_invoice_create.html' pk=mandate_request.id %}">Make Payment</a></p>
-            {% endif %}
+                {% if mandate_request.mandateproforma_set.all.last.status == 'Pending' %}
+                    <p><a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mand_req_invoice_create.html' pk=mandate_request.id %}">Make Payment</a></p>
+                {% endif %}
             </div>
+            {% else %}
+            <p class="text-danger">Proforma Pending</p>
             {% endif %}
 		</div>
 	</div>
@@ -58,17 +60,21 @@
 				<div class="col-md">
                     <div class="line_content">
                         <div class="line-list">
-							<p><a class="text-success" href="{% url 'investor/investview/cart/mandate_request.html' pk=cart.id %}">{{ cart }}</a></p>
+							<p><a class="text-success" href="{% url 'investor/investview/cart/mandate_request.html' pk=cart.id %}">{{ cart.id }}</a></p>
                         </div>
                     </div>
                     <p>{{ cart.mineral }}</p>
                     <p>{{ cart.invest_type }}</p>
                     <p>{{ mandate_request.date_created }}</p>
+                    {% if mandate_request.mandate_set.all %}
                     <div class="line_content">
                         <div class="line-list">
 							<p><a class="text-success" href="{% url 'investor/investview/mandate/services.html' pk=mandate_request.mandate_set.all.last.id %}">{{ mandate_request.mandate_set.all.last }}</a></p>
                         </div>
                     </div>
+                    {% else %}
+                    <p class="text-danger">Pending</p>
+                    {% endif %}
                 </div>
 			</div>
             <div class="row">

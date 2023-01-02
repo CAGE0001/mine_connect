@@ -10,7 +10,6 @@
 <div class="row">
     <br>
     <div class="col-md-3">
-        <div class="card-header">
             <form method="get">
                 <div class="row">
                     <div class="form col-md">
@@ -22,37 +21,66 @@
                 <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
                 </div>
             </form>
-        </div>
      </div>
     <div class="col-md">
             <div class="card-header">
                 <h3>Mine Certificates ...</h3>
-            </div>
-                <div class="card-body bg-white">
-                    <table class="table bg-white">
-                        <tr>
-                            <th>Date Created</th>
-                            <th>Mine</th>
-                            <th>Type</th>
-                            <th>Issue Date </th>
-                        </tr>
-
-                    <div class="list-line">
-                    {% for record in filter.qs %}
-                        <div class="list-content"><a
-                                href="{% url 'mining_detail.html' pk=record.id %}">
-                        <tr>
-                            <td>{{record.date_created}}</td>
-                            <td>{{record.mine}}</td>
-                            <td><a href="{% url 'mining_detail.html' pk=record.id %}">{{record.type}}</a></td>
-                            <td>{{record.issue_date}}</td>
-                        </tr>
-                            </a>
-                        </div>
-                    {% endfor %}
-                    </div>
-                    </table>
+            <br>
+            <div class="row">
+                <div class="col-md-2">
+                <h5>Date</h5>
                 </div>
+                <div class="col-md">
+                <h5>Mine</h5>
+                </div>
+                <div class="col-md-2">
+                <h5>Type</h5>
+                </div>
+                <div class="col-md-2">
+                <h5>Issued</h5>
+                </div>
+            </div>
+        </div>
+        <div class="card-body bg-white">
+            {% for record in page_obj %}
+            <div class="list-line">
+                <div class="list-content"><a href="{% url 'mining_detail.html' pk=record.id %}">
+                <div class="row">
+                    <div class="col-md-2">
+                        <p>{{record.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{record.mine}}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{record.type}}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{record.issue_date}}</p>
+                    </div>
+                </div>
+                </a></div>
+            </div>
+            {% endfor %}
+        </div>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
     </div>
 </div>
 <br>

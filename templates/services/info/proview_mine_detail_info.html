@@ -19,14 +19,13 @@
 				</div>
 			</div>
 			<br>
-            <a class="expand" href="{% url 'services/mine_map.html' pk=mine.id %}"><i class="fab fa-light fa-window-maximize fa-lg"></i>Full Screen >></a>
+            <a class="expand" href="{% url 'services/mine_map.html' pk=mine.id %}"><i class="fa-solid fa-expand" style="font-size:30px;color:success;"></i></a>
 		<div id="map" style="height: 70%;"></div>
 	</div>
 
 	{% if mine.date_created %}
 	<div class="col-md-1">
 		<div class="date">
-<!--			<h5>{{ driver.date_created }}</h5>-->
 		</div>
 	</div>
 	{% endif%}

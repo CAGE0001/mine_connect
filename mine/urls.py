@@ -1,5 +1,7 @@
 from django.urls import path, include
+from django.contrib.auth import views as auth_views
 from .import views
+from .views import PasswordsChangeView
 
 urlpatterns = [
     path('index', views.index, name='index.html'),
@@ -10,6 +12,7 @@ urlpatterns = [
     path('login', views.login, name='login.html'),
     path('logout', views.logout, name='logout'),
     path('confirm_logout', views.confirm_logout, name='confirm_logout.html'),
+    path('password/change/', PasswordsChangeView.as_view(template_name='password_change.html'), name='password_change'),
     path('owner_type', views.owner_type, name='owner_type.html'),
     path('module_options', views.module_options, name='module_options.html'),
 
@@ -24,17 +27,27 @@ urlpatterns = [
     path('cart_mine_match/<str:pk>/edit/', views.edit_cart_mine_match, name='investor/edit_cart_mine_match.html'),
     path('cart_mine_match/lists/', views.cart_mine_match_list, name='investor/cart_mine_match_list.html'),
 
-    path('player/<str:pk>/detail/', views.player_detail, name='player_detail.html'),
-    path('player/<str:pk>/mine/detail/', views.player_detail_mine, name='player_detail_mines.html'),
-    path('player/<str:pk>/<str:template_name>/detail_general/', views.player_detail_investor, name='player_detail_investor.html'),
-    path('player/<str:pk>/investor/detail/', views.player_detail_investor, name='player_detail_investor.html'),
+    path('player/<str:pk>/detail/', views.player_detail, {'template': 'player_detail.html'}, name='player_detail.html'),
+    path('player/<str:pk>/mine/detail/', views.player_detail, {'template': 'player_detail_mines.html'}, name='player_detail_mines.html'),
+    path('player/<str:pk>/investor/detail/', views.player_detail, {'template': 'player_detail_investor.html'}, name='player_detail_investor.html'),
     path('player/<str:pk>/service/detail/', views.player_detail_service, name='player_detail_services.html'),
-    path('player/<str:pk>/receipts/detail/', views.player_detail_receipts, name='player_detail_receipts.html'),
-    path('player/<str:pk>/payments/detail/', views.player_detail_payments, name='player_detail_payments.html'),
+    path('player/<str:pk>/receipts/detail/', views.player_detail, {'template': 'player_detail_receipts.html'}, name='player_detail_receipts.html'),
+    path('player/<str:pk>/payments/detail/', views.player_detail, {'template': 'player_detail_payments.html'}, name='player_detail_payments.html'),
+
     path('player_list/', views.player_list, name='player_list.html'),
     path('player_individual/lists/', views.player_individuals_list, name='individuals_list.html'),
     path('player_syndicate/lists/', views.player_syndicate_list, name='syndicate_list.html'),
     path('player_company/lists/', views.player_company_list, name='company_list.html'),
+
+    path('player/archive/<str:pk>/letters/', views.player_archive, {'template': 'player_archive.html'}, name='player_archive'),
+    path('player/archive/<str:pk>/receipts/', views.player_archive, {'template': 'player_archive_receipts.html'}, name='player_archive_receipts'),
+    path('player/archive/<str:pk>/agreements/', views.player_archive, {'template': 'player_archive_agreements.html'}, name='player_archive_agreements'),
+    path('player/archive/<str:pk>/others/', views.player_archive, {'template': 'player_archive_others.html'}, name='player_archive_others'),
+
+    path('add_letter/<str:pk>/', views.attach_letter, name='add_letter'),
+    path('add_receipt/<str:pk>/', views.attach_receipt, name='add_receipt'),
+    path('add_agreement/<str:pk>/', views.attach_agreement, name='add_agreement'),
+    path('add_other_doc/<str:pk>/', views.attach_other_doc, name='add_other_doc'),
 
     path('mandate_request/<str:pk>/create/', views.create_mandate_request, name='investor/mandate_request_create.html'),
     path('mandate_request/<str:pk>/detail/', views.investor_mandate_request_detail, name='investor/mandate_request_detail.html'),
@@ -57,17 +70,27 @@ urlpatterns = [
     path('claim_reg_cert_list/', views.claim_reg_cert_list, name='claim_reg_cert_list.html'),
     path('claim_reg_cert_add/<str:pk>/', views.claim_reg_cert_add, name='claim_reg_cert_add.html'),
 
+    path('investorview/cart/<str:pk>/request_detail/', views.investview_cart_detail,
+         {'template': 'investor/investview/cart_request_detail.html'}, name='investor/investview/cart_request_detail.html'),
     path('investorview/cart/<str:pk>/mandate_requests/', views.investview_cart_detail, {'template': 'investor/investview/cart/mandate_request.html'}, name='investor/investview/cart/mandate_request.html'),
     path('investorview/cart/<str:pk>/mandates/', views.investview_cart_detail, {'template': 'investor/investview/cart/mandates.html'}, name='investor/investview/cart/mandates.html'),
     path('investorview/cart/<str:pk>/field_requests/', views.investview_cart_detail, {'template': 'investor/investview/cart/services.html'}, name='investor/investview/cart/services.html'),
     path('investorview/<str:pk>/cart_match/', views.investview_cart_match, name='investor/investview_cart_match.html'),
-    path('investorview/<str:pk>/<str:pk1>/request_mandates/', views.investview_request_mandates, name='investor/investview_request_mandates.html'),
+    path('investorview/mine/<str:pk>/request_mandates/', views.investview_request_mandates, name='investor/investview_request_mandates.html'),
     path('investorview/cart/<str:pk>/field_activity/', views.investview_cart_detail, {'template': 'investor/investview/cart/field_activity.html'}, name='investor/investview/cart/field_activity.html'),
     path('investorview/cart/lists/', views.investview_cart_request_list, name='investor/investview/cart/list.html'),
     path('investorview/cart/<str:pk>/request/new/', views.investview_cart_request_new, name='investor/investview/cart/request.html'),
 
     path('investorview/mine/<str:pk>/claims/', views.mine_detail, {'template': 'investor/investview/mine/claims.html'}, name='investor/investview/mine/claims.html'),
     path('investorview/mine/<str:pk>/reports/', views.mine_detail, {'template': 'investor/investview/mine/reports.html'}, name='investor/investview/mine/reports.html'),
+
+    path('investorview/mine/<str:pk>/plant_list/', views.mine_detail, {'template': 'investor/investview/plant_list.html'}, name='investor/investview/plant_list'),
+    path('investorview/mine/<str:pk>/mobile_plant/', views.mine_detail, {'template': 'investor/investview/yellow_plant.html'}, name='investor/investview/yellow_plant'),
+    path('investorview/mine/<str:pk>/mine_works/', views.mine_detail, {'template': 'investor/investview/mine_works.html'}, name='investor/investview/mine_works'),
+
+    path('investorview/mine/<str:pk>/mineral_production/', views.mine_detail, {'template': 'investor/investview/more_production_reports.html'}, name='investor/more_production_reports'),
+    path('investorview/mine/<str:pk>/ore_production/', views.mine_detail, {'template': 'investor/investview/more_production_reports_ore.html'}, name='investor/more_production_reports_ore'),
+    path('investorview/mine/<str:pk>/waste_production/', views.mine_detail, {'template': 'investor/investview/more_production_reports_waste.html'}, name='investor/more_production_reports_waste'),
     path('investorview/mine/<str:pk>/map/', views.mine_detail, {'template': 'investor/mine_map.html'}, name='investor/mine_map.html'),
 
     path('provider/mine/<str:pk>/claims/', views.proview_mine_detail, {'template': 'services/proview/mine/claims.html'}, name='services/proview/mine/claims.html'),
@@ -105,6 +128,7 @@ urlpatterns = [
     path('plant_list/<str:pk>/', views.more_production_reports, {'template': 'plant_list.html'}, name='plant_list.html'),
     path('mine_works_list/<str:pk>/', views.more_production_reports, {'template': 'mine_works_list.html'}, name='mine_works_list.html'),
     path('yellow_plant_list/<str:pk>/', views.more_production_reports, {'template': 'yellow_plant_list.html'}, name='yellow_plant_list.html'),
+
     path('mineview_production_reports_mineral/<str:pk>/', views.more_production_reports, {'template': 'mineview_production_mineral.html'}, name='mineview_production_mineral.html'),
     path('mineview_production_reports_ore/<str:pk>/', views.more_production_reports, {'template': 'mineview_production_ore.html'}, name='mineview_production_ore.html'),
     path('mineview_production_reports_waste/<str:pk>/', views.more_production_reports, {'template': 'mineview_production_waste.html'}, name='mineview_production_waste.html'),
@@ -118,6 +142,9 @@ urlpatterns = [
     path('claim_location/<str:pk>/add/', views.claim_loc, name='add_claim_loc.html'),
     path('field_proforma/<str:pk>/new/', views.field_proforma_new, name='investor/field_proforma_new.html'),
     path('field_proforma/<str:pk>/detail/', views.field_proforma_detail, name='investor/proforma_detail.html'),
+
+    path('sample_point/<str:pk>/new/', views.new_sample, name='new_sample.html'),
+    path('sample/<str:pk>/add/', views.add_sample, name='add_sample.html'),
 
     path('service_provider/face/<str:pk>/detail/', views.service_face_detail, name='services/provider_face_detail.html'),
     path('service_provider/<str:pk>/detail/', views.service_detail, name='services/provider_detail.html'),
@@ -146,11 +173,12 @@ urlpatterns = [
     path('mine_owner/<str:pk>/mines/', views.mine_owner_mines, name='mine_owner/mandate_detail.html'),
     path('mine_owner/profile/', views.mine_owner_profile, name='mine_owner/profile.html'),
     path('mine_owner/accounts/', views.mine_owner_accounts, name='mine_owner/accounts.html'),
+    path('mine_owner/trxn/<str:pk>/detail/', views.trxn_detail, {'template': 'mine_owner/mineview_trxn_detail.html'}, name='mine_owner_trxn_detail'),
 
-    path('mine_owner/archive/letters/', views.mineview_archive, {'template': 'mine_owner/minewiew/archive/letters.html'}, name='mine_owner/mineview_archive_letters.html'),
-    path('mine_owner/archive/agreements/', views.mineview_archive, {'template': 'mine_owner/minewiew/archive/agreements.html'}, name='mine_owner/minewiew_archive_agreements.html'),
-    path('mine_owner/archive/receipts/', views.mineview_archive, {'template': 'mine_owner/minewiew/archive/receipts.html'}, name='mine_owner/minewiew_archive_receipts.html'),
-    path('mine_owner/archive/others/', views.mineview_archive, {'template': 'mine_owner/minewiew/archive/others.html'}, name='mine_owner/minewiew_archive_others.html'),
+    path('mine_owner/archive/letters/', views.mineview_archive, {'template': 'mine_owner/minewiew/archive/letters.html'}, name='mineview_archive_letters.html'),
+    path('mine_owner/archive/agreements/', views.mineview_archive, {'template': 'mine_owner/minewiew/archive/agreements.html'}, name='minewiew_archive_agreements.html'),
+    path('mine_owner/archive/receipts/', views.mineview_archive, {'template': 'mine_owner/minewiew/archive/receipts.html'}, name='minewiew_archive_receipts.html'),
+    path('mine_owner/archive/others/', views.mineview_archive, {'template': 'mine_owner/minewiew/archive/others.html'}, name='minewiew_archive_others.html'),
 
     path('provider/profile/', views.provider_profile, name='services/proview/profile.html'),
     path('provider/accounts/', views.proview_accounts, name='services/proview/accounts.html'),
@@ -190,7 +218,7 @@ urlpatterns = [
 
     path('trxn/<str:pk>/detail/', views.trxn_detail, {'template': 'trxn_detail.html'}, name='trxn_detail.html'),
     path('investor_trxn/<str:pk>/detail/', views.trxn_detail, {'template': 'investor/investview/trxn/detail.html'}, name='investor/investview/trxn/detail.html'),
-    path('mine_owner_trxn/<str:pk>/detail/', views.trxn_detail, {'template': 'mine_owner/mineview/detail.html'}, name='mine_owner/mineview/detail.html'),
+    path('mine_owner_trxn/<str:pk>/detail/', views.trxn_detail, {'template': 'mine_owner/mineview_trxn_detail.html'}, name='mine_owner_mineview_detail'),
     path('provider_trxn/<str:pk>/detail/', views.trxn_detail, {'template': 'services/detail.html'}, name='services/detail.html'),
     path('trxn-lists/', views.trxn_list, name='trxn_list.html'),
     path('investoview-trxn-lists/', views.investorview_trxn_list, name='investor/investview/trxn/nav_list.html'),
@@ -198,7 +226,23 @@ urlpatterns = [
     path('receipt/<str:pk>/detail/', views.receipt_detail, name='receipt_detail.html'),
     path('receipt_list/', views.receipt_list, name='receipt_list.html'),
 
-    path('invoice/<str:pk>/detail/', views.invoice_detail, name='invoice_detail.html'),
+    path('plant_image/<str:pk>/', views.plant_pictures, name='plant_pictures'),
+    path('mobile_image/<str:pk>/', views.yellow_pictures, name='mobile_pictures'),
+    path('works_image/<str:pk>/', views.works_pictures, name='works_pictures'),
+
+    path('add_plant_image/<str:pk>/', views.add_picture_plant, name='plant_image_add'),
+    path('add_mobile_image/<str:pk>/', views.add_picture_mobile, name='mobile_image_add'),
+    path('add_works_image/<str:pk>/', views.add_picture_works, name='works_image_add'),
+
+    path('add_plant_usage/<str:pk>/', views.plant_usage, {'source': 'plant'}, name='plant_usage_add'),
+    path('add_mobile_usage/<str:pk>/', views.plant_usage, {'source': 'yellow'}, name='mobile_usage_add'),
+
+    path('add_plant_service/<str:pk>/', views.add_service, {'source': 'plant'}, name='plant_service_add'),
+    path('add_mobile_service/<str:pk>/', views.add_service, {'source': 'yellow'}, name='mobile_service_add'),
+    path('add_works_activity/<str:pk>/', views.add_works_activity, {'source': 'works'}, name='works_activity_add'),
+
+    path('invoice/<str:pk>/detail/', views.invoice_detail, {'template': 'invoice_detail.html'}, name='invoice_detail.html'),
+    path('mine_owner/invoice/<str:pk>/detail/', views.invoice_detail, {'template': 'mine_owner/invoice_detail.html'}, name='mine_owner_invoice_detail'),
     path('mand_req_invoice/<str:pk>/create/', views.mand_req_invoice_create, name='mand_req_invoice_create.html'),
     path('invoice_list/', views.invoice_list, name='invoice_list.html'),
 
@@ -254,6 +298,7 @@ urlpatterns = [
     path('mine/<str:pk>/proforma/detail/', views.mine_detail, {'template': 'mine_detail_proforma.html'}, name='mine_detail_proforma.html'),
     path('mine/<str:pk>/invoice/detail/', views.mine_detail, {'template': 'mine_detail_invoice.html'}, name='mine_detail_invoice.html'),
     path('mine/<str:pk>/map/detail/', views.mine_detail, {'template': 'mine_map.html'}, name='mine_map.html'),
+    path('mine/<str:pk>/sample/map/', views.mine_detail, {'template': 'sample_map.html'}, name='sample_map.html'),
 
     path('mining_claim_new', views.mining_claim_new, name='mining_claim_new.html'),
     path('mining_claim_list', views.mining_claim_list, name='mining_claim_list.html'),

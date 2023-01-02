@@ -60,7 +60,10 @@
 	<div class="col-md">
 		<div class="row">
             <div class="col-md">
-            <h5>Date Created</h5>
+            <h5>Date</h5>
+            </div>
+            <div class="col-md">
+            <h5>Trxn Ref</h5>
             </div>
             <div class="col-md">
             <h5>Purpose</h5>
@@ -71,17 +74,20 @@
             <div class="col-md">
             <h5>Debit</h5>
             </div>
-            <div class="col-md-4">
+            <div class="col-md">
             <h5>Balance</h5>
             </div>
         </div>
 		<br>
-		{% for payment in payments %}
+		{% for payment in page_obj %}
 		<div class="list_content">
             <div class="list-line"><a class="text-success" href="{% url 'investor/investview/trxn/detail.html' pk=payment.0.id %}">
                 <div class="row">
                     <div class="col-md">
                         <p>{{payment.0.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{payment.0.id}}</p>
                     </div>
                     <div class="col-md">
                         <p>{{payment.0.purpose}}</p>
@@ -104,7 +110,7 @@
                         <p></p>
                     </div>
                     {% endif %}
-                    <div class="col-md-4">
+                    <div class="col-md">
                         <p>{{ payment.0.balance }}</p>
                     </div>
                 </div>
@@ -113,6 +119,24 @@
 		{% endfor %}
 	</div>
 </div>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
 </div>
 </div>
 <br>

@@ -1,26 +1,18 @@
 
     <div class="row">
-        {% if not plant %}
         <div class="col-md">
             <a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mine_plant.html' pk=mine.id %}">Add Plant</a>
         </div>
-        {% endif %}
-        {% if not works%}
         <div class="col-md">
         <a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mine_works.html' pk=mine.id %}">Add Works</a>
         </div>
-        {% endif %}
         <div class="col-md">
             <a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mine_production.html' pk=mine.id %}">Add Production</a>
         </div>
-        {% if not labour %}
         <div class="col-md">
         <a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mine_labour.html' pk=mine.id %}">Add Labour</a>
         </div>
-        {% endif %}
-        {% if not mobile %}
         <div class="col-md">
         <a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mine_yellow_plant.html' pk=mine.id %}">Add Yellow Plant</a>
         </div>
-        {% endif %}
     </div>

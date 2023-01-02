@@ -4,6 +4,52 @@
 
 {% load crispy_forms_tags %}
 
+    {% block button %}
+<style>
+
+/* Style The Archive Button */
+.archivebtn {
+  width: 100%;
+  cursor: pointer;
+}
+/* Style The archive Button */
+.archive {
+  min-width: 100%;
+  cursor: pointer;
+}
+
+/* The container div - needed to position the archive content */
+.archive {
+  position: relative;
+  display: inline-block;
+}
+
+/* Archive Content (Hidden by Default) */
+.archive-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 200px;
+  width: 100%;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.archive-content a {
+  color: black;
+  padding: 5px 10px;
+  text-decoration: none;
+  display: block;
+  margin-top: 10px;
+}
+
+/* Show the dropdown menu on hover */
+.archive:hover .archive-content {
+  display: block;
+}
+</style>
+    {% endblock %}
 	<br>
 	<br>
 	<br>
@@ -13,9 +59,7 @@
 <!--		<div class="card card-body">-->
 			<div class="row">
 				<div class="col-md">
-                    <h5>Player </h5>
-					<hr>
-					<h3>{{ player.name }} </h3>
+<!--					<h3>{{ player.name }} </h3>-->
 				</div>
 			</div>
         </div>
@@ -64,6 +108,18 @@
             <div class="col-md">
                 <a class="btn btn-outline-success btn-sm btn-block" href="{% url 'cash_out.html' pk=player.id %}">Cash Out</a>
             </div>
+            <br>
+		<div class="col-md">
+			<div class="archive">
+			<a class="archivebtn btn btn-outline-success  btn-block btn-sm">Add Record</a>
+				<div class="archive-content">
+					<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'add_letter' pk=player.id %}">Letter</a>
+					<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'add_agreement' pk=player.id %}">Agreement</a>
+					<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'add_receipt' pk=player.id %}">Receipt</a>
+					<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'add_other_doc' pk=player.id %}">Other</a>
+				</div>
+			</div>
+		</div>
         </div>
             </div>
 
@@ -72,7 +128,7 @@
 <br>
     <div class="card card-body">
         <div class="card-header">
-        <h5>Player Information</h5>
+					<h3>{{ player.name }} </h3>
         </div>
         <br>
         <div class="row">
@@ -96,26 +152,25 @@
                 <div class="col-md-9">
                 </div>
                 <div class="col-md">
-                    <p><a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'individual_edit.html' pk=player.ref %}">Edit</a></p>
+<!--                    <p><a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'individual_edit.html' pk=player.ref %}">Edit</a></p>-->
                 </div>
             </div>
             <br>
             {% elif player.type == 'Syndicate' %}
             <div class="row">
                 <div class="col-md">
-                    <p>Date of Registration</p>
-                    <p>Identity Number</p>
-                    <p>Represantatives</p>
+                    Date of Registration<br>
+                    Represantatives<br>
                 </div>
                 <div class="col-md">
-                    <p>{{ synd.dor }}</p>
-                    <p>Members:</p>
-                    {% for member in syndicate.syndmemberrelation_set.all %}
-                    {{ member.member }}
+                    {{ synd.dor }}<br>
+                    Members:<br>
+                    {% for member in synd.syndmemberrelation_set.all %}
+                    {{ member.member }}<br>
                     {% endfor %}
-                    <p>Agents:</p>
-                    {% for member in syndicate.syndagentrelation_set.all %}
-                    {{ member.agent }}
+                    Agents:<br>
+                    {% for member in synd.syndagentrelation_set.all %}
+                    {{ member.agent.first_name }} {{ member.agent.last_name }}<br>
                     {% endfor %}
                 </div>
             </div>
@@ -123,26 +178,26 @@
                 <div class="col-md-9">
                 </div>
                 <div class="col-md">
-                    <p><a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'syndicate_edit.html' pk=synd.id %}">Edit</a></p>
+<!--                    <p><a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'syndicate_edit.html' pk=synd.id %}">Edit</a></p>-->
                 </div>
             </div>
             <br>
             {% else %}
             <div class="row">
                 <div class="col-md">
-                    <p>Company Type</p>
-                    <p>Date of Registration</p>
-                    <p>Nationality</p>
-                    <p>Registration Number</p>
-                    <p>Agents</p>
+                    Company Type<br>
+                    Date of Registration<br>
+                    Nationality<br>
+                    Registration Number<br>
+                    Agents<br>
                 </div>
                 <div class="col-md">
-                    <p>{{ corp.type }}</p>
-                    <p>{{ corp.doi }}</p>
-                    <p>{{ corp.nationality }}</p>
-                    <p>{{ corp.reg_number }}</p>
+                    {{ corp.type }}<br>
+                    {{ corp.doi }}<br>
+                    {{ corp.nationality }}<br>
+                    {{ corp.reg_number }}<br>
                     {% for member in corp.corpagentrelation_set.all %}
-                    <p>{{ member.agent }}</p>
+                    {{ member.agent.first_name }} {{ member.agent.last_name }}<br>
                     {% endfor %}
                 </div>
             </div>
@@ -150,7 +205,7 @@
                 <div class="col-md-9">
                 </div>
                 <div class="col-md">
-                    <p><a class="btn btn-outline-success  btn-block btn-sm"  href="{% url 'corporate_edit.html' pk=corp.id %}">Edit</a></p>
+<!--                    <p><a class="btn btn-outline-success  btn-block btn-sm"  href="{% url 'corporate_edit.html' pk=corp.id %}">Edit</a></p>-->
                 </div>
             </div>
             {% endif %}
@@ -158,31 +213,26 @@
         <div class="col-md">
         <div class="row">
             <div class="col-md">
-                <p>Type</p>
-                <p>Phone Number</p>
-                <p>Email</p>
-                <p>Bank</p>
-                <p>Bank Account</p>
-                <p>Trxn Balance</p>
-                <p>Street Address</p>
-                <p>Surburb</p>
-                <p>Town/City</p>
-                <p>Country</p>
-<!--                    <p>Investor Status</p>-->
+                Type<br>
+                Phone Number<br>
+                Email<br>
+                Bank<br>
+                Bank Account<br>
+                Trxn Balance<br>
+                Address<br>
             </div>
 
             <div class="col-md">
-                <p>{{ player.type }}</p>
-                <p>{{ player.phone_number }}</p>
-                <p>{{ player.email }}</p>
-                <p>{{ player.bank }}</p>
-                <p>{{ player.bank_account }}</p>
-                <p>{{ player.trxn_balance }}</p>
-                <p>{{ player.street_address }}</p>
-                <p>{{ player.suburb }}</p>
-                <p>{{ player.city }}</p>
-                <p>{{ player.country }}</p>
-<!--                    <p>{{ investor_status }}</p>-->
+                {{ player.type }}<br>
+                {{ player.phone_number }}<br>
+                {{ player.email }}<br>
+                {{ player.bank }}<br>
+                {{ player.bank_account }}<br>
+                $ {{ player.trxn_balance }}<br>
+                {{ player.street_address }}<br>
+                {{ player.suburb }}<br>
+                {{ player.city }}<br>
+                {{ player.country.country }}
             </div>
         </div>
         <div class="row">
@@ -190,11 +240,8 @@
             <div class="col-md">
             </div>
             <div class="col-md">
-                <a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'player_edit.html' pk=player.id %}">Update</a>
+<!--                <a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'player_edit.html' pk=player.id %}">Update</a>-->
             </div>
-<!--                <div class="col-md">-->
-<!--                    <a class="btn btn-danger  btn-block btn-sm" href="">Delete</a>-->
-<!--                </div>-->
         </div>
         </div>
         </div>
@@ -233,6 +280,9 @@
             <a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'player_detail_payments.html' pk=player.id %}">Payments</a>
         </div>
         {% endif %}
+        <div class="col-md">
+            <a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'player_archive' pk=player.id %}">Archive</a>
+        </div>
         {% if receipts_count %}
         <div class="col-md">
             <a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'player_detail_receipts.html' pk=player.id %}">Receipts</a>

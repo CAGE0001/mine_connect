@@ -36,7 +36,6 @@
 <div class="row">
     <br>
     <div class="col-md-3">
-        <div class="card-header">
             <form method="get">
                 <div class="row">
                     <div class="form col-md">
@@ -49,32 +48,60 @@
                 <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
                 </div>
             </form>
-        </div>
      </div>
     <div class="col-md">
             <div class="card-header">
                 <h3>Syndicates ...</h3>
-            </div>
-                <div class="card-body bg-white">
-                    <table class="table bg-white">
-                        <tr>
-                            <th>Date Added</th>
-                            <th>Name</th>
-                            <th>Incorp Date</th>
-                        </tr>
-
-                        {% if filter %}
-                        {% for synd in filter.qs %}
-                        <tr>
-                            <td>{{synd.date_created}}</td>
-                            <td>{{synd.name}}</td>
-                            <td>{{synd.dor}}</td>
-                        </tr>
-                        {% endfor %}
-                        {% endif %}
-                    </table>
+            <br>
+            <div class="row">
+                <div class="col-md">
+                <h5>Date</h5>
                 </div>
-<!--        </div>-->
+                <div class="col-md">
+                <h5>Name</h5>
+                </div>
+                <div class="col-md">
+                <h5>Incorp Date</h5>
+                </div>
+            </div>
+        </div>
+        <div class="card-body bg-white">
+            {% for record in page_obj %}
+            <div class="list_content">
+                <div class="list-line"><a class="text-success" href="">
+                <div class="row">
+                    <div class="col-md">
+                        <p>{{record.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{record.name}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{record.dor}}</p>
+                    </div>
+                </div>
+                </a></div>
+            </div>
+            {% endfor %}
+        </div>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
     </div>
 </div>
 <br>

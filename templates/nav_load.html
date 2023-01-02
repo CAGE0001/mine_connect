@@ -70,13 +70,24 @@
     </div>
     <div class="col-md-2">
         <div class="log">
+        <div class="row">
+            <div class="col-md"></div>
+            <div class="col-md">
+                <i class="fa-regular fa-user" style="font-size:30px;color:success;"></i>
+            </div>
+            <div class="col-md"></div>
+        </div>
           <div class="droplog">
         {% if user.is_authenticated %}
-                <h5 class=" text-success">{{ user.username}}</h5>
+                <p class="text-success" style="text-align: center; ">{{ user.username}}</p>
         {% endif %}
             <div class="droplog-content">
         {% if user.is_authenticated %}
-              <a class=" btn btn-outline-success btn-block btn-sm" href="{% url 'confirm_logout.html' %}"><h5>Log Out</h5></a>
+                <br>
+                <div class="col-md">
+                  <a style="top-padding: 5px; left-padding: 10px; "href="{% url 'confirm_logout.html' %}"><p>Log Out</p></a>
+                  <a style="left-padding: 10px; "href="{% url 'password_change' %}"><p>Reset Password</p></a>
+                </div>
         {% else %}
               <a class=" btn btn-outline-success btn-block btn-sm" href="{% url 'login.html' %}"><h5>Log In</h5></a>
         {% endif %}

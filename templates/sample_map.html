@@ -1,0 +1,61 @@
+{% extends 'base_claim_map.html' %}
+
+{% block head %}
+<style>
+.expand{
+    position:absolute;
+    top:115px;
+    right:50px;
+    z-index: 1000;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% load leaflet_tags %}
+
+{% load crispy_forms_tags %}
+
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md">
+                <h3>Mine </h3>
+            </div>
+            <div class="col-md">
+                <h3>{{ mine }} </h3>
+            </div>
+        </div>
+    </div>
+    <a class="expand" href={{cancel}}><i class="fa-solid fa-compress" style="font-size:30px;color:success;"></i></a>
+    <div>
+        <div id="map" style="height: 620px; "></div>
+    </div>
+<br>
+<br>
+{% endblock %}
+
+    {% block java %}
+    <script type="text/javascript">
+    var claimList = []
+    {% for poly in claims %}
+    var claimBoundaryLayer = L.geoJSON().addTo(map);
+    var claimJson = {{poly.name.miningclaimpolygon_set.all.last.location.geojson|safe}};
+    claimBoundaryLayer.addData(claimJson).bindPopup('<a href="{% url 'mining_claim_map.html' pk=poly.name.id %}">{{poly.name}}</a><hr><p>{{poly.name.area}} Hectares</p>');
+    {% endfor %}
+    {% for e in sample_points %}
+    var sampleMarkers = L.marker([{{e.latitude}}, {{e.longitude}}]).addTo(map).bindPopup('<p>{{e.name}}</p><a href={% url 'add_sample.html' pk=e.id %}>Add Assay</a><br><p>{{e.latitude}}, {{e.longitude}}</p>').openPopup();
+    {% endfor %}
+    </script>
+    {% endblock %}
+
+    {% block map_centre %}
+    <script type="text/javascript">
+    var zoom = 14
+    </script>
+        {% include 'map_java/map_centre.html' %}
+    {% endblock %}
+
+    {% block overlaymaps %}
+        layerControl.addOverlay(claimBoundaryLayer, "Mining Claims");
+    {% endblock %}

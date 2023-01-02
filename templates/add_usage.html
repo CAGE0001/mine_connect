@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+<br>
+<br>
+<br>
+<br>
+<div>
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md">
+            <h3>Add Usage Record</h3>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-md">
+            <p>Equipment</p>
+            </div>
+            <div class="col-md">
+            <p>{{ item }}</p>
+            </div>
+        </div>
+    </div>
+    <br>
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<form method="POST" class="player-form">{% csrf_token %}
+    <br>
+    <div class="group-form">
+    {{ form|crispy}}
+    </div>
+    <br>
+    <div class="card-footer">
+        <div class="row">
+            <div class="col-md">
+                <a class="btn btn-primary  btn-block btn-sm" href={{ cancel }}>Cancel</a>
+            </div>
+            <div class="col-md">
+                <button type="submit" class="btn btn-outline-success btn-block btn-sm" value="Create">Save</button>
+            </div>
+        </div>
+    </div>
+</form>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

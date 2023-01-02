@@ -18,6 +18,13 @@ PLAYERS = (
     ('Syndicate', 'Syndicate'),
 )
 
+MINEAGREEMENTS = (
+    ('Tribute', 'Tribute'),
+    ('Joint Venture', 'Joint Venture'),
+    ('Management.', 'Management'),
+    ('Other', 'Other'),
+)
+
 
 def filter_by_range(queryset, name, value):
         start = value.start
@@ -31,7 +38,7 @@ class IndiRecordFilter(django_filters.FilterSet):
     first_name = django_filters.CharFilter(lookup_expr='icontains', label='First Name')
     last_name = django_filters.CharFilter(lookup_expr='icontains', label='Last Name')
     nid = django_filters.CharFilter(lookup_expr='iexact', label='Identity Number')
-    nationality = django_filters.CharFilter(field_name='nationality__nationality', lookup_expr='iexact')
+    nationality = django_filters.CharFilter(field_name='nationality__nationality', lookup_expr='icontains', label='Nationality')
 
     on_board = django_filters.DateFromToRangeFilter(
         label='On Board Date:',
@@ -58,9 +65,9 @@ class IndiRecordFilter(django_filters.FilterSet):
 
 class CorpRecordFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_expr='icontains', label='Company Name')
-    reg_number = django_filters.CharFilter(lookup_expr='iexact', label='Registration Number')
+    reg_number = django_filters.CharFilter(lookup_expr='icontains', label='Registration Number')
     type = django_filters.ChoiceFilter(choices=CORPTYPE, label='Company Type')
-    nationality = django_filters.CharFilter(field_name='nationality__nationality', lookup_expr='iexact')
+    nationality = django_filters.CharFilter(field_name='nationality__nationality', lookup_expr='icontains')
 
     on_board = django_filters.DateFromToRangeFilter(
         label='On Board Date:',
@@ -114,7 +121,7 @@ class SyndRecordFilter(django_filters.FilterSet):
 class MineFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_expr='icontains', label='Mine Name')
     owner = django_filters.CharFilter(lookup_expr='icontains', label='Mine Owner')
-    mineral = django_filters.CharFilter(lookup_expr='icontains', label='Mineral')
+    mineral = django_filters.CharFilter(field_name='mineral__name', lookup_expr='icontains', label='Mineral')
 
     class meta:
         model = Mine
@@ -122,9 +129,9 @@ class MineFilter(django_filters.FilterSet):
 
 
 class PlayerFilter(django_filters.FilterSet):
-    name = django_filters.CharFilter(lookup_expr='icontains', label='Entity Name')
-    bank = django_filters.CharFilter(lookup_expr='icontains', label='bank')
-    country = django_filters.CharFilter(field_name='nationality__country', lookup_expr='iexact', label='Country')
+    name = django_filters.CharFilter(lookup_expr='icontains', label='Name')
+    bank = django_filters.CharFilter(lookup_expr='icontains', label='Bank')
+    country = django_filters.CharFilter(field_name='nationality__country', lookup_expr='icontains', label='Country')
     type = django_filters.ChoiceFilter(choices=PLAYERS)
 
     date_range = django_filters.DateFromToRangeFilter(
@@ -142,7 +149,6 @@ class PlayerFilter(django_filters.FilterSet):
 
 
 class MoreProductionFilter(django_filters.FilterSet):
-    mineral = django_filters.ModelChoiceFilter(queryset=Mineral.objects.all(), label='Mineral')
     mineral = django_filters.CharFilter(field_name='mineral__name', lookup_expr='iexact')
     nid = django_filters.CharFilter(lookup_expr='icontains', label='Identity Ref')
 
@@ -262,8 +268,19 @@ class ClaimsFilter(django_filters.FilterSet):
 
 class FieldFilter(django_filters.FilterSet):
     id = django_filters.NumberFilter(label='Field Activity Ref')
+    provider = django_filters.ModelMultipleChoiceFilter(
+        field_name='provider',
+        queryset=ServiceProv.objects.all(),
+        label='Service Provider',
+    )
+    investor = django_filters.CharFilter(
+        field_name='proforma__field_request__mandate__mandate_request__cart_mine_match__cart_request__investor__player__name',
+        lookup_expr='icontains',
+        label='Investor',
+    )
+    mine = django_filters.CharFilter(field_name='proforma__field_request__mandate__mandate_request__cart_mine_match__cart_request__mine__name', lookup_expr='icontains', label='Mine')
+    mineral = django_filters.CharFilter(field_name='proforma__field_request__mandate__mandate_request__cart_mine_match__cart_request__mineral__name', lookup_expr='icontains', label='Mineral')
     subject = django_filters.CharFilter(lookup_expr='icontains', label='Activity')
-    proforma = django_filters.CharFilter(field_name='proforma__field_request__mandate__mandate_request__cart_mine_match__cart_request__investor__player__name', lookup_expr='iexact', label='Investor')
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date Created:',
@@ -290,7 +307,7 @@ class FieldFilter(django_filters.FilterSet):
 class ServiceFieldFilter(django_filters.FilterSet):
     id = django_filters.NumberFilter(label='Field Activity Ref')
     subject = django_filters.CharFilter(lookup_expr='icontains', label='Activity')
-    proforma = django_filters.CharFilter(field_name='proforma__field_request__mandate__mandate_request__cart_mine_match__cart_request__investor__player__name', lookup_expr='iexact', label='Investor')
+    proforma = django_filters.CharFilter(field_name='proforma__field_request__mandate__mandate_request__cart_mine_match__cart_request__investor__player__name', lookup_expr='icontains', label='Investor')
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date Created:',
@@ -323,7 +340,7 @@ class ServiceQuoteFilter(django_filters.FilterSet):
     )
 
     id = django_filters.NumberFilter(label='Quotation Ref')
-    provider = django_filters.CharFilter(field_name='provider__name__player__name', lookup_expr='iexact', label='Service Provider')
+    provider = django_filters.CharFilter(field_name='provider__name__player__name', lookup_expr='icontains', label='Service Provider')
     status = django_filters.ChoiceFilter(choices=STATUS)
 
     date_range = django_filters.DateFromToRangeFilter(
@@ -371,7 +388,7 @@ class ProviderQuoteFilter(django_filters.FilterSet):
 
 class ServiceChoiceFilter(django_filters.FilterSet):
 
-    rating = django_filters.CharFilter(field_name='rating__name', lookup_expr='iexact', label='Professional Rating')
+    rating = django_filters.CharFilter(field_name='rating__name', lookup_expr='icontains', label='Professional Rating')
 
     class meta:
         model = ServiceProv
@@ -434,7 +451,7 @@ class MineEmployeesFilter(django_filters.FilterSet):
     employee = django_filters.CharFilter(field_name='employee', lookup_expr='icontains', label='Individual')
     mine = django_filters.CharFilter(field_name='mine__name', lookup_expr='icontains', label='Mine')
     # mine = django_filters.ModelChoiceFilter(queryset=Mine.objects.all(), label='Mine')
-    job = django_filters.ModelChoiceFilter(queryset=MineJobList.objects.all(), label='Job description')
+    job = django_filters.CharFilter(field_name='job__job', lookup_expr='icontains', label='Job description')
     post = django_filters.ChoiceFilter(choices=MINEPOSTS)
 
     date_range = django_filters.DateFromToRangeFilter(
@@ -622,31 +639,38 @@ class MineCertificateFilter(django_filters.FilterSet):
 
 class ClaimRegFilter(django_filters.FilterSet):
 
-    claim = django_filters.ModelChoiceFilter(queryset=MiningClaim.objects.all(), label='Mining Claim')
-    claim = django_filters.CharFilter(field_name='claim', lookup_expr='icontains', label='Mining Claim')
+    claim = django_filters.CharFilter(field_name='claim__name', lookup_expr='icontains', label='Mining Claim')
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date Created:',
         method=filter_by_range,
         widget=RangeWidget(attrs={'class': 'datepicker', 'type': 'date'})
     )
+    reg_date_range = django_filters.DateFromToRangeFilter(
+        label='Issue Date:',
+        method=filter_by_range,
+        widget=RangeWidget(attrs={'class': 'datepicker', 'type': 'date'})
+    )
 
     class meta:
         model = ClaimRegCert
-        fields = ('__all__', 'date_range')
+        fields = ('__all__', 'date_range', 'reg_date_range')
 
     def filter(self, date_created__gte, date_created__lte):
+        pass
+
+    def filter1(self, reg_date__gte, reg_date__lte):
         pass
 
 
 class ServiceProvFilter(django_filters.FilterSet):
 
     # name = django_filters.ModelChoiceFilter(queryset=Player.objects.all(), label='Service Provider')
-    name = django_filters.CharFilter(field_name='name__name', lookup_expr='iexact', label='Service Provider')
+    name = django_filters.CharFilter(field_name='name__name', lookup_expr='icontains', label='Service Provider')
     # service = django_filters.ModelChoiceFilter(queryset=ProfService.objects.all(), label='Service')
-    service = django_filters.CharFilter(field_name='service__name', lookup_expr='iexact', label='Service')
+    service = django_filters.CharFilter(field_name='service__name', lookup_expr='icontains', label='Service')
     # rating = django_filters.ModelChoiceFilter(queryset=ServiceProvRole.objects.all(), label='Rating')
-    rating = django_filters.CharFilter(field_name='rating__name', lookup_expr='iexact', label='Professional Rating')
+    rating = django_filters.CharFilter(field_name='rating__name', lookup_expr='icontains', label='Professional Rating')
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date Created:',
@@ -664,9 +688,9 @@ class ServiceProvFilter(django_filters.FilterSet):
 
 class MineOwnerFilter(django_filters.FilterSet):
     # mine = django_filters.ModelChoiceFilter(queryset=Mine.objects.all(), label='Mine')
-    mine = django_filters.CharFilter(field_name='mine__name', lookup_expr='iexact', label='Mine')
+    mine = django_filters.CharFilter(field_name='mine__name', lookup_expr='icontains', label='Mine')
     # owner = django_filters.ModelChoiceFilter(queryset=Player.objects.all(), label='Owner')
-    owner = django_filters.CharFilter(field_name='owner__name', lookup_expr='iexact', label='Mine Owner')
+    owner = django_filters.CharFilter(field_name='owner__name', lookup_expr='icontains', label='Mine Owner')
     status = django_filters.ChoiceFilter(choices=OWNERSTATUS)
 
     date_range = django_filters.DateFromToRangeFilter(
@@ -685,16 +709,10 @@ class MineOwnerFilter(django_filters.FilterSet):
 
 class MandateFilter(django_filters.FilterSet):
 
-    STATUS = (
-        ('Pending', 'Pending'),
-        ('Under-Way', 'Under-Way'),
-        ('Expired', 'Expired'),
-        ('Cancelled', 'Cancelled'),
-    )
-
     id = django_filters.NumberFilter(label='Mandate Ref')
-    mandate_request = django_filters.ModelChoiceFilter(queryset=MandateRequest.objects.all(), label='Mandate Request')
-    payment_status = django_filters.ChoiceFilter(choices=STATUS)
+    mineral = django_filters.CharFilter(field_name='mandate_request__cart_mine_match__cart_request__mineral__name', lookup_expr='icontains', label='Mineral')
+    investor = django_filters.CharFilter(field_name='mandate_request__cart_mine_match__cart_request__investor__player__name', lookup_expr='icontains', label='Investor')
+    mine = django_filters.CharFilter(field_name='mandate_request__cart_mine_match__cart_request__mine__name', lookup_expr='icontains', label='Mine')
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date Created:',
@@ -728,8 +746,12 @@ class FieldProformaFilter(django_filters.FilterSet):
     )
 
     id = django_filters.NumberFilter(label='Proforma Ref')
-    field_request = django_filters.ModelChoiceFilter(queryset=FieldReq.objects.all(), label='Field Request')
+    field_request = django_filters.CharFilter(field_name='field_request__id', lookup_expr='exact', label='Field Request')
+    mine = django_filters.CharFilter(field_name='field_request__mandate__mandate_request__cart_mine_match__cart_request__mine__name', lookup_expr='icontains', label='Mine')
+    investor = django_filters.CharFilter(field_name='field_request__mandate__mandate_request__cart_mine_match__cart_request__investor__player__name', lookup_expr='icontains', label='Investor')
     status = django_filters.ChoiceFilter(choices=STATUS)
+    admin_premium = django_filters.CharFilter(field_name='admin_premium__service__name', lookup_expr='icontains', label='Professional Service')
+    amount = django_filters.NumericRangeFilter(label="Amount")
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date Created:',
@@ -755,8 +777,9 @@ class MandateRequestFilter(django_filters.FilterSet):
     )
 
     id = django_filters.NumberFilter(label='Mandate Request Ref')
-    cart_mine_match = django_filters.ModelChoiceFilter(queryset=CartMineMatch.objects.all(), label='Cart Match')
-    purpose = django_filters.ModelChoiceFilter(queryset=MandateTypeList.objects.all(), label='Mandate Purpose')
+    mine = django_filters.CharFilter(field_name='mine__name', lookup_expr='icontains', label='Mine')
+    investor = django_filters.CharFilter(field_name='cart_mine_match__cart_request__investor__player__name', lookup_expr='icontains', label='Investor')
+    purpose = django_filters.CharFilter(field_name='purpose__type', lookup_expr='icontains', label='Purpose')
     status = django_filters.ChoiceFilter(choices=STATUS, label='Status')
 
     date_range = django_filters.DateFromToRangeFilter(
@@ -820,8 +843,11 @@ class MandateProformaFilter(django_filters.FilterSet):
     )
 
     id = django_filters.NumberFilter(label='Mandate Proforma Ref')
-    mandate_request = django_filters.ModelChoiceFilter(queryset=MandateRequest.objects.all(), label='Mandate Request')
+    mandate_request = django_filters.CharFilter(field_name='mandate_request__id', lookup_expr='exact', label='Mandate Request')
+    mine = django_filters.CharFilter(field_name='mandate_request__cart_mine_match__cart_request__mine__name', lookup_expr='icontains', label='Mine')
+    investor = django_filters.CharFilter(field_name='mandate_request__cart_mine_match__cart_request__investor__player__name', lookup_expr='icontains', label='Investor')
     status = django_filters.ChoiceFilter(choices=PROFORMA, label='Status')
+    amount = django_filters.NumericRangeFilter(label="Amount")
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date Created:',
@@ -858,7 +884,7 @@ class CartMineMatchFilter(django_filters.FilterSet):
 
 class InvestorFilter(django_filters.FilterSet):
     # player = django_filters.ModelChoiceFilter(queryset=Player.objects.all(), label='Player')
-    player = django_filters.CharFilter(field_name='player__name', lookup_expr='iexact', label='Player')
+    player = django_filters.CharFilter(field_name='player__name', lookup_expr='icontains', label='Player')
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date Created:',
@@ -878,7 +904,7 @@ class InvoiceFilter(django_filters.FilterSet):
 
     id = django_filters.NumberFilter(label='Invoice Number')
     # payer = django_filters.ModelChoiceFilter(queryset=Player.objects.all(), label='Payer')
-    payer = django_filters.CharFilter(field_name='payer__name', lookup_expr='iexact', label='Payer')
+    payer = django_filters.CharFilter(field_name='payer__name', lookup_expr='icontains', label='Payer')
     purpose = django_filters.ModelChoiceFilter(queryset=TrxnPurpose.objects.all(), label='Purpose')
 
     date_range = django_filters.DateFromToRangeFilter(
@@ -901,7 +927,7 @@ class ReceiptFilter(django_filters.FilterSet):
     # invoice = django_filters.ModelChoiceFilter(queryset=Invoice.objects.all(), label='Invoice')
     invoice = django_filters.NumberFilter(field_name='invoice__id', lookup_expr='exact', label='Invoice Ref')
     # trxn_ref = django_filters.ModelChoiceFilter(queryset=Trxns.objects.all(), label='Trxn Ref')
-    trxn_ref = django_filters.CharFilter(field_name='trxn_ref__id', lookup_expr='iexact', label='Trxn Ref')
+    trxn_ref = django_filters.CharFilter(field_name='trxn_ref__id', lookup_expr='icontains', label='Trxn Ref')
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date Created:',
@@ -953,10 +979,7 @@ class MineMandateRequestFilter(django_filters.FilterSet):
 class TrxnFilter(django_filters.FilterSet):
 
     id = django_filters.NumberFilter(label='Trxn Ref')
-    # payer = django_filters.ModelChoiceFilter(queryset=Player.objects.all(), label='Payer')
-    # payer = django_filters.CharFilter(field_name='payer__name', lookup_expr='icontains', label='Payer')
-    # payee = django_filters.ModelChoiceFilter(queryset=Player.objects.all(), label='Payee')
-    payee = django_filters.CharFilter(field_name='payee__name', lookup_expr='iexact', label='Payee')
+    payee = django_filters.CharFilter(field_name='payee__name', lookup_expr='icontains', label='Payee')
     purpose = django_filters.ModelChoiceFilter(queryset=TrxnPurpose.objects.all(), label='Purpose')
 
     date_range = django_filters.DateFromToRangeFilter(
@@ -1067,7 +1090,14 @@ class FieldReqFilter(django_filters.FilterSet):
         ('Cancelled', 'Cancelled'),
         ('Approved', 'Approved'),
     )
-    service = django_filters.ModelChoiceFilter(queryset=ProfService.objects.all(), label='Service')
+    service = django_filters.CharFilter(field_name='service__name', lookup_expr='icontains', label='Service')
+    investor = django_filters.CharFilter(
+        field_name='mandate__mandate_request__cart_mine_match__cart_request__investor__player__name',
+        lookup_expr='icontains',
+        label='Investor',
+    )
+    mine = django_filters.CharFilter(field_name='mandate__mandate_request__cart_mine_match__cart_request__mine__name', lookup_expr='icontains', label='Mine')
+    mineral = django_filters.CharFilter(field_name='mandate__mandate_request__cart_mine_match__cart_request__mineral__name', lookup_expr='icontains', label='Mineral')
     status = django_filters.ChoiceFilter(choices=STATUS)
 
     date_range = django_filters.DateFromToRangeFilter(
@@ -1208,42 +1238,11 @@ class MineviewArchiveLetterFilter(django_filters.FilterSet):
 
 class MineviewWorksFilter(django_filters.FilterSet):
 
-    MINELETTERS = (
-        ('Mines Ministry', 'Mines Ministry'),
-        ('Government', 'Government'),
-        ('Other', 'Other'),
-    )
-    INOUT = (
-        ('In', 'In'),
-        ('Out', 'Out'),
-    )
-
-    mine = django_filters.CharFilter(field_name='mine__name', lookup_expr='icontains', label='Mine')
-    other_party = django_filters.CharFilter(lookup_expr='icontains', label='Other Party')
-    type = django_filters.ChoiceFilter(choices=MINELETTERS)
-    inout = django_filters.ChoiceFilter(choices=INOUT, label='To / From')
+    works = django_filters.CharFilter(field_name='works__works', lookup_expr='icontains', label='Works')
+    comment = django_filters.CharFilter(lookup_expr='icontains', label='Description')
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date:',
-        method=filter_by_range,
-        widget=RangeWidget(attrs={'class': 'datepicker', 'type': 'date'})
-    )
-
-    class meta:
-        model = MineLetters
-        fields = ('__all__', 'date_range')
-
-    def filter(self, report_date__gte, report_date__lte):
-        pass
-
-
-class MineviewArchiveAgreementFilter(django_filters.FilterSet):
-
-    works = django_filters.CharFilter(field_name='works__works', lookup_expr='icontains', label='Description')
-    comment = django_filters.CharFilter(lookup_expr='icontains', label='Comment')
-
-    date_range = django_filters.DateFromToRangeFilter(
-        label='Date Created:',
         method=filter_by_range,
         widget=RangeWidget(attrs={'class': 'datepicker', 'type': 'date'})
     )
@@ -1256,10 +1255,30 @@ class MineviewArchiveAgreementFilter(django_filters.FilterSet):
         pass
 
 
+class MineviewArchiveAgreementFilter(django_filters.FilterSet):
+
+    mine = django_filters.CharFilter(field_name='mine__name', lookup_expr='icontains', label='Mine')
+    type = django_filters.ChoiceFilter(choices=MINEAGREEMENTS, label='Type' )
+    counter_party = django_filters.CharFilter(lookup_expr='icontains', label='Other Party')
+
+    date_range = django_filters.DateFromToRangeFilter(
+        label='Date Created:',
+        method=filter_by_range,
+        widget=RangeWidget(attrs={'class': 'datepicker', 'type': 'date'})
+    )
+
+    class meta:
+        model = MineAgreements
+        fields = ('__all__', 'date_range')
+
+    def filter(self, date_created__gte, date_created__lte):
+        pass
+
+
 class MineviewPlantFilter(django_filters.FilterSet):
 
-    plant = django_filters.CharFilter(field_name='plant__plant', lookup_expr='icontains', label='Description')
-    comment = django_filters.CharFilter(lookup_expr='icontains', label='Comment')
+    plant = django_filters.CharFilter(field_name='plant__plant', lookup_expr='icontains', label='Plant')
+    comment = django_filters.CharFilter(lookup_expr='icontains', label='Description')
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date Created:',
@@ -1277,8 +1296,8 @@ class MineviewPlantFilter(django_filters.FilterSet):
 
 class MineviewMobileFilter(django_filters.FilterSet):
 
-    works = django_filters.CharFilter(field_name='plant__plant', lookup_expr='icontains', label='Description')
-    comment = django_filters.CharFilter(lookup_expr='icontains', label='Comment')
+    plant = django_filters.CharFilter(field_name='plant__plant', lookup_expr='icontains', label='Plant')
+    comment = django_filters.CharFilter(lookup_expr='icontains', label='Description')
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date Created:',
@@ -1305,6 +1324,7 @@ class MineviewArchiveReceiptFilter(django_filters.FilterSet):
     )
 
     mine = django_filters.CharFilter(field_name='mine__name', lookup_expr='icontains', label='Mine')
+    issued_by = django_filters.CharFilter(lookup_expr='icontains', label='Issuer')
     rec_number = django_filters.NumberFilter(label='Receipt Number')
     type = django_filters.ChoiceFilter(choices=MINERECEIPTS)
 
@@ -1324,13 +1344,8 @@ class MineviewArchiveReceiptFilter(django_filters.FilterSet):
 
 class MineviewArchiveOtherFilter(django_filters.FilterSet):
 
-    TYPE = (
-        ('Technical', 'Technical'),
-        ('Receipts', 'Receipts'),
-    )
-
     mine = django_filters.CharFilter(field_name='mine__name', lookup_expr='icontains', label='Mine')
-    subject = django_filters.CharFilter(lookup_expr='icontains', label='Subject')
+    subject = django_filters.CharFilter(lookup_expr='icontains', label='Description')
 
     date_range = django_filters.DateFromToRangeFilter(
         label='Date:',
@@ -1349,8 +1364,8 @@ class MineviewArchiveOtherFilter(django_filters.FilterSet):
 class CartRequestFilter(django_filters.FilterSet):
 
     id = django_filters.NumberFilter(label='Cart Request Ref')
-    mineral = django_filters.ModelChoiceFilter(queryset=Mineral.objects.all(), label='Mineral')
-    # mineral = django_filters.CharFilter(field_name='mineral__name', lookup_expr='icontains', label='Mineral')
+    mineral = django_filters.CharFilter(field_name='mineral__name', lookup_expr='icontains', label='Mineral')
+    investor = django_filters.CharFilter(field_name='investor__player__name', lookup_expr='icontains', label='Investor')
     invest_type = django_filters.ChoiceFilter(choices=INVESTYPE)
 
     date_range = django_filters.DateFromToRangeFilter(

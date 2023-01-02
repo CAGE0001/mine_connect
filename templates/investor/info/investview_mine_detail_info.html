@@ -1,4 +1,53 @@
-	<br>
+
+
+    {% block button %}
+<style>
+
+/* Style The Archive Button */
+.archivebtn {
+  width: 100%;
+  cursor: pointer;
+}
+/* Style The archive Button */
+.archive {
+  min-width: 100%;
+  cursor: pointer;
+}
+
+/* The container div - needed to position the archive content */
+.archive {
+  position: relative;
+  display: inline-block;
+}
+
+/* Archive Content (Hidden by Default) */
+.archive-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 200px;
+  width: 100%;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.archive-content a {
+  color: black;
+  padding: 5px 10px;
+  text-decoration: none;
+  display: block;
+  margin-top: 10px;
+}
+
+/* Show the dropdown menu on hover */
+.archive:hover .archive-content {
+  display: block;
+}
+</style>
+    {% endblock %}
+
+<br>
 	<br>
 <style>
 .expand{
@@ -18,7 +67,7 @@
 				</div>
 			</div>
 			<br>
-            <a class="expand" href="{% url 'investor/mine_map.html' pk=mine.id %}"><i class="fab fa-light fa-window-maximize fa-lg"></i>Full Screen >></a>
+            <a class="expand" href="{% url 'investor/mine_map.html' pk=mine.id %}"><i class="fa-solid fa-expand" style="font-size:30px;color:success;"></i></a>
 
 			<div id="map" style="height: 70%;"></div>
 	</div>
@@ -39,10 +88,10 @@
                     <p>Country</p>
 					<p>Area</p>
 					<p>Combine Option</p>
-					<p>Resource Type</p>
 					<p>Reserves Proven</p>
 					<p>Reserves Possible</p>
-					<p>Reserves Probable</p>
+					<p>Reserves Inferred</p>
+					<p>Resource Type</p>
 					<p>Minerals</p>
 				</div>
 
@@ -52,15 +101,17 @@
 					{% if mine.mineinvestreq_set.all.last.conglomerate == True %}
 					<p>Available </p>
 					{% else %}
-					<p>N / A</p>
+					<p>Stand Alone</p>
 					{% endif %}
-					<p>{{ mine.resource_type }}</p>
 					<p>{{ mine.reserves_proven }} MT</p>
 					<p>{{ mine.reserves_possible }} MT</p>
 					<p>{{ mine.reserves_probable }} MT</p>
-                {% for mineral in mine.minemineral_set.all %}
+					<p>{% for deposit in mine.resource_type.all %}
+					{{ deposit }}, <br>
+                	{% endfor %}</p>
+					{% for mineral in mine.minemineral_set.all %}
                     <p>{{ mineral.mineral }}</p>
-                {% endfor %}
+                	{% endfor %}
                 </div>
 			</div>
 		</div>
@@ -71,120 +122,115 @@
 <div class="card card-body">
 	<div class="row">
 	<div class="col-md">
-		<div class="card card-header">
+	{% if mine.minelabour_set.all %}
+			<div class="col-md">
 			<h5>Employees</h5>
-		</div>
+			<hr>
+			</div>
 		<div class="card-body">
 			{% if mine.minelabour_set.all.last.management %}
 			<div class="row">
 				<div class="col-md">
-					<p>Management</p>
+					Management
 				</div>
 				<div class="col-md">
-					<p>{{ mine.minelabour_set.all.last.management }}</p>
+					{{ mine.minelabour_set.all.last.management }}
 				</div>
 			</div>
 			{% endif %}
 			{% if mine.minelabour_set.all.last.skilled %}
 			<div class="row">
 				<div class="col-md">
-					<p>Skilled</p>
+					Skilled
 				</div>
 				<div class="col-md">
-					<p>{{ mine.minelabour_set.all.last.skilled }}</p>
+					{{ mine.minelabour_set.all.last.skilled }}
 				</div>
 			</div>
 			{% endif %}
 			{% if mine.minelabour_set.all.last.semi_skilled %}
 			<div class="row">
 				<div class="col-md">
-					<p>Semi-Skilled</p>
+					Semi-Skilled
 				</div>
 				<div class="col-md">
-					<p>{{ mine.minelabour_set.all.last.semi_skilled }}</p>
+					{{ mine.minelabour_set.all.last.semi_skilled }}
 				</div>
 			</div>
 			{% endif %}
 			{% if mine.minelabour_set.all.last.unskilled %}
 			<div class="row">
 				<div class="col-md">
-					<p>Un-Skilled</p>
+					Un-Skilled
 				</div>
 				<div class="col-md">
-					<p>{{ mine.minelabour_set.all.last.unskilled }}</p>
+					{{ mine.minelabour_set.all.last.unskilled }}
 				</div>
 			</div>
 			{% endif %}
 		</div>
-		<br>
-					<div class="card card-header">
-						<h5>Production</h5>
-					</div>
+	{% endif %}
+	</div>
+		<div class="col-md">
+			<div class="col-md">
+			<h5>Production</h5>
+				<hr>
+			</div>
 		{% for mineral in mineral_set %}
 					<div class="card-body">
 				{% if mineral == 'all' %}
+						<div><a class="text-success" href="{% url 'investor/more_production_reports_ore' pk=mine.id%}">
 							<div class="row">
 								<div class="col-md">
-									<p>Ore</p>
+									Ore
 								</div>
 								<div class="col-md">
-									<p>{{ ore_production}} Tonnes</p>
+									{{ ore_production}} Tonnes
 								</div>
 							</div>
+						</a></div>
+						<div><a class="text-success" href="{% url 'investor/more_production_reports_waste' pk=mine.id%}">
 							<div class="row">
 								<div class="col-md">
-									<p>Waste</p>
+									Waste
 								</div>
 								<div class="col-md">
-									<p>{{ waste_production }} Tonnes</p>
+									{{ waste_production }} Tonnes
 								</div>
 							</div>
+						</a></div>
 				{% else %}
 						{% for prod in mineral_production %}
+						<hr>
+						<div><a class="text-success" href="{% url 'investor/more_production_reports_mineral' pk=mine.id%}">
 							<div class="row">
 								<div class="col-md">
-									<p>{{ prod.0 }}</p>
+									{{ prod.0 }}
 								</div>
 								<div class="col-md">
-									<p>{{ prod.1 }} {{ prod.2 }}</p>
+									{{ prod.1 }} {{ prod.2 }}
 								</div>
 							</div>
+						</a></div>
 						{% endfor %}
 				{% endif %}
 					</div>
 		{% endfor %}
-		<br>
-		<div class="card card-header">
-			<h5>Mine Works</h5>
-		</div>
-		<div class="card-body">
-			{% for record in works %}
-				<p>{{ record.quantity }} {{ record.works }}</p>
-				<p>{{record.comment}}</p>
-			{% endfor %}
-		</div>
-	</div>
-		<div class="col-md">
-		<div class="card card-header">
-			<h5>Plant and Equipment</h5>
-		</div>
-		<div class="card-body">
-			{% for record in plant %}
-				<p>{{ record.quantity }} {{ record.plant }}</p>
-				<p>{{record.comment}}</p>
-			{% endfor %}
-		</div>
 		</div>
 		<div class="col-md">
-			<div class="card card-header">
-				<h5>Yellow Plant</h5>
+			<br>
+			<br>
+		<div class="col-md">
+			<a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'investor/investview/plant_list' pk=mine.id %}">Fixed Plant and Equipment</a>
+		</div>
+			<br>
+			<div class="col-md">
+				<a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'investor/investview/yellow_plant' pk=mine.id %}">Mobile Plant</a>
 			</div>
-			<div class="card-body">
-				{% for record in mobile %}
-					<p>{{ record.quantity }} {{ record.plant }}</p>
-					<p>{{record.comment}}</p>
-				{% endfor %}
-			</div>
+			<br>
+		<div class="col-md">
+			<a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'investor/investview/mine_works' pk=mine.id %}">Mine Works</a>
+		</div>
 		</div>
 	</div>
 </div>

@@ -88,6 +88,9 @@
             <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_detail_payments.html' pk=player.id %}">Payments</a>
         </div>
         {% endif %}
+        <div class="col-md">
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'player_archive' pk=player.id %}">Archive</a>
+        </div>
     </div>
         <br>
     <div class="row">

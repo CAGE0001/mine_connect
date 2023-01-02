@@ -35,14 +35,16 @@
 			<div class="row">
 				<div class="col-md">
                     <p>Date</p>
-                    <p>Invoiced To</p>
+                    <p>Payer</p>
+                    <p>Payee</p>
                     <p>Purpose</p>
                     <p>Amount</p>
 				</div>
 
 				<div class="col-md">
                     <p>{{ invoice.date_created }}</p>
-                    <p><a href="{% url 'player_detail.html' pk=invoice.payer.id %}">{{invoice.payer}}</a></p>
+                    <p>{{invoice.payer}}</p>
+                    <p>{{invoice.payee}}</p>
                     <p>{{ invoice.purpose }}</p>
                     <p>{{ invoice.amount }}</p>
                 </div>

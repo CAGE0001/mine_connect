@@ -10,47 +10,69 @@
 <div class="row">
     <br>
     <div class="col-md-3">
-        <div class="card-header">
             <form method="get">
                 <div class="row">
                     <div class="form col-md">
                     {{ filter.form|crispy}}
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6"></div>
                 <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
-                </div>
+
             </form>
-        </div>
      </div>
     <div class="col-md">
             <div class="card-header">
                 <h3>Cart Request - Mine Match List ...</h3>
-            </div>
-                <div class="card-body bg-white">
-                    <table class="table bg-white">
-                        <tr>
-                            <th>Date Created</th>
-                            <th>Cart Request</th>
-                            <th>Valid Until</th>
-                        </tr>
-
-                    <div class="list-line">
-                    {% for record in filter.qs %}
-                        <div class="list-content"><a
-                                href="">
-                        <tr>
-                            <td>{{record.date_created}}</td>
-                            <td>{{record.cart_request}}</td>
-                            <td>{{record.valid}}</td>
-                        </tr>
-                            </a>
-                        </div>
-                    {% endfor %}
-                    </div>
-                    </table>
+            <br>
+            <div class="row">
+                <div class="col-md-2">
+                <h5>Date Created</h5>
                 </div>
+                <div class="col-md">
+                <h5>Cart Request</h5>
+                </div>
+                <div class="col-md-2">
+                <h5>Valid Until </h5>
+                </div>
+            </div>
+        </div>
+        <div class="card-body bg-white">
+            {% for record in page_obj %}
+            <div class="list-line">
+                <div class="list-content"><a href="">
+                <div class="row">
+                    <div class="col-md-2">
+                        <p>{{record.date_created}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{record.cart_request}}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <p>{{record.valid}}</p>
+                    </div>
+                </div>
+                </a></div>
+            </div>
+            {% endfor %}
+        </div>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
     </div>
 </div>
 <br>

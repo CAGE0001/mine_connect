@@ -58,7 +58,6 @@
         <div class="col-md-6"></div>
     </div>
 </div>
-{% if minerals %}
 <div class="card-body bg-white">
 	<div class="col-md">
 		<div class="row">
@@ -100,7 +99,24 @@
         {% endif %}
 	</div>
 </div>
-{% endif %}
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if minerals.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ minerals.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ minerals.number }} of {{ minerals.paginator.num_pages }}.
+                </span>
+
+                {% if minerals.has_next %}
+                    <a href="?page={{ minerals.next_page_number }}">next</a>
+                    <a href="?page={{ minerals.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
 <br>
 <br>
 {% endblock %}

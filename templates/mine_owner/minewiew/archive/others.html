@@ -24,13 +24,13 @@
 <div class="card-header">
     <div class="row">
         <div class="col-md">
-            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_owner/mineview_archive_letters.html' %}">Letters</a>
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'mineview_archive_letters.html' pk=player.id %}">Letters</a>
         </div>
         <div class="col-md">
-            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/minewiew_archive_agreements.html' %}">Agreements</a>
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'minewiew_archive_agreements.html' pk=player.id %}">Agreements</a>
         </div>
         <div class="col-md">
-            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_owner/minewiew_archive_receipts.html' %}">Receipts</a>
+            <a class="btn btn-success  btn-block btn-sm" href="{% url 'minewiew_archive_receipts.html' pk=player.id %}">Receipts</a>
         </div>
         <div class="col-md">
             <a class="btn btn-block"><h5>Others</h5></a>
@@ -55,23 +55,23 @@
             <div class="col-md">
             <h5>Mine</h5>
             </div>
-            <div>
+            <div class="col-md">
             <h5>Subject</h5>
             </div>
         </div>
 		<br>
-		{% for claim in others_filter.qs %}
+		{% for claim in page_obj3 %}
 		<div class="list_content">
-            <div class="list-line"> <a href="{% url 'mine_owner/mineview_archive_other_detail.html' pk=claim.id %}">
+            <div class="list-line"><a class="text-success" target="_blank" href="{{ MEDIA_URL }}{{ claim.pdf.url }}">
                 <div class="row">
                     <div class="col-md">
                         <p>{{claim.report_date}}</p>
                     </div>
                     <div class="col-md">
-                        <p>{{claim.mine}</p>
+                        <p>{{claim.mine}}</p>
                     </div>
                     <div class="col-md">
-                        <p>{{claim.subject}</p>
+                        <p>{{claim.subject}}</p>
                     </div>
                 </div>
             </a></div>
@@ -79,6 +79,24 @@
 		{% endfor %}
 	</div>
 </div>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj3.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj3.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj3.number }} of {{ page_obj3.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj3.has_next %}
+                    <a href="?page={{ page_obj3.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj3.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
 </div>
 </div>
 <br>

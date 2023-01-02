@@ -41,7 +41,7 @@
                     <p>Investor</p>
                     <p>Cart Request</p>
                     <p>Mineral</p>
-                    <p>Investment Purpose</p>
+                    <p>Purpose</p>
                     <p>Date Created</p>
                     <p>Mandate Duration</p>
                     <p>Mandate</p>
@@ -49,12 +49,16 @@
 
 				<div class="col-md">
                     <p><a class="text-success" href="{% url 'player_detail.html' pk=cart_request.investor.player.id %}">{{ cart_request.investor }}</a></p>
-                    <p><a class="text-success" href="{% url 'investor/cart_request_detail.html' pk=cart_request.id %}">{{ cart_request }}</a></p>
+                    <p><a class="text-success" href="{% url 'investor/cart_request_detail.html' pk=cart_request.id %}">{{ cart_request.id }}</a></p>
                     <p>{{ cart_request.mineral }}</p>
                     <p>{{ mandate_request.purpose }}</p>
                     <p>{{ mandate_request.date_created }}</p>
-                    <p>{{ mandate_request.duration }} Months</p>
+                    <p>{{ mandate_request.duration }} Days</p>
+                    {% if mandate_request.mandate_set.all.last %}
                     <p><a class="text-success" href="{% url 'investor/mandate_detail.html' pk=mandate_request.mandate_set.all.last.id %}">{{ mandate_request.mandate_set.all.last }}</a></p>
+                    {% else %}
+                    <p class="text-danger">Request Pending</p>
+                    {% endif %}
                 </div>
 			</div>
             <div class="row">

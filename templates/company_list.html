@@ -10,49 +10,69 @@
 <div class="row">
     <br>
     <div class="col-md-3">
-        <div class="card-header">
             <form method="get">
                 <div class="row">
                     <div class="form col-md">
                     {{ filter.form|crispy}}
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6"></div>
                 <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
-                </div>
+
             </form>
-        </div>
      </div>
     <div class="col-md">
             <div class="card-header">
                 <h3>Companies ...</h3>
-            </div>
-                <div class="card-body bg-white">
-                    <table class="table bg-white">
-                        <tr>
-                            <th>Date Incorporated</th>
-                            <th>Name</th>
-                            <th>Country</th>
-                            <th></th>
-                        </tr>
-
-                    <div class="list-line">
-                    {% for record in filter.qs %}
-                        <div class="list-content"><a
-                                href="{% url 'corp_player_new.html' pk=record.id %}">
-                        <tr>
-                            <td>{{record.doi}}</td>
-                            <td>{{record.name}}</td>
-                            <td>{{record.nationality}}</td>
-                            <td><a class="text-success" href="{% url 'corp_player_new.html' pk=record.id %}">Process</a></td>
-                        </tr>
-                            </a>
-                        </div>
-                    {% endfor %}
-                    </div>
-                    </table>
+            <br>
+            <div class="row">
+                <div class="col-md-2">
+                <h5>Date of Inc.</h5>
                 </div>
+                <div class="col-md">
+                <h5>Name</h5>
+                </div>
+                <div class="col-md-2">
+                <h5>Country</h5>
+                </div>
+            </div>
+        </div>
+        <div class="card-body bg-white">
+            {% for record in page_obj %}
+        <div class="list_content">
+            <div class="list-line"><a class="text-success" href="{% url 'corp_player_new.html' pk=record.id %}">
+            <div class="row">
+                <div class="col-md-2">
+                    <p>{{record.doi}}</p>
+                </div>
+                <div class="col-md">
+                    <p>{{record.name}}</p>
+                </div>
+                <div class="col-md-2">
+                    <p>{{record.nationality}}</p>
+                </div>
+            </div>
+            </a></div>
+        </div>
+            {% endfor %}
+        </div>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
     </div>
 </div>
 <br>

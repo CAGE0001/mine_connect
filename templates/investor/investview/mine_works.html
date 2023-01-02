@@ -1,0 +1,112 @@
+{% extends 'investor/investor_base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+       {% include 'investor/info/mine_detail_infoless.html' %}
+
+<div class="row">
+    <div class="col-md">
+        <div style="text-align: center">
+        {% for message in messages %}
+        <h3 class="text-danger alignment: centre">{{ message }}</h3>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+<div id="map" style="height: 400px;"></div>
+<br>
+<div class="card-header">
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-block"><h5>Mine Works</h5></a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'investor/investview/plant_list' pk=mine.id %}">Plant and Equipment</a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success btn-block btn-sm" href="{% url 'investor/investview/yellow_plant' pk=mine.id %}">Mobile Plant</a>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6">
+            {% if works.count > 5 %}
+                <form method="get">
+
+                    {{works_filter.form|crispy}}
+
+                <button class="btn btn-outline-success btn-sm " type="submit">Search</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md">
+        </div>
+        <div class="col-md">
+        </div>
+        <div class="col-md-6"></div>
+    </div>
+</div>
+<div class="card-body bg-white">
+	<div class="col-md">
+		<div class="row">
+            <div class="col-md-3">
+            <h5>Type</h5>
+            </div>
+            <div class="col-md">
+            <h5>Description</h5>
+            </div>
+        </div>
+		<br>
+        {% for record in works %}
+        <div class="list_content">
+            <div class="list-line">
+                <div class="row">
+                    <div class="col-md-3">
+                        <p>{{record.works}}</p>
+                    </div>
+                    <div class="col-md">
+                        <p>{{record.comment}}</p>
+                    </div>
+                </div>
+            </div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+<br>
+<br>
+{% endblock %}
+
+    {% block map_centre %}
+<script type="text/javascript">
+    var map_view = {{mineloc.lat_long}};
+    var zoom = 16
+</script>
+    {% endblock %}
+
+    {% block java %}
+{% include 'map_java/mine_location.html' %}
+    {% endblock %}

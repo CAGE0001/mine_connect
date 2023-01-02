@@ -1,25 +1,22 @@
 
 <div class="row">
     <div class="col-md">
-        <p>Phone Number</p>
-        <p>Email</p>
-        <p>Bank</p>
-        <p>Bank Account</p>
-        <p>Trxn Balance</p>
-        <p>Street Address</p>
-        <p>Surburb</p>
-        <p>Town/City</p>
-        <p>Country</p>
+        Phone Number<br>
+        Email<br>
+        Bank<br>
+        Bank Account<br>
+        Trxn Balance<br>
+        Address<br>
     </div>
     <div class="col-md">
-        <p>{{ player.phone_number }}</p>
-        <p>{{ player.email }}</p>
-        <p>{{ player.bank }}</p>
-        <p>{{ player.bank_account }}</p>
-        <p>{{ player.trxn_balance }}</p>
-        <p>{{ player.street_address }}</p>
-        <p>{{ player.suburb }}</p>
-        <p>{{ player.city }}</p>
-        <p>{{ player.country }}</p>
+        {{ player.phone_number }}<br>
+        {{ player.email }}<br>
+        {{ player.bank }}<br>
+        {{ player.bank_account }}<br>
+        $ {{ player.trxn_balance }}<br>
+        {{ player.street_address }}<br>
+        {{ player.suburb }}<br>
+        {{ player.city }}<br>
+        {{ player.country.country }}
     </div>
 </div>

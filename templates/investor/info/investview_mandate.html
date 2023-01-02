@@ -15,7 +15,7 @@
 			<br>
 		<div class="card card-body">
 			<h5>Field Activity</h5>
-			<hr>
+			<br>
                 <p><a class="btn btn-outline-success btn-sm btn-block" href="{% url 'investor/field_request_create.html' pk=mandate.id %}">Initiate Field Activity</a></p>
 		</div>
 			<br>
@@ -33,7 +33,7 @@
 			<h5>Mandate Information</h5>
 			<hr>
 			<div class="row">
-				<div class="col-md">
+				<div class="col-md-5">
                     <p>Date Created</p>
                     <p>Cart Request</p>
                     <p>Mandate Request</p>
@@ -45,7 +45,7 @@
                     <p>{{ mandate.date_created }}</p>
                     <div class="line_content">
                         <div class="line-list">
-                    		<p><a class="text-success" href="{% url 'investor/investview/cart/mandate_request.html' pk=cart.id %}">{{ cart }}</a></p>
+                    		<p><a class="text-success" href="{% url 'investor/investview/cart/mandate_request.html' pk=cart.id %}">{{ cart.id }}</a></p>
                         </div>
                     </div>
                     <div class="line_content">
@@ -58,7 +58,7 @@
                 </div>
 			</div>
             <div class="row">
-                <div class="col-md">
+                <div class="col-md-5">
                     <p>Mines </p>
                 </div>
                 <div class="col-md">

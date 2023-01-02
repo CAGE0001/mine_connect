@@ -1,5 +1,54 @@
-	<br>
-	<br>
+
+
+    {% block button %}
+<style>
+
+/* Style The Archive Button */
+.archivebtn {
+  width: 100%;
+  cursor: pointer;
+}
+/* Style The archive Button */
+.archive {
+  min-width: 100%;
+  cursor: pointer;
+}
+
+/* The container div - needed to position the archive content */
+.archive {
+  position: relative;
+  display: inline-block;
+}
+
+/* Archive Content (Hidden by Default) */
+.archive-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 200px;
+  width: 100%;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.archive-content a {
+  color: black;
+  padding: 5px 10px;
+  text-decoration: none;
+  display: block;
+  margin-top: 10px;
+}
+
+/* Show the dropdown menu on hover */
+.archive:hover .archive-content {
+  display: block;
+}
+</style>
+    {% endblock %}
+
+<br>
+<br>
 <style>
 .expand{
     position:absolute;
@@ -11,16 +60,15 @@
 
 <div class="row">
 	<div class="col-md-5">
-<!--		<div class="card card-body">-->
 			<div class="row">
 				<div class="col-md">
                     <h5>Mine </h5>
 					<hr>
-					<h3>{{ mine.name }} </h3>
+					<a class="text-success" href="{% url 'mine_detail_carts.html' pk=mine.id %}"><h3>{{ mine.name }} </h3></a>
 				</div>
 			</div>
 			<br>
-            <a class="expand" href="{% url 'mine_map.html' pk=mine.id %}"><i class="fa-regular fa-window-maximize fa-beat" style="font-size:30px;color:gray;"></i></a>
+            <a class="expand" href="{% url 'mine_map.html' pk=mine.id %}"><i class="fa-solid fa-expand" style="font-size:30px;color:success;"></i></a>
 			<div id="map" style="height: 70%;"></div>
 	</div>
 
@@ -37,6 +85,9 @@
 			<hr>
 			<div class="row">
 				<div class="col-md">
+					{% if mine.mineownerrelation_set.all %}
+                    <p>Owner</p>
+					{% endif %}
                     <p>Country</p>
 					<p>Area</p>
 					<p>Combine Option</p>
@@ -44,24 +95,31 @@
 					<p>Reserves Proven</p>
 					<p>Reserves Possible</p>
 					<p>Reserves Probable</p>
+                    <p>Status</p>
 					<p>Minerals</p>
 				</div>
 
 				<div class="col-md">
-                    <p>{{ mine.country }}</p>
+					{% if mine.mineownerrelation_set.all %}
+                    <p><a class="text-success" href="{% url 'player_detail.html' pk=mine.mineownerrelation_set.all.last.owner.id %}">{{ mine.mineownerrelation_set.all.last.owner }}</a></p>
+                    {% endif %}
+					<p>{{ mine.country }}</p>
 					<p>{{ mine_area }} Hectares</p>
 					{% if mine.mineinvestreq_set.all.last.conglomerate == True %}
 					<p>Available </p>
 					{% else %}
-					<p>N / A</p>
+					<p>None</p>
 					{% endif %}
-					<p>{{ mine.resource_type }}</p>
+                    <p>{% for item in mine.resource_type.all %}
+					{{ item }},
+						{% endfor %}</p>
 					<p>{{ mine.reserves_proven }} MT</p>
 					<p>{{ mine.reserves_possible }} MT</p>
 					<p>{{ mine.reserves_probable }} MT</p>
-                {% for mineral in mine.minemineral_set.all %}
-                    <p>{{ mineral.mineral }}</p>
-                {% endfor %}
+                    <p>{{ mine.insp_status }}</p>
+					{% for mineral in mine.mineral.all %}
+                    <p>{{ mineral }}</p>
+					{% endfor %}
                 </div>
 			</div>
 		</div>
@@ -72,9 +130,15 @@
 <div class="card card-body">
 	<div class="row">
 	<div class="col-md">
-	{% if mine.minelabour_set.all %}
 			<div class="col-md">
-			<h5>Employees</h5>
+				<div class="row">
+					<div class="col-md-9">
+						<h5>Employees</h5>
+					</div>
+					<div class="col-md">
+						<a class="text-success" style="font-size:20px;" href="{% url 'mine_labour.html' pk=mine.id %}"><i class="fa-regular fa-square-plus"></i></a>
+					</div>
+				</div>
 			<hr>
 			</div>
 		<div class="card-body">
@@ -119,11 +183,17 @@
 			</div>
 			{% endif %}
 		</div>
-	{% endif %}
 	</div>
 		<div class="col-md">
 			<div class="col-md">
-			<h5>Production</h5>
+				<div class="row">
+					<div class="col-md-9">
+						<h5>Production</h5>
+					</div>
+					<div class="col-md">
+						<a class="text-success" style="font-size:20px;" href="{% url 'mine_production.html' pk=mine.id %}"><i class="fa-regular fa-square-plus"></i></a>
+					</div>
+				</div>
 				<hr>
 			</div>
 		{% for mineral in mineral_set %}
@@ -168,19 +238,56 @@
 		{% endfor %}
 		</div>
 		<div class="col-md">
-			<br>
+		<div class="col-md">
+			<div class="archive">
+				<button class="archivebtn btn btn-outline-success  btn-block btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Reports and Certificates</button>
+				<div class="archive-content">
+					<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'more_mine_reports.html' pk=mine.id %}">View</a>
+					<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'mine_attach_report.html' pk=mine.id %}">Add Report</a>
+					<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'mine_attach_certificate.html' pk=mine.id %}">Add Certificate</a>
+				</div>
+			</div>
+		</div>
 			<br>
 		<div class="col-md">
-			<a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'plant_list.html' pk=mine.id %}">Fixed Plant and Equipment</a>
+			<div class="archive">
+				<button class="archivebtn btn btn-outline-success  btn-block btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Fixed Plant and Equipment</button>
+				<div class="archive-content">
+					<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'plant_list.html' pk=mine.id %}">View</a>
+					<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'mine_plant.html' pk=mine.id %}">Add</a>
+				</div>
+			</div>
 		</div>
 			<br>
 			<div class="col-md">
-				<a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'yellow_plant_list.html' pk=mine.id %}">Mobile Plant</a>
+			<div class="archive">
+				<button class="archivebtn btn btn-outline-success  btn-block btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Mobile Plant</button>
+				<div class="archive-content">
+					<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'yellow_plant_list.html' pk=mine.id %}">View</a>
+					<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'mine_yellow_plant.html' pk=mine.id %}">Add</a>
+				</div>
+			</div>
 			</div>
 			<br>
 		<div class="col-md">
-			<a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'mine_works_list.html' pk=mine.id %}">Mine Works</a>
+			<div class="archive btn-group">
+				<button class="archivebtn btn btn-outline-success  btn-block btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Mine Works</button>
+					<div class="archive-content">
+						<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'mine_works_list.html' pk=mine.id %}">View</a>
+						<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'mine_works.html' pk=mine.id %}">Add</a>
+					</div>
+			</div>
 		</div>
+			<br>
+		<div class="col-md">
+			<div class="archive btn-group">
+				<button class="archivebtn btn btn-outline-success  btn-block btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Sample Point</button>
+					<div class="archive-content">
+						<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'sample_map.html' pk=mine.id %}">View</a>
+						<a class="btn btn-outline-danger  btn-block btn-sm" href="{% url 'new_sample.html' pk=mine.id %}">Add</a>
+					</div>
+			</div>
 		</div>
+	</div>
 	</div>
 </div>

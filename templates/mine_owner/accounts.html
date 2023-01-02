@@ -56,12 +56,12 @@
             </div>
         </div>
     </div>
-</div>
-<div class="card-body bg-white">
-	<div class="col-md">
 		<div class="row">
             <div class="col-md">
-            <h5>Date Created</h5>
+            <h5>Date</h5>
+            </div>
+            <div class="col-md">
+            <h5>Trxn Ref</h5>
             </div>
             <div class="col-md">
             <h5>Purpose</h5>
@@ -73,29 +73,33 @@
             <h5>Debit</h5>
             </div>
         </div>
-		<br>
-		{% for payment in payments %}
+</div>
+<div class="card-body bg-white">
+		{% for payment in page_obj %}
 		<div class="list_content">
-            <div class="list-line"><a class="text-success" href="{% url 'mine_owner/mineview/detail.html' pk=payment.0.id %}">
+            <div class="list-line"><a class="text-success" href="{% url 'mine_owner_trxn_detail' pk=payment.id %}">
                 <div class="row">
                     <div class="col-md">
-                        <p>{{payment.0.date_created}}</p>
+                        <p>{{payment.date_created}}</p>
                     </div>
                     <div class="col-md">
-                        <p>{{payment.0.purpose}}</p>
+                        <p>{{payment.id}}</p>
                     </div>
-                    {% if payment.1 == 'N' %}
                     <div class="col-md">
-                        <p>{{ payment.0.amount }}</p>
+                        <p>{{payment.purpose}}</p>
+                    </div>
+                    {% if payment.payer == player %}
+                    <div class="col-md">
+                        <p>{{ payment.amount }}</p>
                     </div>
                     {% else %}
                     <div class="col-md">
                         <p></p>
                     </div>
                     {% endif %}
-                    {% if payment.1 == 'Y' %}
+                    {% if payment.payee == player %}
                     <div class="col-md">
-                        <p>{{ payment.0.amount }}</p>
+                        <p>{{ payment.amount }}</p>
                     </div>
                     {% else %}
                     <div class="col-md">
@@ -106,8 +110,25 @@
             </a></div>
 		</div>
 		{% endfor %}
-	</div>
 </div>
+        <br>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
 </div>
 </div>
 <br>

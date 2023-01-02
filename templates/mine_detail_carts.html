@@ -23,7 +23,7 @@
 <div class="card-header">
     <div class="row">
         <div class="col-md">
-            <a class="btn btn-success  btn-block btn-sm"  href="{% url 'mine_detail_mine.html' pk=mine.id %}">Claims ...</a>
+            <a class="btn btn-outline-success  btn-block btn-sm"  href="{% url 'mine_detail_mine.html' pk=mine.id %}">Claims</a>
         </div>
         {% if cart_match_count %}
         <div class="col-md">
@@ -32,32 +32,32 @@
         {% endif %}
         {% if mandate_request.count != 0 %}
         <div class="col-md">
-            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_mandate_req.html' pk=mine.id %}">Mand-Reqs </a>
+            <a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'mine_detail_mandate_req.html' pk=mine.id %}">Mand-Reqs </a>
         </div>
         {% endif %}
         {% if mandate_list.count != 0 %}
         <div class="col-md">
-            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_mandate.html' pk=mine.id %}">Mandates ...</a>
+            <a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'mine_detail_mandate.html' pk=mine.id %}">Mandates</a>
         </div>
         {% endif %}
         {% if visit_req_list.count != 0 %}
         <div class="col-md">
-            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_field_req.html' pk=mine.id %}">Field Request</a>
+            <a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'mine_detail_field_req.html' pk=mine.id %}">Field Reqs</a>
         </div>
         {% endif %}
         {% if visit_list.count != 0 %}
         <div class="col-md">
-            <a class="btn btn-success  btn-block btn-sm" href="{% url 'mine_detail_field_visits.html' pk=mine.id %}">Field Visits</a>
+            <a class="btn btn-outline-success  btn-block btn-sm" href="{% url 'mine_detail_field_visits.html' pk=mine.id %}">Field Visits</a>
         </div>
         {% endif %}
         {% if field_proforma_list.count != 0 %}
         <div class="col-md">
-            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_proforma.html' pk=mine.id %}">Proformas</a>
+            <a class="btn btn-outline-success btn-block btn-sm" href="{% url 'mine_detail_proforma.html' pk=mine.id %}">Proformas</a>
         </div>
         {% endif %}
         {% if field_invoice_list.count != 0 %}
         <div class="col-md">
-            <a class="btn btn-success btn-block btn-sm" href="{% url 'mine_detail_invoice.html' pk=mine.id %}">Field Invoice</a>
+            <a class="btn btn-outline-success btn-block btn-sm" href="{% url 'mine_detail_invoice.html' pk=mine.id %}">Field Invoice</a>
         </div>
         {% endif %}
     </div>
@@ -83,34 +83,6 @@
         </div>
     </div>
 </div>
-<div class="card-header">
-		<div class="row">
-			<div class="col-md-3">
-			</div>
-			<div class="col-md-3">
-			</div>
-			<div class="col-md-3">
-				<div class="row">
-					<div class="col-md">
-<!--									<p>Total Distance:</p>-->
-					</div>
-					<div class="col-md">
-<!--									<p>{{ total_distance }} Kms</p>-->
-					</div>
-				</div>
-			</div>
-			<div class="col-md">
-				<div class="row">
-					<div class="col-md">
-					<p>Query Count :     </p>
-					</div>
-					<div class="col-md">
-					<p>{{ cart_match_count }} Requests</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
 {% if cart_match_count != 0 %}
 <div class="card-body bg-white">
 	<div class="col-md">

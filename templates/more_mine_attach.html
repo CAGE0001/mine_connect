@@ -20,12 +20,12 @@
     <div class="row">
         {% if report_count != 0 %}
         <div class="col-md">
-            <a class="btn btn-success btn-block"  href="{% url 'more_mine_attach.html' pk=mine.id ">Reports</a>
+            <a class="btn btn-success btn-block btn-sm"  href="{% url 'more_mine_reports.html' pk=mine.id %}">Reports</a>
         </div>
         {% endif %}
         {% if attach_count != 0 %}
         <div class="col-md">
-            <a class="btn btn-block btn-sm" %}><h5>Attachments</h5></a>
+            <a class="btn btn-block btn-sm" %}><h5>Certificates</h5></a>
         </div>
         {% endif %}
     </div>
@@ -47,9 +47,6 @@
     </div>
     <div class="row">
         <div class="col-md">
-            <a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mine_attach_report.html' pk=mine.id %}">Attach Report</a>
-        </div>
-        <div class="col-md">
             <a class="btn btn-outline-success btn-sm btn-block" href="{% url 'mine_attach_certificate.html' pk=mine.id %}">Attach Certificate</a>
         </div>
         <div class="col-md-6"></div>
@@ -62,29 +59,29 @@
             <div class="col-md-3">
             <h5>Created</h5>
             </div>
-            <div class="col-md">
-            <h5>Name</h5>
-            </div>
             <div class="col-md-3">
             <h5>Type</h5>
+            </div>
+            <div class="col-md">
+            <h5>Name</h5>
             </div>
         </div>
 		<br>
         {% for record in filter.qs %}
         <div class="list_content">
-            <div class="list-line">
+            <div class="list-line"><a class="text-success" href="{{ MEDIA_URL }}{{ record.pdf.url }}">
                 <div class="row">
                     <div class="col-md-3">
                         <p>{{record.date_created}}</p>
                     </div>
-                    <div class="col-md">
-                        <p><a class="text-success" href="{% url 'mine_report_detail.html' pk=record.id %}">{{record.name}}</a></p>
-                    </div>
                     <div class="col-md-3">
                         <p>{{ record.type }}</p>
                     </div>
+                    <div class="col-md">
+                        <p>{{record.name}}</p>
+                    </div>
                 </div>
-            </div>
+            </a></div>
 		</div>
 		{% endfor %}
 	</div>

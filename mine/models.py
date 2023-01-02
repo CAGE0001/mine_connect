@@ -2,6 +2,7 @@ from django.contrib.gis.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.operations import CreateExtension
 from django.db import migrations
+# from django.db import models
 from django.utils.datetime_safe import datetime
 
 
@@ -98,10 +99,30 @@ MINEREPORTS = (
     ('Feasibility', 'Feasibility'),
 )
 
+MINERASTERS = (
+    ('Local Geology', 'Local Geology'),
+    ('Regional Geology', 'Regional Geology'),
+    ('Country Geology', 'Country Geology'),
+    ('Env. Mgt.', 'Env. Mgt.'),
+    ('Site Plan', 'Site Plan'),
+    ('Topology', 'Topology'),
+    ('Magnetic', 'Magnetic'),
+    ('Seismic', 'Seismic'),
+    ('GPR', 'GPR'),
+    ('Plant Layout', 'Plant Layout'),
+)
+
 MINEAGREEMENTS = (
     ('Tribute', 'Tribute'),
     ('Joint Venture', 'Joint Venture'),
-    ('Management.', 'Management'),
+    ('Management', 'Management'),
+    ('Other', 'Other'),
+)
+
+SERVICEATTACH = (
+    ('Receipt', 'Receipt'),
+    ('Report', 'Report'),
+    ('Image', 'Image'),
 )
 
 MINERECEIPTS = (
@@ -218,6 +239,7 @@ SUBPERIOD = (
     ('Annual', 'Annual'),
 )
 
+
 class Country(models.Model):
     country = models.CharField(max_length=100)
     nationality = models.CharField(max_length=30, default='Zimbabwe')
@@ -246,12 +268,20 @@ class IndRecord(models.Model):
     nationality = models.ForeignKey(Country, on_delete=models.CASCADE)
     nid = models.CharField(max_length=50, null=False, verbose_name='Identity Number')
     status = models.CharField(max_length=10, choices=PLAYERSTATUS, default='None')
+    agents = models.ManyToManyField(User, through='IndiAgentRelation', related_name='agent_user', blank=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         first_name = str(self.first_name)
         last_name = str(self.last_name)
         return first_name + " " + last_name
+
+
+class IndiAgentRelation(models.Model):
+    date_created = models.DateField(auto_now_add=True, null=True)
+    individual = models.ForeignKey(IndRecord, on_delete=models.CASCADE)
+    agent = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.CharField(max_length=30, choices=MEMBERSTATUS, default='Current')
 
 
 class CorpRecord(models.Model):
@@ -261,7 +291,7 @@ class CorpRecord(models.Model):
     doi = models.DateField(verbose_name='Date of Inc')
     nationality = models.ForeignKey(Country, on_delete=models.CASCADE)
     reg_number = models.CharField(max_length=50, null=False, verbose_name='Identity Number')
-    agents = models.ManyToManyField(User, through='CorpAgentRelation', related_name='agent_user')
+    agents = models.ManyToManyField(User, through='CorpAgentRelation', related_name='indi_agent_user')
     status = models.CharField(max_length=10, choices=PLAYERSTATUS, default='None')
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -289,23 +319,20 @@ class SyndMemberRelation(models.Model):
     syndicate = models.ForeignKey(Syndicate, on_delete=models.CASCADE)
     member = models.ForeignKey(IndRecord, on_delete=models.CASCADE)
     status = models.CharField(max_length=30, choices=MEMBERSTATUS, default='Current')
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 class CorpAgentRelation(models.Model):
     date_created = models.DateField(auto_now_add=True, null=True)
     company = models.ForeignKey(CorpRecord, on_delete=models.CASCADE)
-    agent = models.ForeignKey(IndRecord, on_delete=models.CASCADE)
+    agent = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(max_length=30, choices=MEMBERSTATUS, default='Current')
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 class SyndAgentRelation(models.Model):
     date_created = models.DateField(auto_now_add=True, null=True)
     syndicate = models.ForeignKey(Syndicate, on_delete=models.CASCADE)
-    agent = models.ForeignKey(IndRecord, on_delete=models.CASCADE)
+    agent = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(max_length=30, choices=MEMBERSTATUS, default='Current')
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 class Player(models.Model):
@@ -313,7 +340,7 @@ class Player(models.Model):
     type = models.CharField(max_length=30, choices=PLAYERS)
     ref = models.IntegerField(null=True)
     name = models.CharField(max_length=100, null=True)
-    phone_number = models.IntegerField()
+    phone_number = models.CharField(max_length=14)
     email = models.EmailField(null=True)
     bank = models.CharField(max_length=100, null=True)
     bank_account = models.CharField(max_length=50, null=True)
@@ -330,6 +357,8 @@ class Player(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
+        if self.type == 'Corporate':
+            return self.name
         return self.name
 
 
@@ -451,7 +480,7 @@ class MiningClaimBeacons(models.Model):
         return list(getattr(self.location, 'coords', [])[::-1])
 
     def __str__(self):
-        return self.name.name
+        return self.name
 
 
 class Dummy(models.Model):
@@ -469,7 +498,7 @@ class MiningClaimPolygon(models.Model):
         return list(getattr(self.location, 'coords', [])[::-1])
 
     def __str__(self):
-        return self.name.name
+        return self.name
 
 
 class Mine(models.Model):
@@ -480,7 +509,7 @@ class Mine(models.Model):
     mineral = models.ManyToManyField(Mineral, through='MineMineral')
     insp_date = models.DateField(null=False, verbose_name='Last Inspected')
     insp_status = models.CharField(max_length=20, choices=OWNERSTATUS, default="Free")
-    resource_type = models.ForeignKey(DepositType, on_delete=models.CASCADE)
+    resource_type = models.ManyToManyField(DepositType)
     reserves_proven = models.IntegerField(null=True)
     reserves_possible = models.IntegerField(null=True)
     reserves_probable = models.IntegerField(null=True)
@@ -488,7 +517,8 @@ class Mine(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        name = str(self.name)
+        return name
 
 
 class MineLocation(models.Model):
@@ -502,7 +532,8 @@ class MineLocation(models.Model):
         return list(getattr(self.location, 'coords', [])[::-1])
 
     def __str__(self):
-        return self.name.name
+        name = str(self.name)
+        return name
 
 
 class MinePolygon(models.Model):
@@ -517,7 +548,7 @@ class MinePolygon(models.Model):
         # return [[point.lat, point.lon] for point in self.polygon]
 
     def __str__(self):
-        return self.name.name
+        return self.name
 
 
 class MineOwnerRelation(models.Model):
@@ -566,9 +597,9 @@ class MineClaimRelation(models.Model):
 
 class MineMineral(models.Model):
     date_created = models.DateField(auto_now_add=True, null=True)
-    mine = models.ForeignKey(Mine, on_delete=models.CASCADE)
-    mineral = models.ForeignKey(Mineral, on_delete=models.CASCADE)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    mine = models.ForeignKey(Mine, on_delete=models.CASCADE, null=True)
+    mineral = models.ForeignKey(Mineral, on_delete=models.CASCADE, null=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 
 
 class MineJobList(models.Model):
@@ -606,7 +637,7 @@ class MineEmployees(models.Model):
 
 class MineCertificates(models.Model):
     date_created = models.DateField(auto_now_add=True)
-    mine = models.ForeignKey(Mine, on_delete=models.CASCADE)
+    mine = models.ForeignKey(Mine, on_delete=models.CASCADE, null=True)
     type = models.CharField(max_length=50, choices=MINECERTIFICATES)
     issue_date = models.DateField(null=True)
     pdf = models.ImageField(upload_to='images/certificates/', null=True)
@@ -620,7 +651,7 @@ class MineCertificates(models.Model):
 
 class MineReports(models.Model):
     date_created = models.DateField(auto_now_add=True)
-    mine = models.ForeignKey(Mine, on_delete=models.CASCADE)
+    mine = models.ForeignKey(Mine, on_delete=models.CASCADE, null=True)
     type = models.CharField(max_length=50, choices=MINEREPORTS)
     report_date = models.DateField(null=True)
     pdf = models.FileField(upload_to='docs/', null=True)
@@ -633,6 +664,27 @@ class MineReports(models.Model):
         return name + " " + xtra + " " + report_date
 
 
+class Raster(models.Model):
+    type = models.CharField(max_length=20, choices=MINERASTERS)
+    description = models.CharField(max_length=50)
+    pdf = models.FileField(upload_to='raster/', null=True)
+
+    def __str__(self):
+        xtra = str(self.type)
+        description = str(self.description)
+        return xtra + " " + description
+
+
+class MineRasterRelation(models.Model):
+    mine = models.ForeignKey(Mine, on_delete=models.CASCADE, null=True)
+    raster = models.ForeignKey(Raster, on_delete=models.CASCADE, null=True)
+
+
+class CountryRasterRelation(models.Model):
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True)
+    raster = models.ForeignKey(Raster, on_delete=models.CASCADE, null=True)
+
+
 class MineAgreements(models.Model):
     date_created = models.DateField(auto_now_add=True)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -640,6 +692,7 @@ class MineAgreements(models.Model):
     type = models.CharField(max_length=50, choices=MINEAGREEMENTS)
     counter_party = models.CharField(max_length=100)
     report_date = models.DateField(null=True)
+    valid_to = models.DateField(null=True, blank=True)
     pdf = models.FileField(upload_to='docs/', null=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -653,6 +706,11 @@ class MineAgreements(models.Model):
             return xtra + " " + report_date
 
 
+class MineAgreementAddendum(models.Model):
+    principal = models.ForeignKey(MineAgreements, on_delete=models.CASCADE, null=True)
+    addendum = models.ForeignKey(MineAgreements, on_delete=models.CASCADE, null=True, related_name='agree_add')
+
+
 class MineReceipts(models.Model):
     date_created = models.DateField(auto_now_add=True)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -660,6 +718,7 @@ class MineReceipts(models.Model):
     type = models.CharField(max_length=50, choices=MINERECEIPTS)
     report_date = models.DateField(null=True)
     rec_number = models.IntegerField()
+    issued_by = models.CharField(max_length=100)
     pdf = models.FileField(upload_to='docs/', null=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -758,6 +817,12 @@ class MineWorks(models.Model):
         return list(getattr(self.location, 'coords', [])[::-1])
 
 
+class WorksImages(models.Model):
+    date_created = models.DateField(auto_now_add=True)
+    plant = models.ForeignKey(MineWorks, on_delete=models.CASCADE, null=True)
+    image = models.ImageField(upload_to='images/works/', null=True)
+
+
 class PlantList(models.Model):
     plant = models.CharField(max_length=50)
 
@@ -769,15 +834,41 @@ class MinePlant(models.Model):
     date_created = models.DateField(auto_now_add=True)
     mine = models.ForeignKey(Mine, on_delete=models.CASCADE)
     plant = models.ForeignKey(PlantList, on_delete=models.CASCADE, null=True)
-    quantity = models.IntegerField(default=0)
+    when_new = models.DateField(null=True, blank=True)
+    quantity = models.IntegerField(default=1)
     comment = models.CharField(max_length=255, null=True, blank=True)
+    serial_number = models.CharField(max_length=30, null=True, blank=True)
     location = models.PointField(blank=True, null=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    @property
+    def lat_long(self):
+        return list(getattr(self.location, 'coords', [])[::-1])
 
     def __str__(self):
         name = str(self.mine)
         plant = str(self.plant)
         return name + " " + plant
+
+
+class PlantImages(models.Model):
+    date_created = models.DateField(auto_now_add=True)
+    plant = models.ForeignKey(MinePlant, on_delete=models.CASCADE, null=True)
+    image = models.ImageField(upload_to='images/plant/', null=True)
+
+
+class PlantPolygon(models.Model):
+    date_created = models.DateField(auto_now_add=True, null=True)
+    name = models.ForeignKey(MinePlant, on_delete=models.CASCADE, null=True)
+    location = models.PolygonField(blank=True, null=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    @property
+    def lat_long(self):
+        return list(getattr(self.location, 'coords', [])[::-1])
+
+    def __str__(self):
+        return self.name
 
 
 class YellowList(models.Model):
@@ -791,14 +882,88 @@ class MineYellowPlant(models.Model):
     date_created = models.DateField(auto_now_add=True)
     mine = models.ForeignKey(Mine, on_delete=models.CASCADE)
     plant = models.ForeignKey(YellowList, on_delete=models.CASCADE, null=True)
-    quantity = models.IntegerField(default=0)
+    model = models.CharField(max_length=20, null=True, blank=True)
+    when_new = models.DateField(null=True, blank=True)
+    quantity = models.IntegerField(default=1)
     comment = models.CharField(max_length=255, null=True, blank=True)
+    serial_number = models.CharField(max_length=30, null=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         name = str(self.mine)
         plant = str(self.plant)
         return name + " " + plant
+
+
+class YellowImages(models.Model):
+    date_created = models.DateField(auto_now_add=True)
+    plant = models.ForeignKey(MineYellowPlant, on_delete=models.CASCADE, null=True)
+    image = models.ImageField(upload_to='images/mobile_plant/', null=True)
+
+
+class EquipmentService(models.Model):
+    date_created = models.DateField(auto_now_add=True, null=True)
+    mobile_plant = models.ForeignKey(MineYellowPlant, on_delete=models.CASCADE, blank=True)
+    fixed_plant = models.ForeignKey(MinePlant, on_delete=models.CASCADE, blank=True)
+    service_date = models.DateField()
+    next_service = models.DateField(blank=True)
+    comment = models.CharField(max_length=2000, null=True, blank=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        if self.mobile_plant:
+            name = str(self.mobile_plant)
+        else:
+            name = str(self.fixed_plant)
+
+        return name + " " + "service" + " " + self.service_date
+
+
+class WorksDev(models.Model):
+    date_created = models.DateField(auto_now_add=True, null=True)
+    works = models.ForeignKey(MineWorks, on_delete=models.CASCADE)
+    dev_date = models.DateField()
+    comment = models.CharField(max_length=2000, null=True, blank=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        works = str(self.works)
+
+        return works + " " + self.dev_date
+
+
+class EquipmentServiceAttach(models.Model):
+    date_created = models.DateField(auto_now_add=True)
+    plant = models.ForeignKey(EquipmentService, on_delete=models.CASCADE, null=True)
+    type = models.CharField(max_length=50, choices=SERVICEATTACH)
+    issue_date = models.DateField(null=True)
+    pdf = models.ImageField(upload_to='images/certificates/', null=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        mine = str(self.mine)
+        issue_date = str(self.issue_date)
+        return mine + " " + str(self.type) + " " + issue_date
+
+
+class EquipmentMileage(models.Model):
+    date_created = models.DateField(auto_now_add=True, null=True)
+    mobile_plant = models.ForeignKey(MineYellowPlant, on_delete=models.CASCADE, blank=True)
+    fixed_plant = models.ForeignKey(MinePlant, on_delete=models.CASCADE, blank=True)
+    reading_date = models.DateField()
+    mileage = models.FloatField(blank=True)
+    usage_time = models.FloatField(blank=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        if self.mobile_plant:
+            name = str(self.mobile_plant)
+        else:
+            name = str(self.fixed_plant)
+        mileage = str(self.mileage)
+        usage_time = str(self.usage_time)
+
+        return name + " " + self.reading_date + " " + mileage + " " + "Kms" + usage_time + "Hrs"
 
 
 class MineLabour(models.Model):
@@ -826,7 +991,6 @@ class MineLabour(models.Model):
 
 class ClaimRegCert(models.Model):
     date_created = models.DateField(auto_now_add=True, null=True)
-    issue_date = models.DateField(null=True)
     pdf = models.ImageField(upload_to='images/certificates/', null=True)
     claim = models.ForeignKey(MiningClaim, on_delete=models.CASCADE)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -851,6 +1015,57 @@ class Beacon(models.Model):
     def __str__(self):
         name = str(self.mining_claim)
         return name + " " + "Beacon" + " " + str(self.symbol)
+
+
+class Elements(models.Model):
+    symbol = models.CharField(max_length=10, null=False)
+
+    def __str__(self):
+        return self.symbol
+
+
+class AssayUnits(models.Model):
+    symbol = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.symbol
+
+
+class Assays(models.Model):
+    date_created = models.DateField(auto_now_add=True, null=True)
+    sample_date = models.DateField(null=True)
+    mineral = models.ForeignKey(Elements, on_delete=models.CASCADE, null=True)
+    assay = models.FloatField(null=True)
+    unit = models.ForeignKey(AssayUnits, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        mineral = str(self.mineral)
+        assay = str(self.assay)
+        unit = str(self.unit)
+        return mineral + " " + assay + " " + unit
+
+
+class SamplePoint(models.Model):
+    name = models.CharField(max_length=20)
+    mine = models.ForeignKey(Mine, on_delete=models.CASCADE)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    assays = models.ManyToManyField(Assays, through='SampleAssays')
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    @property
+    def lat_long(self):
+        return [self.latitude, self.longitude]
+
+    def __str__(self):
+        name = str(self.name)
+        return "Sample" + name
+
+
+class SampleAssays(models.Model):
+    assay = models.ForeignKey(Assays, on_delete=models.CASCADE)
+    sample_point = models.ForeignKey(SamplePoint, on_delete=models.CASCADE)
 
 
 class Investor(models.Model):
@@ -892,7 +1107,7 @@ class CartRequest(models.Model):
     mineral = models.ForeignKey(Mineral, on_delete=models.CASCADE)
     deposit_type = models.ManyToManyField(DepositType)
     resource_unit = models.CharField(max_length=30, choices=UNIT)
-    min_grade = models.IntegerField()
+    min_grade = models.FloatField()
     grade_unit = models.CharField(max_length=30, choices=GRADEUNIT)
     invest_type = models.CharField(max_length=30, choices=INVESTYPE)
     location = models.CharField(max_length=255, blank=True, null=True)
@@ -1002,12 +1217,14 @@ class MineMandateRelation(models.Model):
     date_created = models.DateField(auto_now_add=True, null=True)
     mine = models.ForeignKey(Mine, on_delete=models.CASCADE)
     mandate = models.ForeignKey(Mandate, on_delete=models.CASCADE)
+    status = models.CharField(max_length=16, choices=MANDATESTATUS, default='Desktop')
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         mine = str(self.mine)
-        status = str(self.mandate)
-        return mine + " " + status
+        mandate = str(self.mandate)
+        status = str(self.status)
+        return mine + " " + mandate + " " + status
 
 
 class ProfService(models.Model):
@@ -1231,11 +1448,6 @@ class Field(models.Model):
     status = models.CharField(max_length=15, choices=STATUS, default='Pending')
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    @property
-    def detail(self):
-        detail = Urls.objects.filter(url='field_activity_detail.html').last()
-        return detail
-
     def __str__(self):
         return "Field Activity" + " " + str(self.id) + " " + str(self.subject)
 
@@ -1280,6 +1492,8 @@ class Trxns(models.Model):
     payer = models.ForeignKey(Player, on_delete=models.CASCADE, null=True)
     payee = models.ForeignKey(Player, on_delete=models.CASCADE, null=True, related_name='trxns_payee')
     amount = models.FloatField(null=True)
+    payer_balance = models.FloatField(null=True)
+    payee_balance = models.FloatField(null=True)
     reverse_trxn = models.IntegerField(null=True, blank=True)
     invoice_ref = models.IntegerField(default=0, null=True)
     purpose = models.ForeignKey(TrxnPurpose, on_delete=models.CASCADE, null=True)
@@ -1295,9 +1509,9 @@ class Invoice(models.Model):
     mandate_request = models.ForeignKey(MandateRequest, on_delete=models.CASCADE, null=True, blank=True)
     mandate = models.ForeignKey(Mandate, on_delete=models.CASCADE, null=True, blank=True)
     field_request = models.ForeignKey(FieldReq, on_delete=models.CASCADE, null=True, blank=True)
-    payer = models.ForeignKey(Player, on_delete=models.CASCADE, null=False)
-    amount = models.FloatField()
-    purpose = models.ForeignKey(TrxnPurpose, on_delete=models.CASCADE, null=False)
+    payer = models.ForeignKey(Player, on_delete=models.CASCADE, null=True)
+    amount = models.FloatField(null=True)
+    purpose = models.ForeignKey(TrxnPurpose, on_delete=models.CASCADE, null=True)
     status = models.CharField(max_length=15, choices=INVOICESTAT, default='Pending')
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
